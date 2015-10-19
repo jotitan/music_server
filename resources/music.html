@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Music player</title>
+
+
+    <script src="vendors/jquery/jquery-2.1.3.min.js"></script>
+    <script src="vendors/jquery/jquery-ui.min.js"></script>
+    <script src="vendors/punch/jquery.ui.touch-punch.min.js"></script>
+    <link rel="stylesheet" href="vendors/jquery/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="vendors/bootstrap/css/bootstrap.min.css">
+
+    <script src="vendors/bootstrap/js/bootstrap.min.js"></script>
+    <script src="vendors/peity/jquery.peity.min.js"></script>
+
+    <script src="vendors/highcharts/highcharts.js"></script>
+
+    <link rel="stylesheet" href="css/style.css"/>
+    <script src="js/loader.js"></script>
+    <script src="js/panel.js"></script>
+    <script src="js/graphic.js"></script>
+    <script src="js/clock.js"></script>
+    <script src="js/music_player.js"></script>
+    <script src="js/playlist.js"></script>
+    <script src="js/explorer.js"></script>
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top navbar-md" role="navigation">
+    <div class="container" style="margin-left:0px;">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <span class="navbar-brand glyphicon glyphicon-music" style="cursor:pointer">
+                Music
+            </span>
+
+            <p class="progress navbar-text" style="width:200px;display:inline-block;margin-bottom:0px">
+                <span id="idTotalBar" class="progress-bar  progress-bar-success" style="display:inline-block"
+                     title="musics" role="progressbar" aria-valuenow="1">
+                    <span id="idNbTaskers"></span>
+                </span>
+            </p>
+
+        </div>
+
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Options <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#" onclick="TasksPanel.open()">
+                            <span class="glyphicon glyphicon-list-alt"></span>
+                            Search...</a>
+                        </li>
+                        <li><a href="#" onclick="PlaylistPanel.open()">
+                            <span class="glyphicon glyphicon-music"></span>
+                            Playlist...</a>
+                        </li>
+                        <li><a href="#" onclick="Explorer.byArtist()">
+                            <span class="glyphicon glyphicon-user"></span>
+                            List by artist...</a>
+                        </li>
+                        <li><a href="#" onclick="Explorer.byAlbum()">
+                            <span class="glyphicon glyphicon-signal"></span>
+                            List by artist and album...</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="navbar navbar-default navbar-fixed-bottom navbar-inverse little-navbar" >
+    <div class="container" style="margin-left:0px;width:100%">
+        <div class="show-time mini-bloc" style="display:inline-block"></div>
+        <div style="height:15px;margin:5px;display:inline-block"><span id="mem-status"></span></div>
+        <div id="idTotalMemory" class="mini-bloc" style="display:inline-block;width:60px;"></div>
+        <div style="height:25px;display:inline-block;top:-5px;position:relative" id="idWindowsNav"><ul class="taskbar"></ul></div>
+        <div id="player" style="height:29px;float:right;border-radius:5px;background-color:white;padding-left:10px">
+            <span class="glyphicon glyphicon-fast-backward previous close" style="display:none"></span>
+            <span class="glyphicon glyphicon-play play close"></span>
+            <span class="glyphicon glyphicon-pause pause close" style="display:none"></span>
+            <span class="glyphicon glyphicon-fast-forward next close" style="display:none"></span>
+            <div class="seeker" style="margin-left:15px;width:200px;display:inline-block;margin-top:5px;"></div>
+            <div style="display:inline-block;font-size:12px;color:darkgray"><span class="position"></span> / <span class="duration"></span></div>
+            - <span style="display:inline-block;width:200px" class="title"></span>
+            <span class="glyphicon glyphicon-plus volume-plus close" style="float:right;padding-top:3px"></span>
+            <span class="glyphicon glyphicon-minus volume-minus close" style="float:right;padding-top:3px"></span>
+            <span class="glyphicon glyphicon-volume-up volume-100 close" style="float:right;padding-top:3px;"></span>
+            <span class="glyphicon glyphicon-volume-down volume-50 close" style="float:right;padding-top:3px;"></span>
+            <span class="glyphicon glyphicon-volume-off volume-0 close" style="float:right;padding-top:3px;"></span>
+        </div>
+    </div>
+</div>
+
+<br/><br/><br/>
+TODO :
+<pre>
+    Affichage etat de la machine qui a l'application
+    Graphique sur statistiques musique
+    Correction bug scroll music (chrome)
+
+    Mode Threejs, D3 pour de la visualisation
+</pre>
+
+<style>
+    #player span.close{
+        float:left;
+    }
+</style>
+
+<audio id="idPlayer">
+
+</audio>
+
+
+
+<script>
+    $(function(){
+        WindowsNavManager.init('idWindowsNav');
+        Loader.launch(function(){
+            Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);})
+            Explorer.byArtist = function(){
+                this.open("/listByArtist");
+            };
+            Explorer.byAlbum = function(){
+                this.open("/listByAlbum");
+            };
+            MusicPlayer.init();
+            MusicPlayer.setPlaylist(PlaylistPanel);
+        });
+    })
+</script>
+
+</body>
+</html>

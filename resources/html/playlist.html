@@ -1,0 +1,48 @@
+<style>
+    .playlist .head > span {
+        text-align:center;
+        border-left-color:darkgray;
+        font-weight:bold;
+    }
+    .playlist div {
+        cursor:pointer;
+    }
+    .playlist div > span {
+        display:inline-block;
+        border-left:solid 1px white;
+    }
+
+    .playlist div > span:nth-child(1){
+        width:20px;
+        text-align:center;
+    }
+
+    .playlist div > span:nth-child(2){
+        width:calc(100% - 110px);
+        padding-left:5px;
+    }
+
+    .playlist div > span:nth-child(3){
+        width:80px;
+        text-align:center;
+    }
+
+    .playlist div.focused {
+        background-color:salmon;
+    }
+
+    .playlist div.played {
+        background-color:lightblue;
+    }
+</style>
+
+<div id="idPlaylist" class="float-panel normal-panel-size">
+    <div style="border-bottom:solid 1px lightgray;padding:5px" class="title">
+        <span>Playlist</span>
+        <span class="glyphicon glyphicon-eye-close close half-screen" data-split="Explorer"/>
+    </div>
+
+    <div style="height:calc(100% - 30px);overflow:auto;padding-left:5px;" class="playlist">
+        <div class="head"><span>#</span><span>Title</span><span>Time</span></div>
+    </div>
+</div>

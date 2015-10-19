@@ -1,0 +1,25 @@
+
+<div id="idGraphTemplate" class="float-panel normal-panel-size">
+    <div style="border-bottom:solid 1px lightgray;padding:5px" class="title" data-nomaximize><span>Graph data</span></div>
+    <div style="width:100%" class="graph"></div>
+</div>
+
+<div id="addGraphPanel" class="float-panel" style="width:400px;height:350px;">
+    <div style="border-bottom:solid 1px lightgray;padding:5px" class="title" data-nomaximize><span>Create graph</span></div>
+    <div style="padding-left:10px;padding-top:5px;">
+        Metric : <select class="metric_select"></select>
+        <input type="radio" value="line" checked name="type_graph" id="idTypeGraphLine"/>
+        <label for="idTypeGraphLine">Line</label>
+        <input type="radio" value="pie" name="type_graph" id="idTypeGraphPie"/>
+        <label for="idTypeGraphPie">Pie</label>
+    </div>
+    <hr style="border:solid 1px darkgrey"/>
+    <div style="padding-left:10px;overflow:auto;height:calc(100% - 140px)">
+        <label style="display:block" for="chk_node_all"><input type="checkbox" autocomplete="off" id="chk_node_all"/>All</label>
+        <div class="nodes_list"></div>
+    </div>
+    <hr style="border:solid 1px darkgrey"/>
+    <div style="float:right">
+        <button class="create_graph">Create</button>
+    </div>
+</div>
