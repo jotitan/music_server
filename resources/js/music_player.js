@@ -42,37 +42,25 @@ var MusicPlayer = {
                 MusicPlayer.playlist.previous();
             });
             MusicPlayer.player.volume = 0.5;
-            this.updateVolumeClass();
             // Volume Behaviour
             $('.volume-plus',this.div).bind('click',function(){
                 if(MusicPlayer.player.volume >= 0.9){
                     MusicPlayer.player.volume=1;
                 }else{
-                    MusicPlayer.player.volume+=0.05;
+                    MusicPlayer.player.volume+=0.1;
                 }
-                _self.updateVolumeClass();
+                VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
             });
             $('.volume-minus',this.div).bind('click',function(){
                 if(MusicPlayer.player.volume <= 0.1){
                     MusicPlayer.player.volume=0;
                 }else{
-                    MusicPlayer.player.volume-=0.05;
+                    MusicPlayer.player.volume-=0.1;
                 }
-                _self.updateVolumeClass();
+                VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
             });
-        },
-        updateVolumeClass:function(){
-             $('.volume-100,.volume-50,.volume-0',this.div).hide();
-             $(this.searchVolumeClass()).show();
-        },
-        searchVolumeClass:function(){
-             if(MusicPlayer.player.volume == 0){
-                return ".volume-0";
-             }
-             if(MusicPlayer.player.volume > 0.7){
-                return ".volume-100";
-             }
-             return ".volume-50";
+            VolumeDrawer.init('idVolume');
+            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
         setTitle:function(title){
             $('.title',this.div).text(title);
@@ -161,3 +149,26 @@ var MusicPlayer = {
     }
 
 }
+
+var VolumeDrawer = {
+    canvas:null,
+    step:Math.PI/5,
+    init:function(id){
+        this.canvas = $('#' + id).get(0).getContext("2d");
+    },
+    draw:function(pourcent){
+        this.canvas.clearRect(0,0,30,30)
+        this.canvas.fillStyle = '#303030'
+        this.canvas.save()
+        this.canvas.translate(12,12)
+        for(var i = 0 ; i < 10 ; i++){
+          if(i > pourcent-1){
+              this.canvas.fillStyle = '#c6c6c6'
+          }
+          this.canvas.rotate(this.step);
+          this.canvas.fillRect(0,4,2,8)
+        }
+        this.canvas.restore()
+    }
+}
+

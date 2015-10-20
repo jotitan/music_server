@@ -113,7 +113,7 @@ var Explorer = {
                 // Dbl click to playlist
                 if(this.fctClick){
                     span.bind('dblclick',function(){
-                        Explorer.fctClick(data[file].id);
+                        Explorer.fctClick($(this).data('id'));
                     });
                 }
             }

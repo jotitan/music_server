@@ -43,6 +43,11 @@ var PlaylistPanel = {
                 PlaylistPanel.addMusicFromId(idMusic);
             }
         })
+        this.div.bind('close',function(){
+           if(localStorage){
+            delete(localStorage["playlist"])
+           }
+        });
         // Load saved playlist
         this.load();
     },
@@ -52,7 +57,7 @@ var PlaylistPanel = {
             musics.forEach(function(m){
                 PlaylistPanel.add(m,true);
             });
-            this.current = parseInt(localStorage["current"])
+            this.current = parseInt(localStorage["current"]) || -1
             this._selectLine();
             this.open();
         }
