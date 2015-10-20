@@ -337,7 +337,7 @@ func (md MusicDictionnary)getTimeMusic(filename string) string{
 	tmpName := fmt.Sprintf("%d",time.Now().Nanosecond())
 	tmpPath := filepath.Join(os.TempDir(),tmpName)
 
-	ftmp,_ := os.OpenFile(tmpPath,os.O_CREATE|os.O_RDWR,os.ModeTemporary)
+	ftmp,_ := os.OpenFile(tmpPath,os.O_CREATE|os.O_RDWR,os.ModePerm)
 	io.Copy(ftmp,f)
 	f.Close()
 	ftmp.Close()
@@ -346,6 +346,7 @@ func (md MusicDictionnary)getTimeMusic(filename string) string{
 
 	mp3InfoPath := GetMp3InfoPath(md.indexFolder)
 	cmd := exec.Command(mp3InfoPath,"-p","%S",tmpPath)
+
 	if result,error := cmd.Output() ; error == nil {
 		return string(result)
 	}
