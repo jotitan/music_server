@@ -344,7 +344,7 @@ func (md MusicDictionnary)getTimeMusic(filename string) string{
 
 	defer os.Remove(tmpPath)
 
-	mp3InfoPath := filepath.Join(md.indexFolder,"mp3info.exe")
+	mp3InfoPath := GetMp3InfoPath(md.indexFolder)
 	cmd := exec.Command(mp3InfoPath,"-p","%S",tmpPath)
 	if result,error := cmd.Output() ; error == nil {
 		return string(result)

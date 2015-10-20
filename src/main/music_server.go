@@ -26,6 +26,7 @@ type SSEWriter struct{
 
 type MusicServer struct{
 	folder string
+	webfolder string
 	dico music.MusicDictionnary
 }
 
@@ -37,7 +38,7 @@ func (sse SSEWriter)Write(message string){
 
 func (ms MusicServer)root(response http.ResponseWriter, request *http.Request){
 	url := request.RequestURI
-	http.ServeFile(response,request,"resources/" + url[1:])
+	http.ServeFile(response,request,filepath.Join(ms.webfolder,url[1:]))
 }
 
 // Use to find node with very short timeout
@@ -188,8 +189,12 @@ func (ms MusicServer)findExposedURL()string{
 	return "localhost"
 }
 
-func (ms MusicServer)create(port string,folder string){
+func (ms MusicServer)create(port string,folder,webfolder string){
 	ms.folder = folder
+	ms.webfolder = "resources/"
+	if webfolder != ""{
+		ms.webfolder = webfolder
+	}
 	ms.dico = music.LoadDictionnary(ms.folder)
 	if port == ""{
 		logger.GetLogger().Fatal("Impossible to run node, port is not defined")
@@ -227,5 +232,5 @@ func main(){
 	}
 
 	ms := MusicServer{}
-	ms.create(port,args["folder"])
+	ms.create(port,args["folder"],args["webfolder"])
 }
