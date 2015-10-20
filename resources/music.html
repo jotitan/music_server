@@ -90,12 +90,16 @@
                 <span class="glyphicon glyphicon-pause pause close" style="display:none"></span>
                 <span class="glyphicon glyphicon-fast-forward next close" style="display:none"></span>
             </div>
-            <div class="seeker" style="margin-left:15px;width:200px;display:inline-block;margin-top:5px;"></div>
-            <div style="display:inline-block;font-size:12px;color:darkgray"><span class="position"></span> / <span class="duration"></span></div>
-            - <span style="display:inline-block;width:200px" class="title"></span>
-            <span class="glyphicon glyphicon-plus volume-plus close" style="float:right;padding-top:3px"></span>
-            <span class="glyphicon glyphicon-minus volume-minus close" style="float:right;padding-top:3px"></span>
-            <canvas height="25px" width="25px" id="idVolume"></canvas>
+            <div class="seeker" style="margin-left:15px;width:200px;display:inline-block;margin-top:5px;top:-2px;"></div>
+            <div style="display:inline-block;position:relative;top:-3px;">
+                <div style="display:inline-block;font-size:12px;color:darkgray">
+                    <span class="position"></span> / <span class="duration"></span>
+                </div>
+                - <span style="display:inline-block;width:200px" class="title"></span>
+            </div>
+            <canvas height="23px" width="23px" id="idVolume" style="position:relative;top:2px;margin-right:5px;float:right"></canvas>
+            <span class="glyphicon glyphicon-plus volume-plus close" style="margin-right:5px;font-size:18px;float:right;padding-top:3px"></span>
+            <span class="glyphicon glyphicon-minus volume-minus close" style="font-size:18px;float:right;padding-top:3px"></span>
         </div>
     </div>
 </div>
@@ -109,9 +113,6 @@ TODO :
 
     Mode Threejs, D3 pour de la visualisation
 </pre>
-
-
-<canvas width="25px" height="25px" id="idCanvas" style="border:solid 1px black"></canvas>
 
 <style>
     #player span.close{

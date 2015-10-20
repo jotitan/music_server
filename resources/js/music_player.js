@@ -44,21 +44,13 @@ var MusicPlayer = {
             MusicPlayer.player.volume = 0.5;
             // Volume Behaviour
             $('.volume-plus',this.div).bind('click',function(){
-                if(MusicPlayer.player.volume >= 0.9){
-                    MusicPlayer.player.volume=1;
-                }else{
-                    MusicPlayer.player.volume+=0.1;
-                }
-                VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+                MusicPlayer.volume.up();
             });
             $('.volume-minus',this.div).bind('click',function(){
-                if(MusicPlayer.player.volume <= 0.1){
-                    MusicPlayer.player.volume=0;
-                }else{
-                    MusicPlayer.player.volume-=0.1;
-                }
-                VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+                MusicPlayer.volume.down();
             });
+            $(document).bind('volume_up',function(){MusicPlayer.volume.up();})
+            $(document).bind('volume_down',function(){MusicPlayer.volume.down();})
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
@@ -74,7 +66,24 @@ var MusicPlayer = {
             $('.position',this.div).text(MusicPlayer._formatTime(value));
         }
     },
-
+    volume:{
+        up:function(){
+            if(MusicPlayer.player.volume >= 0.9){
+                 MusicPlayer.player.volume=1;
+             }else{
+                 MusicPlayer.player.volume+=0.1;
+             }
+             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+        },
+        down:function(){
+            if(MusicPlayer.player.volume <= 0.1){
+                MusicPlayer.player.volume=0;
+            }else{
+                MusicPlayer.player.volume-=0.1;
+            }
+            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+        }
+    },
     init:function(){
         this.player = $('#idPlayer').get(0);
         this.controls.init('player')
@@ -100,6 +109,8 @@ var MusicPlayer = {
                 case 112 : $(document).trigger('pause_event');break;
                 case 34 : $(document).trigger('next_event');break;
                 case 33 : $(document).trigger('previous_event');break;
+                case 43 : $(document).trigger('volume_up');break;
+                case 45 : $(document).trigger('volume_down');break;
             }
         });
         $(document).unbind('pause_event').bind('pause_event',function(){
