@@ -59,7 +59,7 @@ func (ai * ArtistIndex)Save(folder string){
 		// New, write size
 		f.Write(getInt32AsByte(int32(len(ai.artists))))
 	}else{
-		//
+		f,_ = os.OpenFile(path,os.O_RDWR,os.ModePerm)
 		f.WriteAt(getInt32AsByte(int32(len(ai.artists))),0)
 		f.Seek(0,2)
 	}
