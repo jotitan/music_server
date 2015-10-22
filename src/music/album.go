@@ -317,8 +317,7 @@ func (ai * AlbumsIndex)Add(album string,idMusic int){
 
 func (ai * AlbumsIndex)Save(folder string){
     // Must get quickly all albums name
-	ar := ArtistIndex{nil,nil,0,ai.toSave,0}
-	ar.SaveTo(folder,"albums.dico")
+    IndexSaver{ai.toSave,0}.Save(filepath.Join(folder,"albums.dico"),true)
 }
 
 // LoadArtistIndex Get artist index to search...

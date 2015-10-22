@@ -10,6 +10,54 @@ import (
 )
 
 
+type IndexSaver struct{
+	values []string
+	current int
+}
+
+// Save only new artists
+func (is * IndexSaver)Save(pathfile string,trunc bool){
+	path := filepath.Join(pathfile)
+	// TRUNC or NOT
+	var f *os.File
+	var err error
+	if trunc {
+		f,err = os.OpenFile(path,os.O_CREATE|os.O_TRUNC|os.O_RDWR,os.ModePerm)
+		f.Write(getInt32AsByte(int32(len(is.values))))
+	}else {
+		f, err = os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_RDWR, os.ModePerm)
+		if err == nil {
+			// New, write size
+			f.Write(getInt32AsByte(int32(len(is.values))))
+		}else {
+			f, _ = os.OpenFile(path, os.O_RDWR, os.ModePerm)
+			f.WriteAt(getInt32AsByte(int32(len(is.values))), 0)
+			f.Seek(0, 2)
+		}
+	}
+	is.current = 0
+	io.Copy(f,is)
+	f.Close()
+}
+
+// Read data from artist index
+func (is * IndexSaver)Read(p []byte)(int,error){
+	pos := 0
+	for {
+		if is.current >= len(is.values){
+			return pos,io.EOF
+		}
+		value := is.values[is.current]
+		if pos + 2 + len(value) > len(p){
+			return pos,nil
+		}
+		writeBytes(p,getInt16AsByte(int16(len(value))),pos)
+		writeBytes(p,[]byte(value),pos+2)
+		pos+=2+len(value)
+		is.current++
+	}
+}
+
 // ArtistIndex store all artists (avoid double)
 type ArtistIndex struct{
 	// Used to define if an artist exist (id of artist)
@@ -52,44 +100,9 @@ func (ai ArtistIndex)FindAll()map[string]int {
 	return ai.artists
 }
 
-func (ai * ArtistIndex)SaveTo(folder,name string){
-	path := filepath.Join(folder,name)
-	f,err := os.OpenFile(path,os.O_CREATE|os.O_EXCL|os.O_RDWR,os.ModePerm)
-	if err == nil {
-		// New, write size
-		f.Write(getInt32AsByte(int32(len(ai.artists))))
-	}else{
-		f,_ = os.OpenFile(path,os.O_RDWR,os.ModePerm)
-		f.WriteAt(getInt32AsByte(int32(len(ai.artists))),0)
-		f.Seek(0,2)
-	}
-	ai.currentSave = 0
-	io.Copy(f,ai)
-	f.Close()
-}
-
 // Save only new artists
 func (ai * ArtistIndex)Save(folder string){
-	ai.SaveTo(folder,"artist.dico")
-}
-
-// Read data from artist index
-func (ai * ArtistIndex)Read(p []byte)(int,error){
-	pos := 0
-	for {
-		if ai.currentSave >= len(ai.artistsToSave){
-			return pos,io.EOF
-		}
-		artist := ai.artistsToSave[ai.currentSave]
-		logger.GetLogger().Info("=>",artist)
-		if pos + 2 + len(artist) > len(p){
-			return pos,nil
-		}
-		writeBytes(p,getInt16AsByte(int16(len(artist))),pos)
-		writeBytes(p,[]byte(artist),pos+2)
-		pos+=2+len(artist)
-		ai.currentSave++
-	}
+	IndexSaver{ai.artistsToSave,0}.Save(filepath.Join(folder,"artist.dico"),false)
 }
 
 // Write get data in p and write in object
