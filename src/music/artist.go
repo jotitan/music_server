@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"encoding/binary"
 	"encoding/gob"
+	"logger"
 )
 
 
@@ -51,9 +52,8 @@ func (ai ArtistIndex)FindAll()map[string]int {
 	return ai.artists
 }
 
-// Save only new artists
-func (ai * ArtistIndex)Save(folder string){
-	path := filepath.Join(folder,"artist.dico")
+func (ai * ArtistIndex)SaveTo(folder,name string){
+	path := filepath.Join(folder,name)
 	f,err := os.OpenFile(path,os.O_CREATE|os.O_EXCL|os.O_RDWR,os.ModePerm)
 	if err == nil {
 		// New, write size
@@ -68,6 +68,11 @@ func (ai * ArtistIndex)Save(folder string){
 	f.Close()
 }
 
+// Save only new artists
+func (ai * ArtistIndex)Save(folder string){
+	ai.SaveTo(folder,"artist.dico")
+}
+
 // Read data from artist index
 func (ai * ArtistIndex)Read(p []byte)(int,error){
 	pos := 0
@@ -76,6 +81,7 @@ func (ai * ArtistIndex)Read(p []byte)(int,error){
 			return pos,io.EOF
 		}
 		artist := ai.artistsToSave[ai.currentSave]
+		logger.GetLogger().Info("=>",artist)
 		if pos + 2 + len(artist) > len(p){
 			return pos,nil
 		}

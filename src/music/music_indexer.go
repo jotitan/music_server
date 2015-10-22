@@ -11,6 +11,7 @@ func IndexArtists(folder string){
     aba := NewAlbumByArtist()
     // Index by album (based on name), no matter artist (case on multiple artist)
     idxAlbums := NewAlbumsIndex()
+
     // Index album by genre (consider only one genre by album)
 
     for _, id := range  artists.FindAll() {

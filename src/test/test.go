@@ -10,6 +10,7 @@ import (
 	"sync"
 	"music"
 	"arguments"
+	"logger"
 )
 
 
@@ -105,14 +106,13 @@ func getMarker(bloc,data []byte)Marker{
 func main(){
 	//run()
 
-
 	args := arguments.ParseArgs()
-
-
 	//dico := music.LoadDictionnary(args["workingFolder"])
 	music.IndexArtists(args["workingFolder"])
 	//dico.Browse(args["browse"])
 
+    aa := music.LoadAlbumIndex(args["workingFolder"])
+	logger.GetLogger().Info(aa)
 
 
 }

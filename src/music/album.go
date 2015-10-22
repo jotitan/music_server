@@ -294,22 +294,41 @@ func (mba MusicByAlbum)GetMusics(folder string,albumId int)[]int{
 
 // AlbumsIndex store all albums, no matter artist, only based on name
 type AlbumsIndex struct{
-    index map[string][]int
+    // Names albums with id
+	names map[string]int
+	toSave []string
+    index [][]int
 }
 
 func NewAlbumsIndex()AlbumsIndex{
-    return AlbumsIndex{make(map[string][]int)}
+    return AlbumsIndex{make(map[string]int),[]string{},make([][]int,0)}
 }
 
 func (ai * AlbumsIndex)Add(album string,idMusic int){
     album = strings.ToLower(album)
-    if list,ok := ai.index[album] ; !ok {
-        ai.index[album] = []int{idMusic}
-    }else{
-        ai.index[album] = append(list,idMusic)
-    }
+	if id,ok := ai.names[album];!ok {
+		ai.names[album] = len(ai.names)
+		ai.toSave = append(ai.toSave,album)
+		ai.index = append(ai.index,[]int{idMusic})
+	}else{
+		ai.index[id] = append(ai.index[id],idMusic)
+	}
 }
 
 func (ai * AlbumsIndex)Save(folder string){
-    path := filepath.Join(folder,"albums_index.index")
+    // Must get quickly all albums name
+	ar := ArtistIndex{nil,nil,0,ai.toSave,0}
+	ar.SaveTo(folder,"albums.dico")
+}
+
+// LoadArtistIndex Get artist index to search...
+func LoadAlbumIndex(folder string)ArtistIndex{
+	path := filepath.Join(folder,"albums.dico")
+	f,err := os.Open(path)
+	ai := ArtistIndex{artists:make(map[string]int),currentId:1,artistsToSave:make([]string,0)}
+	if err == nil {
+		io.Copy(&ai,f)
+		f.Close()
+	}
+	return ai
 }
