@@ -4,6 +4,7 @@ import (
     "os"
     "path/filepath"
     "io"
+    "strings"
 )
 
 // Give methods to manage album
@@ -289,4 +290,26 @@ func (mba MusicByAlbum)GetMusics(folder string,albumId int)[]int{
 	musicsTab := make([]byte,nbMusics*4)
 	f.ReadAt(musicsTab,posInFile+2)
     return getBytesAsInts32Int(musicsTab)
+}
+
+// AlbumsIndex store all albums, no matter artist, only based on name
+type AlbumsIndex struct{
+    index map[string][]int
+}
+
+func NewAlbumsIndex()AlbumsIndex{
+    return AlbumsIndex{make(map[string][]int)}
+}
+
+func (ai * AlbumsIndex)Add(album string,idMusic int){
+    album = strings.ToLower(album)
+    if list,ok := ai.index[album] ; !ok {
+        ai.index[album] = []int{idMusic}
+    }else{
+        ai.index[album] = append(list,idMusic)
+    }
+}
+
+func (ai * AlbumsIndex)Save(folder string){
+    path := filepath.Join(folder,"albums_index.index")
 }

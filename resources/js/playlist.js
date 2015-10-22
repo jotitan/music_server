@@ -51,6 +51,17 @@ var PlaylistPanel = {
         // Load saved playlist
         this.load();
     },
+    // Return selected or first in list
+    getOne:function(){
+        var focused = $('div:not(.head).focused',this.listDiv);
+        if(focused.length > 0){
+            return focused.data('music');
+        }
+        if(this.list.length > 0){
+            return this.list[0];
+        }
+        return null;
+    },
     load:function(){
         if(localStorage && localStorage["playlist"]!=null){
             var musics = JSON.parse(localStorage["playlist"]);
@@ -77,6 +88,7 @@ var PlaylistPanel = {
         $('>div:nth-child(' + (index+1) + ')',this.listDiv).remove();
         this.list.splice(index,1);
         // Play next song ?
+        this.save()
     },
     addMusicFromId:function(id){
         $.ajax({

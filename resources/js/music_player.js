@@ -102,8 +102,9 @@ var MusicPlayer = {
             }
         });
         // Detect key controls
-        $(document).bind('keypress',function(e){
+        $(document).bind('keyup',function(e){
             var key = (e.keyCode != 0)?e.keyCode:e.charCode;
+            //console.log(key,e)
             switch(key){
                 case 46 : $(document).trigger('delete_event');break;
                 case 112 : $(document).trigger('pause_event');break;
@@ -111,6 +112,8 @@ var MusicPlayer = {
                 case 33 : $(document).trigger('previous_event');break;
                 case 43 : $(document).trigger('volume_up');break;
                 case 45 : $(document).trigger('volume_down');break;
+                case 54 : $(document).trigger('volume_down');break;
+                case 61 : if(e.shiftKey){$(document).trigger('volume_up');}break;
             }
         });
         $(document).unbind('pause_event').bind('pause_event',function(){
@@ -125,6 +128,7 @@ var MusicPlayer = {
         });
     },
     load:function(music){
+        if(music == null){return;}
         this.player.src = music.src;
         this.controls.setTitle(music.title);
         this.play();
@@ -135,6 +139,10 @@ var MusicPlayer = {
         $('.play',this.div).show();
     },
     play:function(){
+        if(this.player.src == "" && this.playlist != null){
+            // Try to load selected playlist music or first
+            this.load(this.playlist.getOne());
+        }
         MusicPlayer.player.play();
         $('.play',this.div).hide();
         $('.pause',this.div).show();

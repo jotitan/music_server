@@ -29,17 +29,19 @@ var Explorer = {
         this.div.bind('open',function(){
            Explorer._open(arguments);
         });
-        $('.info-folders > span.filter > :text',this.div).bind('keyup',function(){
+        $('.info-folders > span.filter > :text',this.div).bind('keyup',function(e){
             var value = $(this).val().toLowerCase();
             if (value.length <=2){
                 $('>span',Explorer.panelFolder).show();
+                e.stopPropagation();
                 return;
             }
             if (value.length > 2){
                 // Fitler results
-                $('>span:not([data-idx^="' + value + '"])',Explorer.panelFolder).hide()
+                $('>span:not([data-idx*="' + value + '"])',Explorer.panelFolder).hide()
                 $('>span[class^="' + value + '"]',Explorer.panelFolder).show()
             }
+            e.stopPropagation();
         });
     },
     addClickBehave:function(fct){

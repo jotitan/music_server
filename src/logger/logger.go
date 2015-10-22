@@ -55,10 +55,12 @@ func InitLogger(filename string, console bool) *Logger {
 	errOut := os.Stdout
 	logger = &Logger{writeConsole:false}
 	if filename != "" {
-		if file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm) ; err == nil {
+		if file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm) ; err == nil {
 			out = file
 			errOut = file
 			logger.writeConsole = console
+		}else{
+			fmt.Println("Error when creating logger",err)
 		}
 	}
 	logger.info = log.New(out, "INFO ", log.Ldate|log.Ltime|log.Lmicroseconds)
