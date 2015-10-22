@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"encoding/binary"
 	"encoding/gob"
-	"logger"
 )
 
 
@@ -102,7 +101,8 @@ func (ai ArtistIndex)FindAll()map[string]int {
 
 // Save only new artists
 func (ai * ArtistIndex)Save(folder string){
-	IndexSaver{ai.artistsToSave,0}.Save(filepath.Join(folder,"artist.dico"),false)
+	is := IndexSaver{ai.artistsToSave,0}
+	is.Save(filepath.Join(folder,"artist.dico"),false)
 }
 
 // Write get data in p and write in object

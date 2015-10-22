@@ -305,9 +305,9 @@ func NewAlbumsIndex()AlbumsIndex{
 }
 
 func (ai * AlbumsIndex)Add(album string,idMusic int){
-    album = strings.ToLower(album)
-	if id,ok := ai.names[album];!ok {
-		ai.names[album] = len(ai.names)
+    lowerAlbum := strings.ToLower(album)
+	if id,ok := ai.names[lowerAlbum];!ok {
+		ai.names[lowerAlbum] = len(ai.names)
 		ai.toSave = append(ai.toSave,album)
 		ai.index = append(ai.index,[]int{idMusic})
 	}else{
@@ -317,11 +317,12 @@ func (ai * AlbumsIndex)Add(album string,idMusic int){
 
 func (ai * AlbumsIndex)Save(folder string){
     // Must get quickly all albums name
-    IndexSaver{ai.toSave,0}.Save(filepath.Join(folder,"albums.dico"),true)
+    is := IndexSaver{ai.toSave,0}
+	is.Save(filepath.Join(folder,"albums.dico"),true)
 }
 
 // LoadArtistIndex Get artist index to search...
-func LoadAlbumIndex(folder string)ArtistIndex{
+func LoadAllAlbums(folder string)ArtistIndex{
 	path := filepath.Join(folder,"albums.dico")
 	f,err := os.Open(path)
 	ai := ArtistIndex{artists:make(map[string]int),currentId:1,artistsToSave:make([]string,0)}
@@ -329,5 +330,6 @@ func LoadAlbumIndex(folder string)ArtistIndex{
 		io.Copy(&ai,f)
 		f.Close()
 	}
+
 	return ai
 }
