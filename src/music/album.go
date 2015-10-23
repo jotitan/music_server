@@ -205,8 +205,8 @@ func (mba * MusicByAlbum)Adds(musicsId []int)int{
 
 
 // The file is trunced at each time (full save)
-func (mba MusicByAlbum)Save(folder string){
-    path := filepath.Join(folder,"album_music.index")
+func (mba MusicByAlbum)SaveTo(folder,name string){
+    path := filepath.Join(folder,name)
     f,_ := os.OpenFile(path,os.O_CREATE|os.O_TRUNC,os.ModePerm)
     // Reserve header size (nb elements * 8 + 4)
     f.Write(getInt32AsByte(int32(len(mba.albums))))
@@ -217,6 +217,10 @@ func (mba MusicByAlbum)Save(folder string){
 	f.WriteAt(getInts64AsByte(mba.header),4)
 
 	f.Close()
+}
+
+func (mba MusicByAlbum)Save(folder string){
+	mba.SaveTo(folder,"album_music.index")
 }
 
 // Struct : nb (4) pos 1 (8) | pos 2 (8) | ... | nb music 1 (2) | musics list (list of 4) | ...
@@ -272,8 +276,12 @@ func (mba * MusicByAlbum)Read(p []byte)(int,error){
     return lengthData,nil
 }
 
-func (mba MusicByAlbum)GetMusics(folder string,albumId int)[]int{
-	path := filepath.Join(folder,"album_music.index")
+func (mba MusicByAlbum)GetMusics(folder string,albumId int)[]int {
+	return mba.GetMusicsFrom(folder, "album_music.index",albumId)
+}
+
+func (mba MusicByAlbum)GetMusicsFrom(folder,filename string,albumId int)[]int{
+	path := filepath.Join(folder,filename)
 	f,_ := os.Open(path)
 	defer f.Close()
 
@@ -319,6 +327,12 @@ func (ai * AlbumsIndex)Save(folder string){
     // Must get quickly all albums name
     is := IndexSaver{ai.toSave,0}
 	is.Save(filepath.Join(folder,"albums.dico"),true)
+
+	// Save musics of albums
+	mba := MusicByAlbum{albums:ai.index}
+	mba.SaveTo(folder,"all_albums_music.index")
+
+
 }
 
 // LoadArtistIndex Get artist index to search...
