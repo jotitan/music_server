@@ -105,21 +105,9 @@ func (ms MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *htt
 		// return albums of artist
 		case request.FormValue("id") != "" :
 		logger.GetLogger().Info("Get musics of album")
-		idArtist,_:= strconv.ParseInt(request.FormValue("id"),10,32)
-
-			albums := music.NewAlbumByArtist().GetAlbums(ms.folder,int(idArtist))
-		albumsData := make([]map[string]string,0,len(albums))
-		for _,album := range albums{
-			albumsData = append(albumsData,map[string]string{"name":album.Name,"url":fmt.Sprintf("idAlbum=%d",album.Id)})
-		}
-		sort.Sort(sortByArtist(albumsData))
-		bdata,_ := json.Marshal(albumsData)
-		response.Write(bdata)
-		case request.FormValue("idAlbum") != "" :
-		idAlbum,_ := strconv.ParseInt(request.FormValue("idAlbum"),10,32)
-		musics := music.MusicByAlbum{}.GetMusics(ms.folder,int(idAlbum))
+		idAlbum,_ := strconv.ParseInt(request.FormValue("id"),10,32)
+		musics := music.MusicByAlbum{}.GetMusicsAll(ms.folder,int(idAlbum))
 		ms.getMusics(response,musics)
-
 	default :
 		albums := music.LoadAllAlbums(ms.folder)
 		albumsData := make([]map[string]string,0,len(albums))

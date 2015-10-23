@@ -4,18 +4,14 @@ func IndexArtists(folder string){
     // Recreate albums index at each time (very quick)
     artists := LoadArtistIndex(folder)
     dico := LoadDictionnary(folder)
-    artistsIdx := LoadArtistMusicIndex(folder)
-    // Index music by album and artist
-    mba := MusicByAlbum{}
-    // Index album by artist
-    aba := NewAlbumByArtist()
-    // Index by album (based on name), no matter artist (case on multiple artist)
-    idxAlbums := NewAlbumsIndex()
+    musicsByArtist := LoadArtistMusicIndex(folder)
+
+    am := NewAlbumManager(folder)
 
     // Index album by genre (consider only one genre by album)
 
-    for _, id := range  artists.FindAll() {
-        musicsIds := artistsIdx.MusicsByArtist[id]
+    for _, artistId := range artists.FindAll() {
+        musicsIds := musicsByArtist.Get(artistId)
         // Load all tracks and group by album
         albums  := make(map[string][]int)
         for i,music := range dico.GetMusicsFromIds(musicsIds)  {
@@ -25,17 +21,9 @@ func IndexArtists(folder string){
             }else{
                 albums[music["album"]] = []int{musicId}
             }
-            idxAlbums.Add(music["album"],musicId)
+            am.AddMusic(music["album"],musicId)
         }
-        // Save all albums
-        for album,musicsIds := range albums {
-            idAlbum := mba.Adds(musicsIds)
-            // Add idAlbum in album artist index
-            aba.AddAlbum(id,NewAlbum(idAlbum,album))
-        }
+        am.AddAlbumsByArtist(artistId,albums)
     }
-    mba.Save(folder)
-    aba.Save(folder)
-    idxAlbums.Save(folder)
-
+    am.Save()
 }

@@ -146,6 +146,10 @@ type ArtistMusicIndex struct{
 	MusicsByArtist map[int][]int
 }
 
+func (ami * ArtistMusicIndex)Get(artistId int)[]int{
+	return ami.MusicsByArtist[artistId]
+}
+
 func (ami * ArtistMusicIndex)Add(artist,music int){
 	if musics,present := ami.MusicsByArtist[artist] ; present {
 		ami.MusicsByArtist[artist] = append(musics,music)
@@ -182,5 +186,3 @@ func LoadArtistMusicIndex(folder string)ArtistMusicIndex{
 	}
 	return ami
 }
-
-// Artist store a list of album : idArtist, list album (id,name)
