@@ -322,7 +322,7 @@ func (ai * AlbumsIndex)Save(folder string){
 }
 
 // LoadArtistIndex Get artist index to search...
-func LoadAllAlbums(folder string)ArtistIndex{
+func LoadAllAlbums(folder string)map[string]int{
 	path := filepath.Join(folder,"albums.dico")
 	f,err := os.Open(path)
 	ai := ArtistIndex{artists:make(map[string]int),currentId:1,artistsToSave:make([]string,0)}
@@ -330,6 +330,5 @@ func LoadAllAlbums(folder string)ArtistIndex{
 		io.Copy(&ai,f)
 		f.Close()
 	}
-
-	return ai
+    return ai.artists
 }

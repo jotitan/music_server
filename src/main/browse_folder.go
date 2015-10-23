@@ -7,6 +7,13 @@ import (
 func main(){
     args := arguments.ParseArgs()
 
-    dico := music.LoadDictionnary(args["workingFolder"])
-    dico.Browse(args["browse"])
+    switch args["task"]{
+        case "browse":
+        dico := music.LoadDictionnary(args["workingFolder"])
+        dico.Browse(args["browse"])
+        case "index":
+        music.IndexArtists(args["workingFolder"])
+    }
+
+
 }

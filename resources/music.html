@@ -68,6 +68,11 @@
                             <span class="glyphicon glyphicon-signal"></span>
                             List by artist and album...</a>
                         </li>
+                        <li><a href="#" onclick="Explorer.byOnlyAlbums()">
+                            <span class="glyphicon glyphicon-signal"></span>
+                            List by albums...</a>
+                        </li>
+
                     </ul>
                 </li>
             </ul>
@@ -136,6 +141,9 @@ TODO :
             };
             Explorer.byAlbum = function(){
                 this.open("/listByAlbum");
+            };
+            Explorer.byOnlyAlbums = function(){
+                this.open("/listByOnlyAlbums");
             };
             MusicPlayer.init();
             MusicPlayer.setPlaylist(PlaylistPanel);
