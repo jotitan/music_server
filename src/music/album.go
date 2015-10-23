@@ -91,7 +91,7 @@ func (aba * AlbumByArtist)AddAlbum(idArtist int,album Album){
 
 func (aba AlbumByArtist)Save(folder string){
     path := filepath.Join(folder,"album_by_artist.index")
-    f,_ := os.OpenFile(path,os.O_CREATE|os.O_TRUNC,os.ModePerm)
+    f,_ := os.OpenFile(path,os.O_CREATE|os.O_TRUNC|os.O_RDWR,os.ModePerm)
     // Get max artist id
     max := 0
     for id := range aba.idxByArtist {
@@ -272,7 +272,7 @@ func NewMusicAlbumSaver(albums [][]int)musicByAlbumSaver{
 }
 
 func (mas musicByAlbumSaver)Save(path string){
-    f,_ := os.OpenFile(path,os.O_CREATE|os.O_TRUNC,os.ModePerm)
+    f,_ := os.OpenFile(path,os.O_CREATE|os.O_TRUNC|os.O_RDWR,os.ModePerm)
     // Reserve header size (nb elements * 8 + 4)
     f.Write(getInt32AsByte(int32(len(mas.data))))
     f.Write(make([]byte,len(mas.data)*8))

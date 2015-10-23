@@ -48,7 +48,7 @@ func (md * MusicDictionnary)browseFolder(folderName string){
 				// TODO : check in bloomfilter if exist. If true, final check in dictionnary
 				if strings.HasSuffix(file.Name(),".mp3") {
 					if info := md.extractInfo(path) ; info != nil {
-						logger.GetLogger().Info("Index",info)
+						logger.GetLogger().Info("Index",info.Artist,info.Name,info.Album)
 						md.Add(path, *info)
 					}else{
 						logger.GetLogger().Error("Impossible to add",path)
