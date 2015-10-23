@@ -28,6 +28,7 @@ type MusicServer struct{
 	folder string
 	webfolder string
 	dico music.MusicDictionnary
+	albumManager *music.AlbumManager
 }
 
 func (sse SSEWriter)Write(message string){
@@ -106,10 +107,10 @@ func (ms MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *htt
 		case request.FormValue("id") != "" :
 		logger.GetLogger().Info("Get musics of album")
 		idAlbum,_ := strconv.ParseInt(request.FormValue("id"),10,32)
-		musics := music.MusicByAlbum{}.GetMusicsAll(ms.folder,int(idAlbum))
-		ms.getMusics(response,musics)
+		    musics := ms.albumManager.GetMusicsAll(int(idAlbum))
+			ms.getMusics(response,musics)
 	default :
-		albums := music.LoadAllAlbums(ms.folder)
+		albums := ms.albumManager.LoadAllAlbums()
 		albumsData := make([]map[string]string,0,len(albums))
 		for album,id := range albums{
 			albumsData = append(albumsData,map[string]string{"name":album,"url":fmt.Sprintf("id=%d",id)})
@@ -137,7 +138,7 @@ func (ms MusicServer)listByAlbum(response http.ResponseWriter, request *http.Req
 		  response.Write(bdata)
 	  case request.FormValue("idAlbum") != "" :
 	  	idAlbum,_ := strconv.ParseInt(request.FormValue("idAlbum"),10,32)
-	  	musics := music.MusicByAlbum{}.GetMusics(ms.folder,int(idAlbum))
+	  	  musics := ms.albumManager.GetMusics(int(idAlbum))
 	  	ms.getMusics(response,musics)
 
 	  default : ms.getAllArtists(response)
@@ -210,6 +211,7 @@ func (ms MusicServer)findExposedURL()string{
 
 func (ms MusicServer)create(port string,folder,webfolder string){
 	ms.folder = folder
+	ms.albumManager = music.NewAlbumManager(ms.folder)
 	ms.webfolder = "resources/"
 	if webfolder != ""{
 		ms.webfolder = webfolder

@@ -69,15 +69,66 @@ type ArtistIndex struct{
 	currentSave int
 }
 
+type IndexReader struct{
+	data map[string]int
+	tempBuffer []byte
+	currentId int
+
+}
+
+
+// LoadArtistIndex Get artist index to search...
+func (ir IndexReader)Load(path string)map[string]int{
+	f,err := os.Open(path)
+	if err == nil {
+		io.Copy(&ir,f)
+		f.Close()
+		return ir.data
+	}
+	return map[string]int{}
+}
+
+// Write get data in p and write in object
+// nb artist (4) | lenght name (2) | data name...
+func (ir * IndexReader)Write(p []byte)(int,error){
+	pos := 0
+	if ir.data == nil || len(ir.data) == 0{
+		// Load number, first 4 bytes
+		ir.data = make(map[string]int,int(binary.LittleEndian.Uint32(p[0:4])))
+		ir.currentId = 1
+		pos=4
+	}
+	pSize := len(p)
+	if ir.tempBuffer != nil && len(ir.tempBuffer) > 0{
+		p = append(ir.tempBuffer,p...)
+		ir.tempBuffer = nil
+	}
+	for {
+		if pos + 2 > len(p) {
+			// Save rest in buffer
+			ir.tempBuffer = p[pos:]
+			return pSize,nil
+		}
+		artistSize := int(binary.LittleEndian.Uint16(p[pos:pos+2]))
+		if pos + 2 + artistSize > len(p)   {
+			ir.tempBuffer = p[pos:]
+			return pSize,nil
+		}
+		ir.data[string(p[pos+2:pos+2+artistSize])] = ir.currentId
+		ir.currentId++
+		pos+=2+artistSize
+	}
+	return pSize,nil
+}
+
+func LoadArtists(folder string)map[string]int {
+	return IndexReader{}.Load(filepath.Join(folder,"artist.dico"))
+}
+
 // LoadArtistIndex Get artist index to search...
 func LoadArtistIndex(folder string)ArtistIndex{
-	path := filepath.Join(folder,"artist.dico")
-	f,err := os.Open(path)
 	ai := ArtistIndex{artists:make(map[string]int),currentId:1,artistsToSave:make([]string,0)}
-	if err == nil {
-		io.Copy(&ai,f)
-		f.Close()
-	}
+	ai.artists = LoadArtists(folder)
 	return ai
 }
 

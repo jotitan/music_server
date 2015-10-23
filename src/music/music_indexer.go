@@ -2,7 +2,7 @@ package music
 
 func IndexArtists(folder string){
     // Recreate albums index at each time (very quick)
-    artists := LoadArtistIndex(folder)
+    artists := LoadArtists(folder)
     dico := LoadDictionnary(folder)
     musicsByArtist := LoadArtistMusicIndex(folder)
 
@@ -10,7 +10,7 @@ func IndexArtists(folder string){
 
     // Index album by genre (consider only one genre by album)
 
-    for _, artistId := range artists.FindAll() {
+    for _, artistId := range artists {
         musicsIds := musicsByArtist.Get(artistId)
         // Load all tracks and group by album
         albums  := make(map[string][]int)
