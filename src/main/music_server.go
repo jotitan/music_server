@@ -168,6 +168,7 @@ func (ms MusicServer)readmusic(response http.ResponseWriter, request *http.Reque
 	logger.GetLogger().Info("Get music id",id)
 	musicInfo := ms.dico.GetMusicFromId(int(id))
 
+	//musicInfo["path"] = "d:\\Zik\\Elvis Presley - An American Trilogy.mp3"
 	m,_ := os.Open(musicInfo["path"])
 	info,_ := m.Stat()
 	response.Header().Set("Content-type","audio/mpeg")

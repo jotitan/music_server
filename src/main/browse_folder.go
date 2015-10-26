@@ -2,6 +2,7 @@ package main
 import (
     "music"
     "arguments"
+    "fmt"
 )
 
 func main(){
@@ -13,6 +14,8 @@ func main(){
         dico.Browse(args["browse"])
         case "index":
         music.IndexArtists(args["workingFolder"])
+        default:
+        fmt.Println("No task define. Available tasks (-task) : browse (-workingFolder and -browse required), index (-workingFolder required)")
     }
 
 

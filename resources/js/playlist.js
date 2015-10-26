@@ -26,9 +26,7 @@ var PlaylistPanel = {
         });
         $(document).unbind('delete_event').bind('delete_event',function(){
             // Delete music. Find position element in list
-            var nb = $('> div:not(.head)',PlaylistPanel.listDiv).length
-            var afters = $('.focused:visible~div',PlaylistPanel.listDiv).length
-            PlaylistPanel.removeMusic(nb-afters);
+            PlaylistPanel.removeMusic(PlaylistPanel.getFocusedPosition());
         });
         $(document).unbind('next_event').bind('next_event',function(){
             PlaylistPanel.next();
@@ -51,13 +49,22 @@ var PlaylistPanel = {
         // Load saved playlist
         this.load();
     },
+    getFocusedPosition:function(){
+        var nb = $('> div:not(.head)',this.listDiv).length
+        var afters = $('.focused:visible~div',this.listDiv).length
+        return nb-afters;
+    },
     // Return selected or first in list
     getOne:function(){
         var focused = $('div:not(.head).focused',this.listDiv);
         if(focused.length > 0){
+            this.current = this.getFocusedPosition() -1
+            this._selectLine()
             return focused.data('music');
         }
         if(this.list.length > 0){
+            this.current = 0;
+            this._selectLine()
             return this.list[0];
         }
         return null;
@@ -113,6 +120,9 @@ var PlaylistPanel = {
         }
     },
     _selectLine:function(){
+        if(this.current == -1){
+            return
+        }
         var line = $('div:nth-child(' + (this.current+2) + ')',this.listDiv);
         $('div',this.listDiv).removeClass('played focused');
         line.addClass('played');

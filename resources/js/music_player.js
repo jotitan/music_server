@@ -62,6 +62,7 @@ var MusicPlayer = {
             $('.duration',this.div).text(MusicPlayer._formatTime(value));
         } ,
         update:function(value){
+            // Check value, if max == value, launch next song
             this.seeker.slider('option','value',value)
             $('.position',this.div).text(MusicPlayer._formatTime(value));
         }
@@ -88,7 +89,7 @@ var MusicPlayer = {
         this.player = $('#idPlayer').get(0);
         this.controls.init('player')
         this.player.addEventListener('canplay',function(e){
-            MusicPlayer.checkProgress();
+            MusicPlayer.initMusic();
         })
         this.player.addEventListener('error',function(e){
             console.log("Error when loading music")
@@ -104,10 +105,10 @@ var MusicPlayer = {
         // Detect key controls
         $(document).bind('keyup',function(e){
             var key = (e.keyCode != 0)?e.keyCode:e.charCode;
-            //console.log(key,e)
+            //console.log(key)
             switch(key){
                 case 46 : $(document).trigger('delete_event');break;
-                case 112 : $(document).trigger('pause_event');break;
+                case 80 : $(document).trigger('pause_event');break;
                 case 34 : $(document).trigger('next_event');break;
                 case 33 : $(document).trigger('previous_event');break;
                 case 43 : $(document).trigger('volume_up');break;
@@ -142,14 +143,14 @@ var MusicPlayer = {
         if(this.player.src == "" && this.playlist != null){
             // Try to load selected playlist music or first
             this.load(this.playlist.getOne());
+            return
         }
         MusicPlayer.player.play();
         $('.play',this.div).hide();
         $('.pause',this.div).show();
     },
-
     // launch after load
-    checkProgress:function(){
+    initMusic:function(){
         this.controls.setMax(this.player.duration);
         this.controls.update(0);
     },
@@ -166,7 +167,6 @@ var MusicPlayer = {
        var rest = time%60;
        return ((min < 10)?"0":"") + min + ":" + ((rest < 10)?"0":"") + rest;
     }
-
 }
 
 var VolumeDrawer = {
