@@ -13,6 +13,8 @@ import (
 	"errors"
 	"os/exec"
 	"time"
+	"io/ioutil"
+	"encoding/binary"
 )
 
 /* Give methods to browse musics in a specific directory */
@@ -26,12 +28,29 @@ const (
 func (md * MusicDictionnary)Browse(folderName string){
     dictionnary := LoadDictionnary(md.indexFolder)
 
+	dictionnary.loadExistingMusic()
 	dictionnary.browseFolder(folderName)
 	dictionnary.Save()
 	dictionnary.artistIndex.Save(md.indexFolder)
 	dictionnary.artistMusicIndex.Save(md.indexFolder)
 
 	IndexArtists(md.indexFolder)
+}
+
+// Load existing music (by inode) in index
+func (md * MusicDictionnary)loadExistingMusic(){
+	md.musicInIndex = make(map[int]struct{})
+	// Load list of int32
+	if f,err := os.Open(filepath.Join(md.indexFolder,"existing_music.map")) ; err == nil {
+		// Load in memory and parse int32 (or load by block if to heavy)
+		data,_ := ioutil.ReadAll(f)
+		md.musicInIndex = make(map[int]struct{},len(data)/4)
+		for i := 0 ; i < len(data)/4 ; i++{
+			md.musicInIndex[int(binary.LittleEndian.Uint32(data[i*4:(i+1)*4]))] = struct{}{}
+		}
+	}else {
+		md.musicInIndex = make(map[int]struct{})
+	}
 }
 
 func (md * MusicDictionnary)browseFolder(folderName string){
@@ -45,7 +64,9 @@ func (md * MusicDictionnary)browseFolder(folderName string){
 				logger.GetLogger().Info("Parse",path)
 				md.browseFolder(path)
 			} else{
-				// TODO : check in bloomfilter if exist. If true, final check in dictionnary
+				// TODO : check in disk map if exist (load, modify and push it)
+
+				//
 				if strings.HasSuffix(file.Name(),".mp3") {
 					if info := md.extractInfo(path) ; info != nil {
 						logger.GetLogger().Info("Index",info.Artist,info.Name,info.Album)
@@ -78,6 +99,8 @@ type MusicDictionnary struct{
 	// Artist index
 	artistIndex ArtistIndex
     artistMusicIndex ArtistMusicIndex
+	// Map which contains inode of indexed music
+	musicInIndex map[int]struct{}
 }
 
 func (md MusicDictionnary)currentSize()int{
