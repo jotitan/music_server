@@ -15,6 +15,8 @@ import (
 	"time"
 	"io/ioutil"
 	"encoding/binary"
+	"bufio"
+	"bytes"
 )
 
 /* Give methods to browse musics in a specific directory */
@@ -30,6 +32,7 @@ func (md * MusicDictionnary)Browse(folderName string){
 
 	dictionnary.loadExistingMusic()
 	dictionnary.browseFolder(folderName)
+	dictionnary.saveExistingMusic()
 	dictionnary.Save()
 	dictionnary.artistIndex.Save(md.indexFolder)
 	dictionnary.artistMusicIndex.Save(md.indexFolder)
@@ -53,27 +56,61 @@ func (md * MusicDictionnary)loadExistingMusic(){
 	}
 }
 
+func (md * MusicDictionnary)saveExistingMusic(){
+	if f,err := os.OpenFile(filepath.Join(md.indexFolder,"existing_music.map"),os.O_CREATE|os.O_TRUNC|os.O_RDWR,os.ModePerm) ; err == nil {
+		list := make([]int,0,len(md.musicInIndex))
+		for inode := range md.musicInIndex{
+			list = append(list,inode)
+		}
+		f.Write(getInts32AsByte(list))
+		f.Close()
+	}
+}
+
+func readInodes(folder string)map[string]int {
+	data,_ := exec.Command("ls",folder,"-i1").Output()
+	inodes := make(map[string]int)
+	r := bufio.NewReader(bytes.NewBuffer(data))
+	for {
+		if line, _, error := r.ReadLine(); error == nil {
+			info := strings.Split(string(line), " ")
+			if inode,err := strconv.ParseInt(info[0],10,32);err == nil {
+				inodes[info[1]] = int(inode)
+			}
+		}else {
+			break
+		}
+	}
+	return inodes
+}
+
 func (md * MusicDictionnary)browseFolder(folderName string){
 	if folder,err := os.Open(folderName) ; err == nil {
 		defer folder.Close()
 		// List all files
 		files,_ := folder.Readdir(-1)
+	    inodes := readInodes(folderName)
 		for _,file := range files {
+			inode := inodes[file.Name()]
 			path := filepath.Join(folderName,file.Name())
 			if file.IsDir() {
 				logger.GetLogger().Info("Parse",path)
 				md.browseFolder(path)
 			} else{
 				// TODO : check in disk map if exist (load, modify and push it)
-
-				//
-				if strings.HasSuffix(file.Name(),".mp3") {
-					if info := md.extractInfo(path) ; info != nil {
-						logger.GetLogger().Info("Index",info.Artist,info.Name,info.Album)
-						md.Add(path, *info)
-					}else{
-						logger.GetLogger().Error("Impossible to add",path)
+				if _,exist := md.musicInIndex[inode] ; !exist {
+					//
+					if strings.HasSuffix(file.Name(), ".mp3") {
+						if info := md.extractInfo(path); info != nil {
+							logger.GetLogger().Info("Index", info.Artist, info.Name, info.Album)
+							md.Add(path, *info)
+							md.musicInIndex[inode] = struct{}{}
+						}else {
+							logger.GetLogger().Error("Impossible to add", path)
+						}
 					}
+				}else{
+					logger.GetLogger().Info(path,"already in index")
 				}
 			}
 		}
