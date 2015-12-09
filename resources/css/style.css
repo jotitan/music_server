@@ -1,8 +1,39 @@
 
 /* Create a medium height at 40px */
 @media (min-width:768px) {
-     .navbar-md {min-height:47px;height:47px;}
+     .navbar-md {
+        min-height:47px;
+        height:47px;
+     }
+     #player .seeker {
+         display:inline-block;
+     }
+     #player {
+         height:29;
+     }
+
+     #player .glyphicon.little {
+         font-size:18px;
+     }
  }
+
+@media (max-width:768px) {
+    #player {
+        height:32px;
+    }
+    #player .glyphicon {
+        font-size:28px;
+        width:28px;
+        height:28px;
+    }
+    #player .glyphicon.little {
+        font-size:28px;
+    }
+    #player .seeker {
+        display:none;
+    }
+}
+
 
  .node {
     width:200px;
