@@ -402,7 +402,8 @@ label > [type="checkbox"] {
 }
 
 .folders.line > span > span.info {
-    float:right
+    float:right;
+    margin-left:10px;
 }
 
 .info-folders {

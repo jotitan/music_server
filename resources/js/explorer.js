@@ -99,6 +99,17 @@ var Explorer = {
                 url = "path=" + Explorer.currentPath + file + "/"
             }
             var info = "";
+            if(data[file].infos!=null){
+                // List of data info
+                for(var field in data[file].infos){
+                    var value = data[file].infos[field]
+                    if(field == "time"){
+                        info += '<span class="info">' + MusicPlayer._formatTime(value) + '</span>';
+                    }else{
+                        info += '<span class="info">' + value + '</span>';
+                    }
+                };
+            }
             if(data[file].info!=null){
                 info = '<span class="info">' + MusicPlayer._formatTime(data[file].info) + '</span>';
             }

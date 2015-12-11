@@ -61,10 +61,21 @@ func (ms MusicServer)statsAsSSE(response http.ResponseWriter, request *http.Requ
 }
 
 type sortByArtist []map[string]string
+type sortByAlbum []map[string]interface{}
 
 func (a sortByArtist)Len() int{return len(a)}
 func (a sortByArtist)Less(i, j int) bool{return a[i]["name"] < a[j]["name"]}
 func (a sortByArtist)Swap(i, j int) {a[i],a[j] = a[j],a[i]}
+
+func (a sortByAlbum)Len() int{return len(a)}
+func (a sortByAlbum)Less(i, j int) bool{
+	infos1 := a[i]["infos"].(map[string]string)
+	infos2 := a[j]["infos"].(map[string]string)
+	t1,_ := strconv.ParseInt(infos1["track"][1:],10,32)
+	t2,_ := strconv.ParseInt(infos2["track"][1:],10,32)
+	return t1 < t2
+}
+func (a sortByAlbum)Swap(i, j int) {a[i],a[j] = a[j],a[i]}
 
 func (ms MusicServer)getAllArtists(response http.ResponseWriter){
 	logger.GetLogger().Info("Get all artists")
@@ -79,12 +90,18 @@ func (ms MusicServer)getAllArtists(response http.ResponseWriter){
 	response.Write(bdata)
 }
 
-func (ms MusicServer)getMusics(response http.ResponseWriter,musicsIds []int){
-	musics := make([]map[string]string,len(musicsIds))
+func (ms MusicServer)getMusics(response http.ResponseWriter,musicsIds []int,sortByTrack bool){
+	musics := make([]map[string]interface{},len(musicsIds))
 	for i,musicId := range musicsIds{
 		m := ms.dico.GetMusicFromId(musicId)
 		delete(m,"path")	// Cause no need to return
-		musics[i] = map[string]string{"name":m["title"],"info":m["length"],"id":fmt.Sprintf("%d",musicId)}
+		infos := make(map[string]string)
+		infos["track"] = "#" + m["track"]
+		infos["time"] = m["length"]
+		musics[i] = map[string]interface{}{"name":m["title"],"id":fmt.Sprintf("%d",musicId),"infos":infos}
+	}
+	if sortByTrack {
+	   sort.Sort(sortByAlbum(musics))
 	}
 	data,_:= json.Marshal(musics)
 	response.Write(data)
@@ -97,7 +114,7 @@ func (ms MusicServer)listByArtist(response http.ResponseWriter, request *http.Re
 		logger.GetLogger().Info("Load music of artist",id)
 		artistId,_ := strconv.ParseInt(id,10,32)
 		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistId)]
-		ms.getMusics(response,musicsIds)
+		ms.getMusics(response,musicsIds,false)
 	}
 }
 
@@ -108,7 +125,7 @@ func (ms MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *htt
 		logger.GetLogger().Info("Get musics of album")
 		idAlbum,_ := strconv.ParseInt(request.FormValue("id"),10,32)
 		    musics := ms.albumManager.GetMusicsAll(int(idAlbum))
-			ms.getMusics(response,musics)
+			ms.getMusics(response,musics,true)
 	default :
 		albums := ms.albumManager.LoadAllAlbums()
 		albumsData := make([]map[string]string,0,len(albums))
@@ -139,7 +156,7 @@ func (ms MusicServer)listByAlbum(response http.ResponseWriter, request *http.Req
 	  case request.FormValue("idAlbum") != "" :
 	  	idAlbum,_ := strconv.ParseInt(request.FormValue("idAlbum"),10,32)
 	  	  musics := ms.albumManager.GetMusics(int(idAlbum))
-	  	ms.getMusics(response,musics)
+	  	ms.getMusics(response,musics,true)
 
 	  default : ms.getAllArtists(response)
 	}
