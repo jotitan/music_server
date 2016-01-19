@@ -27,6 +27,9 @@ type SSEWriter struct{
 type MusicServer struct{
 	folder string
 	webfolder string
+	// main music folder to update
+	musicFolder string
+	addressMask [4]int
 	dico music.MusicDictionnary
 	albumManager *music.AlbumManager
 }
@@ -45,6 +48,30 @@ func (ms MusicServer)root(response http.ResponseWriter, request *http.Request){
 // Use to find node with very short timeout
 func (ms MusicServer)status(response http.ResponseWriter, request *http.Request){
 	response.Write([]byte("Up"))
+}
+
+// update local folder if exist
+func (ms MusicServer)update(response http.ResponseWriter, request *http.Request){
+	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
+	addr := request.RemoteAddr[strings.LastIndex(request.RemoteAddr,":"):]
+	if "[::1]" != addr {
+		// [::1] means localhost. Otherwise, compare to mask
+		for i,val := range strings.Split(addr,".") {
+			if intval,e := strconv.ParseInt(val,10,32) ; e!= nil {
+				logger.GetLogger().Error("User attempt to update data from outside",request.Host,request.RemoteAddr)
+				return
+			}else{
+				if int(intval) & ms.addressMask[i] != int(intval){
+					logger.GetLogger().Error("User attempt to update data from outside",request.Host,request.RemoteAddr)
+					return
+				}
+			}
+		}
+	}
+	if ms.musicFolder!="" {
+		dico := music.LoadDictionnary(ms.folder)
+		dico.Browse(ms.musicFolder)
+	}
 }
 
 func (ms MusicServer)createSSEHeader(response http.ResponseWriter){
@@ -227,10 +254,20 @@ func (ms MusicServer)findExposedURL()string{
 	return "localhost"
 }
 
-func (ms MusicServer)create(port string,folder,webfolder string){
-	ms.folder = folder
+func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webfolder string){
+	ms.folder = indexFolder
 	ms.albumManager = music.NewAlbumManager(ms.folder)
 	ms.webfolder = "resources/"
+	if musicFolder != "" {
+		ms.musicFolder = musicFolder
+		if addressMask!=""{
+			for i,val := range strings.Split(addressMask,".") {
+				if intVal,e := strconv.ParseInt(val,10,32);e == nil {
+					ms.addressMask[i] = int(intVal)
+				}
+			}
+		}
+	}
 	if webfolder != ""{
 		ms.webfolder = webfolder
 	}
@@ -258,6 +295,7 @@ func (ms MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/listByAlbum",ms.listByAlbum)
 	mux.HandleFunc("/listByOnlyAlbums",ms.listByOnlyAlbums)
 	mux.HandleFunc("/browse",ms.browse)
+	mux.HandleFunc("/update",ms.update)
 	mux.HandleFunc("/",ms.root)
 	return mux
 }
@@ -272,5 +310,5 @@ func main(){
 	}
 
 	ms := MusicServer{}
-	ms.create(port,args["folder"],args["webfolder"])
+	ms.create(port,args["folder"],args["musicFolder"],args["addressMask"],args["webfolder"])
 }

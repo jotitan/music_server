@@ -29,6 +29,7 @@
 </head>
 <body>
 
+<div class="pcBloc">
 <div class="navbar navbar-inverse navbar-fixed-top navbar-md" role="navigation">
     <div class="container" style="margin-left:0px;">
         <div class="navbar-header">
@@ -65,7 +66,7 @@
                             List by artist...</a>
                         </li>
                         <li><a href="#" onclick="Explorer.byAlbum()">
-                            <span class="glyphicon glyphicon-signal"></span>
+                            <span class="glyphicon glyphicon-record"></span>
                             List by artist and album...</a>
                         </li>
                         <li><a href="#" onclick="Explorer.byOnlyAlbums()">
@@ -78,6 +79,7 @@
             </ul>
         </div>
     </div>
+</div>
 </div>
 
 <div class="navbar navbar-default navbar-fixed-bottom navbar-inverse little-navbar" >
@@ -94,11 +96,11 @@
                 <span class="glyphicon glyphicon-fast-forward next close" style="display:none"></span>
             </div>
             <div class="seeker" style="margin-left:15px;width:200px;margin-top:5px;top:-2px;"></div>
-            <div style="display:inline-block;position:relative;top:-3px;">
+            <div style="display:inline-block;position:relative;top:-7px;">
                 <div style="display:inline-block;font-size:12px;color:darkgray">
                     <span class="position"></span> / <span class="duration"></span>
                 </div>
-                - <span style="display:inline-block;width:200px" class="title"></span>
+                - <div style="display:inline-block;height:16px;width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"><span class="title"></span></div>
             </div>
             <canvas height="23px" width="23px" id="idVolume" style="position:relative;top:2px;margin-right:5px;float:right"></canvas>
             <span class="glyphicon little glyphicon-plus volume-plus close" style="margin-right:5px;float:right;padding-top:3px"></span>
@@ -107,17 +109,19 @@
     </div>
 </div>
 
-<br/><br/><br/>
 TODO :
 <pre>
-    Affichage etat de la machine qui a l'application
     Graphique sur statistiques musique
-    Correction bug scroll music (chrome)
 
     Mode Threejs, D3 pour de la visualisation
-
-    Ajouter icone sur playlist (supprimer, play...)
 </pre>
+
+<div class="mobileBloc">
+    <span class="glyphicon glyphicon-music" title="Playlist" onclick="PlaylistPanel.open()"></span>
+    <span class="glyphicon glyphicon-user" title="List by artist" onclick="Explorer.byArtist()"></span>
+    <span class="glyphicon glyphicon-record" title="List by album" onclick="Explorer.byAlbum()"></span>
+    <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="Explorer.byOnlyAlbums()"></span>
+</div>
 
 <style>
     #player span.close{
@@ -125,9 +129,7 @@ TODO :
     }
 </style>
 
-<audio id="idPlayer">
-
-</audio>
+<audio id="idPlayer"></audio>
 
 
 
@@ -137,13 +139,13 @@ TODO :
         Loader.launch(function(){
             Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);})
             Explorer.byArtist = function(){
-                this.open("/listByArtist");
+                this.open("/listByArtist","Explore by artist");
             };
             Explorer.byAlbum = function(){
-                this.open("/listByAlbum");
+                this.open("/listByAlbum","Explore by album");
             };
             Explorer.byOnlyAlbums = function(){
-                this.open("/listByOnlyAlbums");
+                this.open("/listByOnlyAlbums","Explore all albums");
             };
             MusicPlayer.init();
             MusicPlayer.setPlaylist(PlaylistPanel);

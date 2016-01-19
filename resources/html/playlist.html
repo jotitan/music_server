@@ -13,19 +13,25 @@
     }
 
     .playlist div > span:nth-child(1){
-        width:20px;
+        width:25px;
         text-align:center;
     }
 
     .playlist div > span:nth-child(2){
-        width:calc(100% - 110px);
-        padding-left:5px;
+        width:20px;
+        text-align:center;
     }
 
     .playlist div > span:nth-child(3){
+        width:calc(100% - 150px);
+        padding-left:5px;
+    }
+
+    .playlist div > span:nth-child(4){
         width:80px;
         text-align:center;
     }
+
 
     .playlist div.focused {
         background-color:salmon;
@@ -43,6 +49,6 @@
     </div>
 
     <div style="height:calc(100% - 30px);overflow:auto;padding-left:5px;" class="playlist">
-        <div class="head"><span>#</span><span>Title</span><span>Time</span></div>
+        <div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div>
     </div>
 </div>

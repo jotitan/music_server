@@ -1,6 +1,13 @@
 
 /* Create a medium height at 40px */
-@media (min-width:768px) {
+@media (min-width:1024px) {
+     .mobileBloc {
+        display:none;
+     }
+     .pcBloc {
+        display:block;
+        padding-bottom:50px;
+     }
      .navbar-md {
         min-height:47px;
         height:47px;
@@ -17,7 +24,13 @@
      }
  }
 
-@media (max-width:768px) {
+@media (max-width:1024px) {
+    .mobileBloc {
+        display:block;
+    }
+    .pcBloc {
+        display:none;
+    }
     #player {
         height:32px;
     }
@@ -34,6 +47,15 @@
     }
 }
 
+
+.mobileBloc .glyphicon {
+    font-size:40px;
+    padding:20px;
+    border:solid 2px gray;
+    border-radius:10px;
+    margin-left:15px;
+    cursor:pointer;
+}
 
  .node {
     width:200px;

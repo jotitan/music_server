@@ -76,6 +76,10 @@ var Explorer = {
     _open:function(){
         this.breadcrumb.empty();
         this.urlServer = arguments[0][1];
+        var title = arguments[0][2];
+        if(title!=null){
+            this.div.find('.title>span:first').html(title);
+        }
         this.loadPath("","Home");
     },
     addBreadcrumb:function(path,display){
