@@ -1,6 +1,6 @@
 
 /* Create a medium height at 40px */
-@media (min-width:1024px) {
+@media (min-width:1280px) {
      .mobileBloc {
         display:none;
      }
@@ -24,7 +24,7 @@
      }
  }
 
-@media (max-width:1024px) {
+@media (max-width:1280px) {
     .mobileBloc {
         display:block;
     }
