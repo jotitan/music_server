@@ -93,7 +93,7 @@ var PlaylistPanel = {
     },
     removeMusic:function(index){
         $('>div:nth-child(' + (index+1) + ')',this.listDiv).remove();
-        this.list.splice(index,1);
+        this.list.splice(index-1,1);
         // Play next song ?
         this.save()
     },
