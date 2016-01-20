@@ -53,7 +53,7 @@ func (ms MusicServer)status(response http.ResponseWriter, request *http.Request)
 // update local folder if exist
 func (ms MusicServer)update(response http.ResponseWriter, request *http.Request){
 	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
-	addr := request.RemoteAddr[strings.LastIndex(request.RemoteAddr,":"):]
+	addr := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr,":")]
 	if "[::1]" != addr {
 		// [::1] means localhost. Otherwise, compare to mask
 		for i,val := range strings.Split(addr,".") {
