@@ -76,7 +76,7 @@ var Panel = {
     open:function(){
         this.div.trigger('open',arguments);
         this.show();
-        WindowsNavManager.add(this)
+        WindowsNavManager.add(this);
     },
     close:function(){
         WindowsNavManager.remove(this)

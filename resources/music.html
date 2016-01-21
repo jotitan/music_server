@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0" />
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0" />
 
     <title>Music player</title>
 
@@ -83,11 +83,9 @@
 </div>
 
 <div class="navbar navbar-default navbar-fixed-bottom navbar-inverse little-navbar" >
-    <div class="container" style="margin-left:0px;width:100%">
-        <div class="show-time mini-bloc" style="display:inline-block"></div>
-        <div style="height:15px;margin:5px;display:inline-block"><span id="mem-status"></span></div>
-        <div id="idTotalMemory" class="mini-bloc" style="display:inline-block;width:60px;"></div>
-        <div style="height:25px;display:inline-block;top:-5px;position:relative" id="idWindowsNav"><ul class="taskbar"></ul></div>
+    <div class="container" style="margin-left:0px;width:100%;padding:0px">
+
+        <div id="idWindowsNav"><ul class="taskbar"></ul></div>
         <div id="player" style="float:right;border-radius:5px;background-color:white;padding-left:10px">
             <div style="display:inline-block;margin-top:2px;">
                 <span class="glyphicon glyphicon-fast-backward previous close" style="display:none"></span>
@@ -109,19 +107,19 @@
     </div>
 </div>
 
+<div class="mobileBloc">
+    <span class="glyphicon glyphicon-music" title="Playlist" onclick="PlaylistPanel.open();WindowsNavManager.setActive(PlaylistPanel);"></span>
+    <span class="glyphicon glyphicon-user" title="List by artist" onclick="setSelected(this,function(show){Explorer.byArtist(show)});"></span>
+    <span class="glyphicon glyphicon-record" title="List by album" onclick="setSelected(this,function(show){Explorer.byAlbum(show)});"></span>
+    <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="setSelected(this,function(show){Explorer.byOnlyAlbums(show)});"></span>
+</div>
+
 TODO :
 <pre>
     Graphique sur statistiques musique
 
     Mode Threejs, D3 pour de la visualisation
 </pre>
-
-<div class="mobileBloc">
-    <span class="glyphicon glyphicon-music" title="Playlist" onclick="PlaylistPanel.open()"></span>
-    <span class="glyphicon glyphicon-user" title="List by artist" onclick="Explorer.byArtist()"></span>
-    <span class="glyphicon glyphicon-record" title="List by album" onclick="Explorer.byAlbum()"></span>
-    <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="Explorer.byOnlyAlbums()"></span>
-</div>
 
 <style>
     #player span.close{
@@ -134,18 +132,29 @@ TODO :
 
 
 <script>
+    var selCase = null;
+    function setSelected(span,fct){
+        var show = selCase == span;
+        if(selCase!=null){
+            $(selCase).removeClass('selected');
+        }
+        $(span).addClass('selected');
+        selCase = span;
+        fct(show);
+    }
     $(function(){
         WindowsNavManager.init('idWindowsNav');
         Loader.launch(function(){
             Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);})
-            Explorer.byArtist = function(){
-                this.open("/listByArtist","Explore by artist");
+            // Show just display the block, no reload block
+            Explorer.byArtist = function(show){
+                this.open(show ? null : "/listByArtist","Explore by artist");
             };
-            Explorer.byAlbum = function(){
-                this.open("/listByAlbum","Explore by album");
+            Explorer.byAlbum = function(show){
+                this.open(show ? null : "/listByAlbum","Explore by album");
             };
-            Explorer.byOnlyAlbums = function(){
-                this.open("/listByOnlyAlbums","Explore all albums");
+            Explorer.byOnlyAlbums = function(show){
+                this.open(show ? null : "/listByOnlyAlbums","Explore all albums");
             };
             MusicPlayer.init();
             MusicPlayer.setPlaylist(PlaylistPanel);

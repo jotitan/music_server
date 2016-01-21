@@ -4,6 +4,12 @@
      .mobileBloc {
         display:none;
      }
+     #idWindowsNav {
+        height:25px;
+        display:inline-block;
+        margin:5px;
+        position:relative;
+     }
      .pcBloc {
         display:block;
         padding-bottom:50px;
@@ -17,6 +23,7 @@
      }
      #player {
          height:29;
+         margin-top:3px;
      }
 
      #player .glyphicon.little {
@@ -25,25 +32,38 @@
  }
 
 @media (max-width:1280px) {
+    #idWindowsNav {
+        display:none;
+    }
     .mobileBloc {
         display:block;
+        margin-top:10px;
     }
     .pcBloc {
         display:none;
     }
     #player {
-        height:32px;
+        height:36px;
+        width:100%;
+    }
+    #player canvas{
+        padding-top:5px;
     }
     #player .glyphicon {
-        font-size:28px;
-        width:28px;
-        height:28px;
+        font-size:32px;
+        width:32px;
+        height:32px;
+        margin-right:10px;
     }
     #player .glyphicon.little {
         font-size:28px;
     }
     #player .seeker {
         display:none;
+    }
+    .little-navbar {
+        background-color:white;
+        border:solid 1px white;
     }
 }
 
@@ -55,6 +75,10 @@
     border-radius:10px;
     margin-left:15px;
     cursor:pointer;
+}
+
+.mobileBloc .glyphicon.selected {
+    background-color:orange;
 }
 
  .node {

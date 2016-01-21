@@ -117,7 +117,11 @@ var PlaylistPanel = {
         line.append('<span>' + MusicPlayer._formatTime(music.length) + '</span>');
         line.append('<span class="glyphicon glyphicon-play" title="Play"></span>');
         $('.glyphicon-play',line).bind('click',function(){MusicPlayer.load(music)});
-        $('.glyphicon-remove',line).bind('click',function(){PlaylistPanel.removeMusic(position)});
+        $('.glyphicon-remove',line).bind('click',function(){
+            var nb = PlaylistPanel.listDiv.find('div:not(.head)').length;
+            var pos = nb - $(this).parent().find('~div').length;
+            PlaylistPanel.removeMusic(pos);
+        });
 
         line.data("position",position-1);
         line.data("music",music);

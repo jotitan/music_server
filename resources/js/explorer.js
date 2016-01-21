@@ -74,6 +74,7 @@ var Explorer = {
     },
     // Call when first open
     _open:function(){
+        if(arguments[0][1] == null){return;}
         this.breadcrumb.empty();
         this.urlServer = arguments[0][1];
         var title = arguments[0][2];
