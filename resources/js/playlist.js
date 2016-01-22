@@ -18,10 +18,8 @@ var PlaylistPanel = {
         });
         this.listDiv.on("dblclick",'div:not(.head)',function(e){
            window.getSelection().removeAllRanges()
-           $('div',PlaylistPanel.listDiv).removeClass('played selected');
-           $(this).addClass('played');
            MusicPlayer.load($(this).data("music"));
-           PlaylistPanel.current = $(this).data("position");
+           PlaylistPanel.setActualPlayed($(this));
            PlaylistPanel.saveCurrent();
         });
         $(document).unbind('delete_event').bind('delete_event',function(){
@@ -49,6 +47,16 @@ var PlaylistPanel = {
         // Load saved playlist
         this.load();
     },
+    setActualPlayed:function(line){
+        $('div',PlaylistPanel.listDiv).removeClass('played selected');
+        line.addClass('played');
+        this.current = this.getPlayedPosition();
+    } ,
+    getPlayedPosition:function(){
+        var nb = $('> div:not(.head)',this.listDiv).length
+        var afters = $('.played:visible~div',this.listDiv).length
+        return nb-afters-1;
+    },
     getFocusedPosition:function(){
         var nb = $('> div:not(.head)',this.listDiv).length
         var afters = $('.focused:visible~div',this.listDiv).length
@@ -58,13 +66,13 @@ var PlaylistPanel = {
     getOne:function(){
         var focused = $('div:not(.head).focused',this.listDiv);
         if(focused.length > 0){
-            this.current = this.getFocusedPosition() -1
-            this._selectLine()
+            this.current = this.getFocusedPosition() -1;
+            this._selectLine();
             return focused.data('music');
         }
         if(this.list.length > 0){
             this.current = 0;
-            this._selectLine()
+            this._selectLine();
             return this.list[0];
         }
         return null;
@@ -116,7 +124,10 @@ var PlaylistPanel = {
         line.append('<span>' + music.title + '</span>');
         line.append('<span>' + MusicPlayer._formatTime(music.length) + '</span>');
         line.append('<span class="glyphicon glyphicon-play" title="Play"></span>');
-        $('.glyphicon-play',line).bind('click',function(){MusicPlayer.load(music)});
+        $('.glyphicon-play',line).bind('click',function(){
+            PlaylistPanel.setActualPlayed($(this).closest('div'));
+            MusicPlayer.load(music);
+        });
         $('.glyphicon-remove',line).bind('click',function(){
             var nb = PlaylistPanel.listDiv.find('div:not(.head)').length;
             var pos = nb - $(this).parent().find('~div').length;
