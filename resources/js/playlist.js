@@ -35,8 +35,16 @@ var PlaylistPanel = {
         this.listDiv.droppable({
             drop:function(event,ui){
                 var idMusic = ui.draggable.data('id');
-                // Get info from id music
-                PlaylistPanel.addMusicFromId(idMusic);
+                if(idMusic == null){
+                    // Get url if exist to load all
+                    var url = ui.draggable.data('url_drag');
+                     if(url != null){
+                        PlaylistPanel.addMusicsFromUrl(url);
+                     }
+                }else{
+                    // Get info from id music
+                    PlaylistPanel.addMusicFromId(idMusic);
+                }
             }
         })
         this.div.bind('close',function(){
@@ -48,9 +56,10 @@ var PlaylistPanel = {
         this.load();
     },
     setActualPlayed:function(line){
-        $('div',PlaylistPanel.listDiv).removeClass('played selected');
+        $('div',PlaylistPanel.listDiv).removeClass('played selected focused');
         line.addClass('played');
         this.current = this.getPlayedPosition();
+        this.listDiv.scrollTop(line.position().top);
     } ,
     getPlayedPosition:function(){
         var nb = $('> div:not(.head)',this.listDiv).length
@@ -84,8 +93,8 @@ var PlaylistPanel = {
                 PlaylistPanel.add(m,true);
             });
             this.current = parseInt(localStorage["current"]) || -1
-            this._selectLine();
             this.open();
+            this._selectLine();
         }
     },
     // Save current playlist and current music in localstorage
@@ -112,6 +121,20 @@ var PlaylistPanel = {
             success:function(data){
                 // No need to create a real Music, just a container with properties, no methods
                 PlaylistPanel.add(data)
+            }
+        })
+    },
+    addMusicsFromUrl:function(url){
+        $.ajax({
+            url:url,
+            dataType:'json',
+            success:function(data){
+                // If list receive with id in each element, add music
+                data.forEach(function(music){
+                   if(music.id != null){
+                        PlaylistPanel.addMusicFromId(music.id);
+                   }
+                });
             }
         })
     },
@@ -147,8 +170,7 @@ var PlaylistPanel = {
             return
         }
         var line = $('div:nth-child(' + (this.current+2) + ')',this.listDiv);
-        $('div',this.listDiv).removeClass('played focused');
-        line.addClass('played');
+        this.setActualPlayed(line);
     },
     next:function(){
         if(this.current+1>=this.list.length){

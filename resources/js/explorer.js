@@ -120,8 +120,14 @@ var Explorer = {
             }
             // Info json with name and either url (param after url) or id
             var span = $('<span data-idx="' + name.toLowerCase() + '" data-url="' + url + '">' + name + info + '</span>');
+            // If url, sub folder exist. Otherwise, final element, can add to playlist
             if(url != null){
-                span.bind('click',function(){
+                // Can add all data in playlist if drag and drop
+                var dragStart = false;
+                span.data("url_drag",this.urlServer + '?' + url);
+                span.draggable({delay:300,helper:'clone',start:function(){dragStart=true;},stop:function(){dragStart=false;}})
+                span.bind('mouseup',function(){
+                    if(dragStart){return;}
                     Explorer.loadPath($(this).data('url'),$(this).text());
                 });
             }else{

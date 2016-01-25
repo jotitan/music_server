@@ -41,8 +41,11 @@ func (sse SSEWriter)Write(message string){
 
 
 func (ms MusicServer)root(response http.ResponseWriter, request *http.Request){
-	url := request.RequestURI
-	http.ServeFile(response,request,filepath.Join(ms.webfolder,url[1:]))
+	if url := request.RequestURI ; url == "/"{
+		http.ServeFile(response,request,filepath.Join(ms.webfolder,"music.html"))
+	}else{
+		http.ServeFile(response,request,filepath.Join(ms.webfolder,url[1:]))
+	}
 }
 
 // Use to find node with very short timeout
