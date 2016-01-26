@@ -199,6 +199,7 @@ func (ms MusicServer)musicInfo(response http.ResponseWriter, request *http.Reque
 	logger.GetLogger().Info("Load music info with id",id)
 	musicInfo := ms.dico.GetMusicFromId(int(id))
 	delete(musicInfo,"path")
+	musicInfo["id"] = fmt.Sprintf("%d",id)
 	musicInfo["src"] = fmt.Sprintf("music?id=%d",id)
 	bdata,_ := json.Marshal(musicInfo)
 	response.Write(bdata)

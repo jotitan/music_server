@@ -1,8 +1,41 @@
 
+.float-panel {
+    box-shadow: 2px 4px 5px 1px rgba(0, 0, 0, 0.7);
+    display:none;
+    background-color:white;
+    z-index:1000;
+    position:absolute;
+    top:100px;
+    left:100px;
+}
+
+.float-panel .title {
+    font-weight:bold;
+}
+
+.float-panel.active {
+    z-index:1001;
+    box-shadow: 2px 4px 5px 1px rgba(150, 100, 0, 0.7);
+}
+
+
 /* Create a medium height at 40px */
 @media (min-width:1280px) {
      .mobileBloc {
         display:none;
+     }
+     .half-left-panel {
+        width:calc(50% - 4px);
+        height:calc(100% - 80px);
+        top:47px;
+        left:0px;
+     }
+
+     .half-right-panel {
+        width:calc(50% - 8px);
+        height:calc(100% - 80px);
+        top:47px;
+        left:50%;
      }
      #idWindowsNav {
         height:25px;
@@ -34,6 +67,19 @@
 @media (max-width:1280px) {
     #idWindowsNav {
         display:none;
+    }
+    .half-left-panel {
+       width:calc(50% - 4px);
+       height:calc(100% - 40px);
+       top:0px;
+       left:0px;
+    }
+
+    .half-right-panel {
+       width:calc(50% - 8px);
+       height:calc(100% - 40px);
+       top:0px;
+       left:50%;
     }
     .mobileBloc {
         display:block;
@@ -294,24 +340,6 @@ div.history > span:hover {
     font-weight:bold;
 }
 
-.float-panel {
-    box-shadow: 2px 4px 5px 1px rgba(0, 0, 0, 0.7);
-    display:none;
-    background-color:white;
-    z-index:1000;
-    position:absolute;
-    top:100px;
-    left:100px;
-}
-
-.float-panel .title {
-    font-weight:bold;
-}
-
-.float-panel.active {
-    z-index:1001;
-    box-shadow: 2px 4px 5px 1px rgba(150, 100, 0, 0.7);
-}
 
 .task-button {
     margin-left:10px
@@ -466,20 +494,6 @@ label > [type="checkbox"] {
    height:calc(100% - 80px);
    top:47px;
    left:0px;
-}
-
-.half-left-panel {
-   width:calc(50% - 4px);
-   height:calc(100% - 80px);
-   top:47px;
-   left:0px;
-}
-
-.half-right-panel {
-   width:calc(50% - 8px);
-   height:calc(100% - 80px);
-   top:47px;
-   left:50%;
 }
 
 /* Message info */

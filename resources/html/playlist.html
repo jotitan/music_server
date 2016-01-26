@@ -18,16 +18,11 @@
     }
 
     .playlist div > span:nth-child(2){
-        width:20px;
-        text-align:center;
-    }
-
-    .playlist div > span:nth-child(3){
-        width:calc(100% - 150px);
+        width:calc(100% - 130px);
         padding-left:5px;
     }
 
-    .playlist div > span:nth-child(4){
+    .playlist div > span:nth-child(3){
         width:80px;
         text-align:center;
     }
@@ -40,6 +35,10 @@
     .playlist div.played {
         background-color:lightblue;
     }
+
+    .playlist .glyphicon.remove {
+        color:red;
+    }
 </style>
 
 <div id="idPlaylist" class="float-panel normal-panel-size">
@@ -48,7 +47,8 @@
         <span class="glyphicon glyphicon-eye-close close half-screen" data-split="Explorer"/>
     </div>
 
-    <div style="height:calc(100% - 30px);overflow:auto;padding-left:5px;" class="playlist">
-        <div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div>
+    <div style="height:calc(100% - 58px);overflow:auto;padding-left:5px;" class="playlist">
+        <!--div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div-->
     </div>
+    <div style="height:15px;border-top:solid 1px lightgray;padding-left:10px"><span class="total_playlist"></span> music(s) in playlist</div>
 </div>

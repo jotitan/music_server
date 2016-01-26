@@ -12,11 +12,11 @@ var PlaylistPanel = {
         this.div.resizable()
         this.listDiv = $('.playlist',this.div)
         // Select behaviour
-        this.listDiv.on("click",'div:not(.head)',function(){
+        this.listDiv.on("click",'div',function(){
             $('div',PlaylistPanel.listDiv).removeClass('focused');
             $(this).addClass('focused');
         });
-        this.listDiv.on("dblclick",'div:not(.head)',function(e){
+        this.listDiv.on("dblclick",'div',function(e){
            window.getSelection().removeAllRanges()
            MusicPlayer.load($(this).data("music"));
            PlaylistPanel.setActualPlayed($(this));
@@ -62,20 +62,26 @@ var PlaylistPanel = {
         this.listDiv.scrollTop(line.position().top);
     } ,
     getPlayedPosition:function(){
-        var nb = $('> div:not(.head)',this.listDiv).length
+        var nb = $('> div',this.listDiv).length
         var afters = $('.played:visible~div',this.listDiv).length
         return nb-afters-1;
     },
     getFocusedPosition:function(){
-        var nb = $('> div:not(.head)',this.listDiv).length
+        var nb = $('> div',this.listDiv).length;
         var afters = $('.focused:visible~div',this.listDiv).length
         return nb-afters;
     },
     // Return selected or first in list
     getOne:function(){
-        var focused = $('div:not(.head).focused',this.listDiv);
+        var focused = $('div.focused',this.listDiv);
         if(focused.length > 0){
-            this.current = this.getFocusedPosition() -1;
+            this.current = this.getFocusedPosition();
+            this._selectLine();
+            return focused.data('music');
+        }
+        focused = $('div.played',this.listDiv);
+        if(focused.length > 0){
+            this.current = this.getPlayedPosition();
             this._selectLine();
             return focused.data('music');
         }
@@ -89,10 +95,13 @@ var PlaylistPanel = {
     load:function(){
         if(localStorage && localStorage["playlist"]!=null){
             var musics = JSON.parse(localStorage["playlist"]);
-            musics.forEach(function(m){
-                PlaylistPanel.add(m,true);
-            });
-            this.current = parseInt(localStorage["current"]) || -1
+            var currentMusic = localStorage["current"];
+            musics.forEach(function(m,i){
+                this.add(m,true);
+                if(currentMusic == m.id){
+                    this.current = i;
+                }
+            },this);
             this.open();
             this._selectLine();
         }
@@ -103,16 +112,19 @@ var PlaylistPanel = {
             localStorage["playlist"] = JSON.stringify(this.list);
         }
     },
+    updateTotal:function(){
+        $('.total_playlist',this.div).html(this.list.length);
+    },
     saveCurrent:function(){
         if(localStorage){
-            localStorage["current"] = this.current;
+            localStorage["current"] = this.list[this.current].id;
         }
     },
     removeMusic:function(index){
-        $('>div:nth-child(' + (index+1) + ')',this.listDiv).remove();
+        $('>div:nth-child(' + index + ')',this.listDiv).remove();
         this.list.splice(index-1,1);
-        // Play next song ?
-        this.save()
+        this.save();
+        this.updateTotal();
     },
     addMusicFromId:function(id){
         $.ajax({
@@ -140,10 +152,9 @@ var PlaylistPanel = {
     },
     // Add a new music in list
     add:function(music,noSave){
-        var position = $('div',this.listDiv).length;
         var line = $('<div></div>');
-        line.append('<span class="glyphicon glyphicon-remove" title="Remove"></span>');
-        line.append('<span>' + position + '</span>');
+        line.append('<span class="glyphicon glyphicon-remove remove" title="Remove"></span>');
+        //line.append('<span>' + $('>div',this.listDiv).length + '</span>');
         line.append('<span>' + music.title + '</span>');
         line.append('<span>' + MusicPlayer._formatTime(music.length) + '</span>');
         line.append('<span class="glyphicon glyphicon-play" title="Play"></span>');
@@ -152,24 +163,23 @@ var PlaylistPanel = {
             MusicPlayer.load(music);
         });
         $('.glyphicon-remove',line).bind('click',function(){
-            var nb = PlaylistPanel.listDiv.find('div:not(.head)').length;
+            var nb = PlaylistPanel.listDiv.find('div').length;
             var pos = nb - $(this).parent().find('~div').length;
             PlaylistPanel.removeMusic(pos);
         });
-
-        line.data("position",position-1);
         line.data("music",music);
         this.listDiv.append(line);
         this.list.push(music);
         if(noSave == null || noSave == false){
             this.save();
         }
+        this.updateTotal();
     },
     _selectLine:function(){
         if(this.current == -1){
             return
         }
-        var line = $('div:nth-child(' + (this.current+2) + ')',this.listDiv);
+        var line = $('div:nth-child(' + (this.current+1) + ')',this.listDiv);
         this.setActualPlayed(line);
     },
     next:function(){
