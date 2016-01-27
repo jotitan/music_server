@@ -31,6 +31,13 @@
         left:0px;
      }
 
+     .maximize-panel-size {
+        width:calc(100% - 4px);
+        height:calc(100% - 80px);
+        top:47px;
+        left:0px;
+     }
+
      .half-right-panel {
         width:calc(50% - 8px);
         height:calc(100% - 80px);
@@ -68,6 +75,13 @@
     #idWindowsNav {
         display:none;
     }
+    .maximize-panel-size {
+        width:calc(100% - 4px);
+        height:calc(100% - 40px);
+        top:0px;
+        left:0px;
+     }
+
     .half-left-panel {
        width:calc(50% - 4px);
        height:calc(100% - 40px);
@@ -489,12 +503,7 @@ label > [type="checkbox"] {
     height:430px;
 }
 
-.maximize-panel-size {
-   width:calc(100% - 4px);
-   height:calc(100% - 80px);
-   top:47px;
-   left:0px;
-}
+
 
 /* Message info */
 .message-cluster {
