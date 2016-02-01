@@ -42,6 +42,11 @@ func (args * Arguments) parse(){
 	}
 }
 
+func (args Arguments)Has(name string)bool{
+	_,ok := args.data[name]
+	return ok
+}
+
 func (args Arguments)GetUInt(argName string)uint{
 	if value,ok := args.data[argName]; ok {
 		if intValue, err := strconv.ParseUint(value,10,0) ; err == nil{

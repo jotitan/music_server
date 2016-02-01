@@ -95,11 +95,14 @@ func (md * MusicDictionnary)browseFolder(folderName string){
 			inode := inodes[file.Name()]
 			path := filepath.Join(folderName,file.Name())
 			if file.IsDir() {
-				logger.GetLogger().Info("Parse",path)
-				md.browseFolder(path)
+				if strings.HasPrefix(file.Name(),"_") {
+					logger.GetLogger().Info("Escape folder starting width _",file.Name())
+				}else {
+					logger.GetLogger().Info("Parse", path)
+					md.browseFolder(path)
+				}
 			} else{
 				if strings.HasSuffix(file.Name(), ".mp3") {
-					logger.GetLogger().Info(file.Name())
 					if _, exist := md.musicInIndex[inode] ; !exist {
 						if info := md.extractInfo(path); info != nil {
 							logger.GetLogger().Info("Index", info.Artist, info.Name, info.Album)
@@ -109,7 +112,7 @@ func (md * MusicDictionnary)browseFolder(folderName string){
 							logger.GetLogger().Error("Impossible to add", path)
 						}
 					}else {
-						logger.GetLogger().Info(path, "already in index")
+						//logger.GetLogger().Info(path, "already in index")
 					}
 				}
 			}
@@ -276,8 +279,23 @@ func (md * MusicDictionnary)Add(path string,music id3.File){
     idMusic := md.nextId
     md.nextId++
     md.musics = append(md.musics, Music{file:music,id:idMusic,path:path})
-	idArtist := md.artistIndex.Add(music.Artist)
-	md.artistMusicIndex.Add(idArtist,int(idMusic))
+	// split artist when & or / or , is present
+	for _,artist := range  splitArtists(music.Artist) {
+		idArtist := md.artistIndex.Add(artist)
+		md.artistMusicIndex.Add(idArtist,int(idMusic))
+	}
+	//idArtist := md.artistIndex.Add(music.Artist)
+	//md.artistMusicIndex.Add(idArtist,int(idMusic))
+}
+
+func splitArtists(artistsList string)[]string{
+	reg,_ := regexp.Compile("&|,|/|;")
+	vals := reg.Split(artistsList,-1)
+	artists := make([]string,len(vals))
+	for i,v := range vals {
+		artists[i] = strings.Trim(v," ")
+	}
+	return artists
 }
 
 // Get many musics by id

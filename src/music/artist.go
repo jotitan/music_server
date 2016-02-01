@@ -127,8 +127,9 @@ func LoadArtists(folder string)map[string]int {
 
 // LoadArtistIndex Get artist index to search...
 func LoadArtistIndex(folder string)ArtistIndex{
-	ai := ArtistIndex{artists:make(map[string]int),currentId:1,artistsToSave:make([]string,0)}
+	ai := ArtistIndex{artists:make(map[string]int),artistsToSave:make([]string,0)}
 	ai.artists = LoadArtists(folder)
+	ai.currentId = len(ai.artists) + 1
 	return ai
 }
 

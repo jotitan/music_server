@@ -1,6 +1,8 @@
 package music
+import "logger"
 
 func IndexArtists(folder string){
+    logger.GetLogger().Info("Launch index")
     // Recreate albums index at each time (very quick)
     artists := LoadArtists(folder)
     dico := LoadDictionnary(folder)
@@ -26,4 +28,5 @@ func IndexArtists(folder string){
         am.AddAlbumsByArtist(artistId,albums)
     }
     am.Save()
+    logger.GetLogger().Info("End index")
 }

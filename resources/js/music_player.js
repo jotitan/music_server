@@ -54,8 +54,9 @@ var MusicPlayer = {
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
-        setTitle:function(title){
+        setTitle:function(title,artist){
             $('.title',this.div).text(title);
+            $('title').html(artist + " - " + title);
         },
         setMax:function(value){
             this.seeker.slider('option','max',value)
@@ -131,7 +132,7 @@ var MusicPlayer = {
     load:function(music){
         if(music == null){return;}
         this.player.src = music.src;
-        this.controls.setTitle(music.title);
+        this.controls.setTitle(music.title,music.artist);
         this.play();
     },
     pause:function(){

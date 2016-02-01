@@ -53,23 +53,41 @@ func (ms MusicServer)status(response http.ResponseWriter, request *http.Request)
 	response.Write([]byte("Up"))
 }
 
-// update local folder if exist
-func (ms MusicServer)update(response http.ResponseWriter, request *http.Request){
-	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
+func (ms MusicServer)checkRequester(request *http.Request)bool{
 	addr := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr,":")]
 	if "[::1]" != addr {
 		// [::1] means localhost. Otherwise, compare to mask
 		for i,val := range strings.Split(addr,".") {
 			if intval,e := strconv.ParseInt(val,10,32) ; e!= nil {
 				logger.GetLogger().Error("User attempt to update data from outside",request.Host,request.RemoteAddr)
-				return
+				return false
 			}else{
 				if int(intval) & ms.addressMask[i] != int(intval){
 					logger.GetLogger().Error("User attempt to update data from outside",request.Host,request.RemoteAddr)
-					return
+					return false
 				}
 			}
 		}
+	}
+	return true
+}
+
+func (ms MusicServer)index(response http.ResponseWriter, request *http.Request){
+	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
+	if !ms.checkRequester(request){
+		return
+	}
+
+	if ms.musicFolder!="" {
+		music.IndexArtists(ms.folder)
+	}
+}
+
+// update local folder if exist
+func (ms MusicServer)update(response http.ResponseWriter, request *http.Request){
+	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
+	if !ms.checkRequester(request){
+		return
 	}
 	if ms.musicFolder!="" {
 		dico := music.LoadDictionnary(ms.folder)
@@ -300,6 +318,7 @@ func (ms MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/listByOnlyAlbums",ms.listByOnlyAlbums)
 	mux.HandleFunc("/browse",ms.browse)
 	mux.HandleFunc("/update",ms.update)
+	mux.HandleFunc("/index",ms.index)
 	mux.HandleFunc("/",ms.root)
 	return mux
 }
