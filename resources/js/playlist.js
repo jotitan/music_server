@@ -48,12 +48,18 @@ var PlaylistPanel = {
             }
         })
         this.div.bind('close',function(){
-           if(localStorage){
-            delete(localStorage["playlist"])
-           }
+           PlaylistPanel.cleanPlaylist();
         });
         // Load saved playlist
         this.load();
+    },
+    cleanPlaylist:function(){
+        if(localStorage){
+            delete(localStorage["playlist"]);
+        }
+        this.listDiv.empty();
+        this.list = [];
+        this.updateTotal();
     },
     setActualPlayed:function(line){
         $('div',PlaylistPanel.listDiv).removeClass('played selected focused');
