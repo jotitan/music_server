@@ -167,7 +167,7 @@ var PlaylistPanel = {
         var music = this.list.splice(index-1,1)[0];
         this.save();
         this.updateTotal();
-        if((noShare == null || nosShare == false) && this.shareManager!=null){
+        if((noShare == null || noShare == false) && this.shareManager!=null){
             this.shareManager.event("remove",music.id);
         }
     },
@@ -301,8 +301,13 @@ var RemotePlaylist = {
             _self.pause();
             _self.shareManager.event("pause");
         });
+        this.listDiv.on("dblclick",'div',function(e){
+            _self.play();
+        });
         this.div.bind('close',function(){
-            _self.shareManager.disable(true);
+            if(_self.shareManager != null){
+                _self.shareManager.disable(true);
+            }
         });
     },
     // show played music
