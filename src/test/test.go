@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"logger"
 	"strings"
-	"regexp"
 )
 
 func main(){
@@ -20,15 +19,10 @@ func main(){
     //aa := music.LoadAllAlbums(args["workingFolder"])
 	//logger.GetLogger().Info(aa)
 
-	tot := "v1"
-	//tot2 := "v1 & v2, v3/v4 /v5/v6&v7 , v8"
-	reg,_ := regexp.Compile("&|,|/")
-	vals := reg.Split(tot,-1)
-	results := make([]string,len(vals))
-	for i,v := range vals {
-		results[i] = strings.Trim(v," ")
-	}
-	logger.GetLogger().Info(results)
+	t := []int{2,4,6,8,10}
+
+	pos := 4
+	logger.GetLogger().Info(append(t[:pos],t[pos+1:]...))
 	return
 
 	path := "C:\\DataBE\\Bernardo1"

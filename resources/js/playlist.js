@@ -6,63 +6,92 @@ var PlaylistPanel = {
     listDiv:null,
     list:[],
     current:-1,
-    init:function(){
+    saveInLS:true,
+    shareManager:null,
+    // To avoid load music
+    noLoadMusic:false,
+    init:function(idDiv,title,noLoad){
+        idDiv = idDiv || '#idPlaylist';
+        title = title || 'Playlist'
         $.extend(true,this,Panel)
-        this.initPanel($('#idPlaylist'),'<span class="glyphicon glyphicon-music icon"></span>Playlist',true)
+        this.initPanel($(idDiv),'<span class="glyphicon glyphicon-music icon"></span>' + title,true)
         this.div.resizable()
-        this.listDiv = $('.playlist',this.div)
+        this.listDiv = $('.playlist',this.div);
         // Select behaviour
+        var _self = this;
         this.listDiv.on("click",'div',function(){
-            $('div',PlaylistPanel.listDiv).removeClass('focused');
+            $('div',_self.listDiv).removeClass('focused');
             $(this).addClass('focused');
         });
         this.listDiv.on("dblclick",'div',function(e){
-           window.getSelection().removeAllRanges()
-           MusicPlayer.load($(this).data("music"));
-           PlaylistPanel.setActualPlayed($(this));
-           PlaylistPanel.saveCurrent();
+           window.getSelection().removeAllRanges();
+           if(!_self.noLoadMusic){
+                MusicPlayer.load($(this).data("music"));
+           }
+           if(_self.shareManager!=null){
+                _self.shareManager.event('playMusic',$(this).data("music").id);
+           }
+           _self.setActualPlayed($(this));
+           _self.saveCurrent();
         });
         $(document).unbind('delete_event').bind('delete_event',function(){
             // Delete music. Find position element in list
-            PlaylistPanel.removeMusic(PlaylistPanel.getFocusedPosition());
+            _self.removeMusic(_self.getFocusedPosition());
         });
         $(document).unbind('next_event').bind('next_event',function(){
-            PlaylistPanel.next();
+            _self.next();
         });
         $(document).unbind('previous_event').bind('previous_event',function(){
-            PlaylistPanel.previous();
+            _self.previous();
         });
         this.listDiv.droppable({
             drop:function(event,ui){
                 var idMusic = ui.draggable.data('id');
                 if(idMusic == null){
-                    // Get url if exist to load all
+                    // Get url if exist to load all, folder case
                     var url = ui.draggable.data('url_drag');
                      if(url != null){
-                        PlaylistPanel.addMusicsFromUrl(url);
+                        _self.addMusicsFromUrl(url);
                      }
                 }else{
                     // Get info from id music
-                    PlaylistPanel.addMusicFromId(idMusic);
+                    _self.addMusicFromId(idMusic);
                 }
             }
         })
         this.div.bind('close',function(){
-           PlaylistPanel.cleanPlaylist();
+           _self.cleanPlaylist();
         });
         // Load saved playlist
+        if(noLoad == true){
+            this.saveInLS = false;
+        }
         this.load();
     },
     cleanPlaylist:function(){
-        if(localStorage){
+        if(this.saveInLS && localStorage){
             delete(localStorage["playlist"]);
+            delete(localStorage["current"]);
         }
         this.listDiv.empty();
         this.list = [];
         this.updateTotal();
     },
+    // No need to propagate share
+    playMusic:function(id){
+        this.list.forEach(function(music,i){
+           if(music.id == id){
+                var line = $('>div:nth-child(' + (i+1) + ')',this.listDiv);
+                MusicPlayer.load(music);
+                this.setActualPlayed(line);
+                this.saveCurrent();
+                return;
+           }
+        },this);
+
+    },
     setActualPlayed:function(line){
-        $('div',PlaylistPanel.listDiv).removeClass('played selected focused');
+        $('div',this.listDiv).removeClass('played selected focused');
         line.addClass('played');
         this.current = this.getPlayedPosition();
         this.listDiv.scrollTop(line.position().top);
@@ -99,7 +128,7 @@ var PlaylistPanel = {
         return null;
     },
     load:function(){
-        if(localStorage && localStorage["playlist"]!=null){
+        if(this.saveInLS && localStorage && localStorage["playlist"]!=null){
             var musics = JSON.parse(localStorage["playlist"]);
             var currentMusic = localStorage["current"];
             musics.forEach(function(m,i){
@@ -108,13 +137,13 @@ var PlaylistPanel = {
                     this.current = i;
                 }
             },this);
-            this.open();
             this._selectLine();
+            this.open();
         }
     },
     // Save current playlist and current music in localstorage
     save:function(){
-        if(localStorage){
+        if(this.saveInLS && localStorage){
             localStorage["playlist"] = JSON.stringify(this.list);
         }
     },
@@ -122,56 +151,92 @@ var PlaylistPanel = {
         $('.total_playlist',this.div).html(this.list.length);
     },
     saveCurrent:function(){
-        if(localStorage){
+        if(this.saveInLS && localStorage){
             localStorage["current"] = this.list[this.current].id;
         }
     },
-    removeMusic:function(index){
+    removeMusicId:function(id,noShare){
+        this.list.forEach(function(music,i){
+           if(music.id == id){
+                return this.removeMusic(i,noShare);
+           }
+        },this);
+    },
+    removeMusic:function(index,noShare){
         $('>div:nth-child(' + index + ')',this.listDiv).remove();
-        this.list.splice(index-1,1);
+        var music = this.list.splice(index-1,1)[0];
         this.save();
         this.updateTotal();
+        if((noShare == null || nosShare == false) && this.shareManager!=null){
+            this.shareManager.event("remove",music.id);
+        }
     },
-    addMusicFromId:function(id){
+    // Add many musics from list of id
+    addMusicsFromIds:function(ids,noShare){
+        var _self = this;
+        $.ajax({
+            url:'/musicsInfo?ids=' + JSON.stringify(ids),
+            dataType:'json',
+            success:function(data){
+                data.forEach(function(music){
+                    if((noShare == null || noShare == false) && _self.shareManager!=null){
+                        _self.shareManager.event('add',music.id);
+                    }
+                    _self.add(music,true,true);
+                });
+                _self.save();
+                _self.updateTotal();
+            }
+        });
+    },
+    addMusicFromId:function(id,noShare){
+        if(noShare == null || noShare == false){
+            if(this.shareManager!=null){
+                this.shareManager.event('add',id);
+            }
+        }
+        var _self = this;
         $.ajax({
             url:'/musicInfo?id=' + id,
             dataType:'json',
             success:function(data){
                 // No need to create a real Music, just a container with properties, no methods
-                PlaylistPanel.add(data)
+                _self.add(data);
             }
         })
     },
     addMusicsFromUrl:function(url){
+        var _self = this;
         $.ajax({
             url:url,
             dataType:'json',
             success:function(data){
                 // If list receive with id in each element, add music
-                data.forEach(function(music){
-                   if(music.id != null){
-                        PlaylistPanel.addMusicFromId(music.id);
-                   }
-                });
+                var ids = data.map(function(m){return parseInt(m.id);})
+                _self.addMusicsFromIds(ids);
             }
         })
     },
     // Add a new music in list
-    add:function(music,noSave){
+    add:function(music,noSave,noTotal){
         var line = $('<div></div>');
         line.append('<span class="glyphicon glyphicon-remove remove" title="Remove"></span>');
         //line.append('<span>' + $('>div',this.listDiv).length + '</span>');
         line.append('<span>' + music.title + '</span>');
         line.append('<span>' + MusicPlayer._formatTime(music.length) + '</span>');
         line.append('<span class="glyphicon glyphicon-play" title="Play"></span>');
+        var _self = this;
         $('.glyphicon-play',line).bind('click',function(){
-            PlaylistPanel.setActualPlayed($(this).closest('div'));
+            _self.setActualPlayed($(this).closest('div'));
+            if(_self.shareManager!=null){
+                _self.shareManager.event('playMusic',music.id);
+            }
             MusicPlayer.load(music);
         });
         $('.glyphicon-remove',line).bind('click',function(){
-            var nb = PlaylistPanel.listDiv.find('div').length;
+            var nb = _self.listDiv.find('div').length;
             var pos = nb - $(this).parent().find('~div').length;
-            PlaylistPanel.removeMusic(pos);
+            _self.removeMusic(pos);
         });
         line.data("music",music);
         this.listDiv.append(line);
@@ -179,7 +244,9 @@ var PlaylistPanel = {
         if(noSave == null || noSave == false){
             this.save();
         }
-        this.updateTotal();
+        if(noTotal == null || noTotal == false){
+            this.updateTotal();
+        }
     },
     _selectLine:function(){
         if(this.current == -1){
@@ -194,7 +261,9 @@ var PlaylistPanel = {
         }
         this.current++;
         this._selectLine();
-        MusicPlayer.load(this.list[this.current]);
+        if(!this.noLoadMusic){
+            MusicPlayer.load(this.list[this.current]);
+        }
     },
     previous:function(){
         if(this.current<=0){
@@ -202,7 +271,79 @@ var PlaylistPanel = {
         }
         this.current--;
         this._selectLine();
-        MusicPlayer.load(this.list[this.current]);
+        if(!this.noLoadMusic){
+            MusicPlayer.load(this.list[this.current]);
+        }
+    },
+    setShareManager:function(manager){
+        this.shareManager = manager;
     }
+}
 
+var RemotePlaylist = {
+    init2:function(){
+        // If remote player, shareManager exist for sure
+        var _self = this;
+        // Manage remote buton
+        $('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
+            _self.shareManager.event("previous");
+            Share.event("previous");
+        });
+        $('.controls>.glyphicon-fast-forward',this.div).bind('click',function(){
+            _self.next();
+            _self.shareManager.event("next");
+        });
+        $('.controls>.glyphicon-play',this.div).bind('click',function(){
+            _self.play();
+            _self.shareManager.event("play");
+        });
+        $('.controls>.glyphicon-pause',this.div).bind('click',function(){
+            _self.pause();
+            _self.shareManager.event("pause");
+        });
+        this.div.bind('close',function(){
+            _self.shareManager.disable(true);
+        });
+    },
+    // show played music
+    showMusic:function(id){
+        this.list.forEach(function(music,i){
+           if(music.id == id){
+                this.play();
+                var line = $('>div:nth-child(' + (i+1) + ')',this.listDiv);
+                this.setActualPlayed(line);
+                return;
+           }
+        },this);
+    },
+    pause:function(){
+        $('.controls>.glyphicon-play',this.div).show();
+        $('.controls>.glyphicon-pause',this.div).hide();
+    },
+    play:function(){
+        $('.controls>.glyphicon-play',this.div).hide();
+        $('.controls>.glyphicon-pause',this.div).show();
+    }
+}
+
+function connectToShare(){
+    $.extend(RemotePlaylist,PlaylistPanel);
+    RemotePlaylist.noLoadMusic=true;
+    RemotePlaylist.list = [];
+    RemotePlaylist.init('#idRemotePlaylist','Remote playlist',true);
+    RemotePlaylist.init2();
+
+    // Show shares
+    Share.getShares(function(data){
+        data.forEach(function(s){
+            var share = $('<div> => ' + s.Name + ' : <button>Connect</button></div>');
+            $('button',share).bind('click',function(){
+                RemotePlaylist.listDiv.empty();
+                $('.title > span:first',RemotePlaylist.div).html('Remote playlist for ' + s.Name);
+                CreateClone(s.Id,RemotePlaylist);
+            });
+            RemotePlaylist.listDiv.append(share);
+            RemotePlaylist.open();
+        });
+    });
 }

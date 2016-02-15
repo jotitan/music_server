@@ -9,6 +9,36 @@ function Music(id,src,title,time){
 
 var MusicPlayer = {
     player:null,
+    // manage name device
+    device:{
+        name:"",
+        input:null,
+        init:function(){
+            this.input = $('#idDeviceName');
+            if(localStorage && localStorage["deviceName"]!=null){
+                this.name =localStorage["deviceName"];
+            }else {
+                this.name = "No name";
+            }
+            this.input.val(this.name);
+             this.input.bind('click',function(){
+               if($(this).hasClass('disabled')){
+                $(this).removeClass('disabled').bind('keydown',function(e){
+                   if(e.keyCode == 13){
+                      MusicPlayer.device.save();
+                   }
+                });
+               }
+            });
+        },
+        save:function(){
+           this.name = this.input.val();
+           this.input.addClass('disabled').unbind('keydown');
+           if(localStorage){
+            localStorage["deviceName"] = this.name;
+           }
+        }
+    },
     // Manage the list of music
     setPlaylist:function(playlist){
         this.playlist = playlist;
@@ -18,6 +48,7 @@ var MusicPlayer = {
     controls:{
         div:null,
         seeker:null,
+        shareManager:null,
         init:function(idDiv){
             this.div = $('#' + idDiv)
             this.seeker = $('.seeker',this.div);
@@ -31,15 +62,25 @@ var MusicPlayer = {
             var _self = this;
             $('.play',this.div).bind('click',function(){
                MusicPlayer.play();
+               if(_self.shareManager!=null){
+                _self.shareManager.event('play');
+               }
             });
             $('.pause',this.div).bind('click',function(){
                MusicPlayer.pause();
+               if(_self.shareManager!=null){
+                   _self.shareManager.event('pause');
+                  }
             });
             $('.next',this.div).bind('click',function(){
-                MusicPlayer.playlist.next();
+                _self.next();
             });
             $('.previous',this.div).bind('click',function(){
+                _self.previous();
                 MusicPlayer.playlist.previous();
+                if(_self.shareManager!=null){
+                    _self.shareManager.event('previous');
+                   }
             });
             MusicPlayer.player.volume = 0.5;
             // Volume Behaviour
@@ -53,6 +94,21 @@ var MusicPlayer = {
             $(document).bind('volume_down',function(){MusicPlayer.volume.down();})
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+        },
+        next:function(){
+            MusicPlayer.playlist.next();
+            if(this.shareManager!=null){
+                this.shareManager.event('next');
+           }
+        },
+        previous:function(){
+            MusicPlayer.playlist.previous();
+            if(this.shareManager!=null){
+                this.shareManager.event('previous');
+           }
+        },
+        setShareManager:function(manager){
+          this.shareManager = manager;
         },
         setTitle:function(title,artist){
             $('.title',this.div).text(title);
@@ -99,9 +155,7 @@ var MusicPlayer = {
             MusicPlayer.controls.update(MusicPlayer.player.currentTime);
         });
         this.player.addEventListener('ended',function(e){
-            if(MusicPlayer.playlist!=null){
-                MusicPlayer.playlist.next();
-            }
+            MusicPlayer.controls.next();
         });
         // Detect key controls
         $(document).bind('keyup',function(e){
@@ -128,6 +182,7 @@ var MusicPlayer = {
                 MusicPlayer.pause();
             }
         });
+        this.device.init();
     },
     load:function(music){
         if(music == null){return;}

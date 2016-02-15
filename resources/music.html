@@ -23,6 +23,7 @@
     <script src="js/panel.js"></script>
     <script src="js/graphic.js"></script>
     <script src="js/clock.js"></script>
+    <script src="js/share.js"></script>
     <script src="js/music_player.js"></script>
     <script src="js/playlist.js"></script>
     <script src="js/explorer.js"></script>
@@ -73,6 +74,10 @@
                             <span class="glyphicon glyphicon-tags"></span>
                             List by albums...</a>
                         </li>
+                        <li><a href="#" onclick="connectToShare()">
+                            <span class="glyphicon glyphicon-flash"></span>
+                            Connect to share...</a>
+                        </li>
 
                     </ul>
                 </li>
@@ -84,7 +89,9 @@
 
 <div class="navbar navbar-default navbar-fixed-bottom navbar-inverse little-navbar" >
     <div class="container" style="margin-left:0px;width:100%;padding:0px">
-
+        <div style="float:left;display:inline-block">
+            <span title="Share" class="glyphicon glyphicon-flash close share-button"></span>
+        </div>
         <div id="idWindowsNav"><ul class="taskbar"></ul></div>
         <div id="player" style="float:right;border-radius:5px;background-color:white;padding-left:10px">
             <div style="display:inline-block;margin-top:2px;">
@@ -107,14 +114,20 @@
     </div>
 </div>
 
+<div style="display:inline-block;float:right;margin-right:20px;">
+    <input id="idDeviceName" type="text" placeholder="Device name" class="disabled name"
+            style="text-align:right;font-variant:small-caps;color:#777;font-weight:bold;text-shadow:2px 2px lightgray"/>
+</div>
+
 <div class="mobileBloc">
     <span class="glyphicon glyphicon-music" title="Playlist" onclick="PlaylistPanel.open();WindowsNavManager.setActive(PlaylistPanel);"></span>
     <span class="glyphicon glyphicon-user" title="List by artist" onclick="setSelected(this,function(show){Explorer.byArtist(show)});"></span>
     <span class="glyphicon glyphicon-record" title="List by album" onclick="setSelected(this,function(show){Explorer.byAlbum(show)});"></span>
     <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="setSelected(this,function(show){Explorer.byOnlyAlbums(show)});"></span>
+    <span class="glyphicon glyphicon-flash" title="Connect to share" onclick="connectToShare();"></span>
 </div>
 
-TODO :
+
 <pre>
     Graphique sur statistiques musique
 
@@ -143,7 +156,7 @@ TODO :
         fct(show);
     }
     $(function(){
-        WindowsNavManager.init('idWindowsNav');
+       WindowsNavManager.init('idWindowsNav');
         Loader.launch(function(){
             Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);})
             // Show just display the block, no reload block
@@ -157,6 +170,7 @@ TODO :
                 this.open(show ? null : "/listByOnlyAlbums","Explore all albums");
             };
             MusicPlayer.init();
+            Share.init();
             MusicPlayer.setPlaylist(PlaylistPanel);
         });
     })

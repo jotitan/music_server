@@ -325,6 +325,7 @@ func (md MusicDictionnary)GetMusicsFromIds(ids []int)[]map[string]string{
 
 				var results map[string]string
 				json.Unmarshal(data,&results)
+				results["id"] = fmt.Sprintf("%d",id)
 				musicResults = append(musicResults,results)
 			}
 		}

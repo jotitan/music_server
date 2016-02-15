@@ -15,6 +15,9 @@ import (
 	"music"
 	"strconv"
 	"sort"
+	"crypto/md5"
+	"math/rand"
+	"encoding/hex"
 )
 
 /* Launch a server to treat resize image */
@@ -223,6 +226,21 @@ func (ms MusicServer)musicInfo(response http.ResponseWriter, request *http.Reque
 	response.Write(bdata)
 }
 
+// Return info about many musics
+func (ms MusicServer)musicsInfo(response http.ResponseWriter, request *http.Request){
+	var ids []int
+	json.Unmarshal([]byte(request.FormValue("ids")),&ids)
+	logger.GetLogger().Info("Load musics",len(ids))
+
+	musics := ms.dico.GetMusicsFromIds(ids)
+	for _,musicInfo := range musics{
+		delete(musicInfo,"path")
+		musicInfo["src"] = fmt.Sprintf("music?id=%s",musicInfo["id"])
+	}
+	bdata,_ := json.Marshal(musics)
+	response.Write(bdata)
+}
+
 func (ms MusicServer)browse(response http.ResponseWriter, request *http.Request){
 	folder := request.FormValue("folder")
 	ms.dico.Browse(folder)
@@ -242,6 +260,61 @@ func (ms MusicServer)readmusic(response http.ResponseWriter, request *http.Reque
 	io.Copy(response,m)
 }
 
+func getSessionID(request *http.Request)string {
+	for _, c := range request.Cookies() {
+		if c.Name == "jsessionid" {
+			return c.Value
+		}
+	}
+	return ""
+}
+
+func sessionID(response http.ResponseWriter,request *http.Request)string{
+	if id := getSessionID(request) ; id != ""{
+		return id
+	}
+	h := md5.New()
+	h.Write([]byte(fmt.Sprintf("%d-%d",time.Now().Nanosecond(),rand.Int())))
+	hash := h.Sum(nil)
+	hexValue := hex.EncodeToString(hash)
+	logger.GetLogger().Info("Set cookie session",hexValue)
+	http.SetCookie(response,&http.Cookie{Name:"jsessionid",Value:hexValue})
+	return hexValue
+}
+
+func (ms MusicServer)getShares(response http.ResponseWriter, request *http.Request){
+	data,_ := json.Marshal(music.GetSharesInfo())
+	response.Write(data)
+}
+
+func (ms MusicServer)killShare(response http.ResponseWriter, request *http.Request){
+	if ss := getShare(request,"id") ; ss!=nil{
+		ss.ForwardEvent(sessionID(response,request),"close","")
+	}
+}
+
+func getShare(request *http.Request, idName string)*music.SharedSession {
+	if id,err := strconv.ParseInt(request.FormValue(idName),10,32) ; err == nil {
+		return music.GetShareConnection(int(id))
+	}
+	return nil
+}
+
+func (ms MusicServer)share(response http.ResponseWriter, request *http.Request){
+	// If id is present, connect as clone
+	if ss := getShare(request,"id") ; ss!=nil{
+		ss.ConnectToShare(response, request.FormValue("device"),sessionID(response,request))
+	}else {
+		music.CreateShareConnection(response, request.FormValue("device"),sessionID(response, request))
+	}
+	logger.GetLogger().Info("END SHARE")
+}
+
+func (ms MusicServer)shareUpdate(response http.ResponseWriter, request *http.Request){
+	if ss := getShare(request,"id") ; ss!=nil{
+		ss.ForwardEvent(sessionID(response,request),request.FormValue("event"),request.FormValue("data"))
+	}
+}
 
 func (ms MusicServer)sendStats(r http.ResponseWriter){
 	defer func(){
@@ -299,7 +372,7 @@ func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webf
 	}
 	localIP := ms.findExposedURL()
 
-    mux := ms.createRoutes()
+	mux := ms.createRoutes()
 	logger.GetLogger().Info("Runner ok on :",localIP,port)
     http.ListenAndServe(":" + port,mux)
 
@@ -313,12 +386,17 @@ func (ms MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/statsAsSSE",ms.statsAsSSE)
 	mux.HandleFunc("/music",ms.readmusic)
 	mux.HandleFunc("/musicInfo",ms.musicInfo)
+	mux.HandleFunc("/musicsInfo",ms.musicsInfo)
 	mux.HandleFunc("/listByArtist",ms.listByArtist)
 	mux.HandleFunc("/listByAlbum",ms.listByAlbum)
 	mux.HandleFunc("/listByOnlyAlbums",ms.listByOnlyAlbums)
 	mux.HandleFunc("/browse",ms.browse)
 	mux.HandleFunc("/update",ms.update)
 	mux.HandleFunc("/index",ms.index)
+	mux.HandleFunc("/share",ms.share)
+	mux.HandleFunc("/killshare",ms.killShare)
+	mux.HandleFunc("/shares",ms.getShares)
+	mux.HandleFunc("/shareUpdate",ms.shareUpdate)
 	mux.HandleFunc("/",ms.root)
 	return mux
 }

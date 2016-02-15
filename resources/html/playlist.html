@@ -1,4 +1,9 @@
 <style>
+    @media (max-width:1280px){
+        .playlist .glyphicon {
+            font-size:24px;
+        }
+    }
     .playlist .head > span {
         text-align:center;
         border-left-color:darkgray;
@@ -51,4 +56,25 @@
         <!--div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div-->
     </div>
     <div style="height:15px;border-top:solid 1px lightgray;padding-left:10px"><span class="total_playlist"></span> music(s) in playlist</div>
+</div>
+
+<div id="idRemotePlaylist" class="float-panel normal-panel-size">
+    <div style="border-bottom:solid 1px lightgray;padding:5px" class="title">
+        <span>Remote playlist</span>
+        <span class="glyphicon glyphicon-eye-close close half-screen" data-split="Explorer"/>
+    </div>
+
+    <div style="height:calc(100% - 54px);overflow:auto;padding-left:5px;" class="playlist">
+        <!--div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div-->
+    </div>
+    <div style="height:20px;border-top:solid 1px lightgray;padding-left:10px">
+        <span class="total_playlist"></span> music(s) in playlist
+        <div style="display:inline-block;float:right;padding-right:20px;" class="controls">
+            <span class="glyphicon glyphicon-fast-backward"></span>
+            <span class="glyphicon glyphicon-play"></span>
+            <span class="glyphicon glyphicon-pause" style="display:none"></span>
+            <span class="glyphicon glyphicon-fast-forward"></span>
+        </div>
+    </div>
+
 </div>
