@@ -77,10 +77,6 @@ var MusicPlayer = {
             });
             $('.previous',this.div).bind('click',function(){
                 _self.previous();
-                MusicPlayer.playlist.previous();
-                if(_self.shareManager!=null){
-                    _self.shareManager.event('previous');
-                   }
             });
             MusicPlayer.player.volume = 0.5;
             // Volume Behaviour
@@ -160,7 +156,6 @@ var MusicPlayer = {
         // Detect key controls
         $(document).bind('keyup',function(e){
             var key = (e.keyCode != 0)?e.keyCode:e.charCode;
-            //console.log(key)
             switch(key){
                 case 46 : $(document).trigger('delete_event');break;
                 case 80 : $(document).trigger('pause_event');break;

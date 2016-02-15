@@ -98,7 +98,7 @@ var PlaylistPanel = {
     } ,
     getPlayedPosition:function(){
         var nb = $('> div',this.listDiv).length
-        var afters = $('.played:visible~div',this.listDiv).length
+        var afters = $('.played~div',this.listDiv).length
         return nb-afters-1;
     },
     getFocusedPosition:function(){
@@ -287,7 +287,6 @@ var RemotePlaylist = {
         // Manage remote buton
         $('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
             _self.shareManager.event("previous");
-            Share.event("previous");
         });
         $('.controls>.glyphicon-fast-forward',this.div).bind('click',function(){
             _self.next();
