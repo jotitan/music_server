@@ -115,7 +115,7 @@ type sortByArtist []map[string]string
 type sortByAlbum []map[string]interface{}
 
 func (a sortByArtist)Len() int{return len(a)}
-func (a sortByArtist)Less(i, j int) bool{return a[i]["name"] < a[j]["name"]}
+func (a sortByArtist)Less(i, j int) bool{return strings.ToLower(a[i]["name"]) < strings.ToLower(a[j]["name"])}
 func (a sortByArtist)Swap(i, j int) {a[i],a[j] = a[j],a[i]}
 
 func (a sortByAlbum)Len() int{return len(a)}
@@ -307,7 +307,6 @@ func (ms MusicServer)share(response http.ResponseWriter, request *http.Request){
 	}else {
 		music.CreateShareConnection(response, request.FormValue("device"),sessionID(response, request))
 	}
-	logger.GetLogger().Info("END SHARE")
 }
 
 func (ms MusicServer)shareUpdate(response http.ResponseWriter, request *http.Request){

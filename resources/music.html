@@ -26,9 +26,10 @@
     <script src="js/share.js"></script>
     <script src="js/music_player.js"></script>
     <script src="js/playlist.js"></script>
+    <script src="js/big_player.js"></script>
     <script src="js/explorer.js"></script>
 </head>
-<body>
+<body style="overflow:hidden">
 
 <div class="pcBloc">
 <div class="navbar navbar-inverse navbar-fixed-top navbar-md" role="navigation">
@@ -107,6 +108,7 @@
                 </div>
                 - <div style="display:inline-block;height:16px;width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"><span class="title"></span></div>
             </div>
+            <span class="glyphicon glyphicon-fullscreen close" onclick="BigPlayerPanel.open()" style="float:right;padding-top:3px;margin-right:5px;"></span>
             <canvas height="23px" width="23px" id="idVolume" style="position:relative;top:2px;margin-right:5px;float:right"></canvas>
             <span class="glyphicon little glyphicon-plus volume-plus close" style="margin-right:5px;float:right;padding-top:3px"></span>
             <span class="glyphicon little glyphicon-minus volume-minus close" style="float:right;padding-top:3px"></span>

@@ -40,9 +40,11 @@ var PlaylistPanel = {
         });
         $(document).unbind('next_event').bind('next_event',function(){
             _self.next();
+            $(document).trigger('show_next_event');
         });
         $(document).unbind('previous_event').bind('previous_event',function(){
             _self.previous();
+            $(document).trigger('show_previous_event');
         });
         this.listDiv.droppable({
             drop:function(event,ui){
@@ -58,15 +60,48 @@ var PlaylistPanel = {
                     _self.addMusicFromId(idMusic);
                 }
             }
-        })
+        });
         this.div.bind('close',function(){
            _self.cleanPlaylist();
+           // If share, close it
+           if(_self.shareManager!=null){
+            _self.shareManager.disable();
+           }
         });
         // Load saved playlist
         if(noLoad == true){
             this.saveInLS = false;
         }
         this.load();
+    },
+    // return songs around current
+    getSong:function(shift){
+        if(this.current != -1 && this.current + shift >=0 && this.current+shift <this.list.length){
+            return this.list[this.current+shift];
+        }
+            return null;
+    },
+    getSong:function(shift,from){
+        from = from || this.current;
+        if(from != -1 && from + shift >=0 && from+shift <this.list.length){
+            return this.list[from+shift];
+        }
+        return null;
+    },
+    getNSongs:function(n){
+        var musics = {};
+        if(this.list == null || this.list.length == 0){
+            return musics;
+        }
+        var c = this.current !=-1 ? this.current : 0;
+        musics[0] = this.list[c];
+        for(var i = c ; i <= c+n && i < this.list.length ; i++ ){
+            musics[i-c] = this.list[i];
+        }
+        for(var i = c ; i >= c-n && i >=0 ; i-- ){
+            musics[i-c] = this.list[i];
+        }
+        return musics;
     },
     cleanPlaylist:function(){
         if(this.saveInLS && localStorage){
@@ -103,7 +138,7 @@ var PlaylistPanel = {
     },
     getFocusedPosition:function(){
         var nb = $('> div',this.listDiv).length;
-        var afters = $('.focused:visible~div',this.listDiv).length
+        var afters = $('.focused~div',this.listDiv).length
         return nb-afters;
     },
     // Return selected or first in list
@@ -172,7 +207,9 @@ var PlaylistPanel = {
         }
     },
     // Add many musics from list of id
-    addMusicsFromIds:function(ids,noShare){
+    addMusicsFromIds:function(datas,noShare){
+        var ids = datas.ids;
+        this.current = datas.current || -1;
         var _self = this;
         $.ajax({
             url:'/musicsInfo?ids=' + JSON.stringify(ids),
@@ -186,6 +223,7 @@ var PlaylistPanel = {
                 });
                 _self.save();
                 _self.updateTotal();
+                _self._selectLine();
             }
         });
     },
@@ -212,8 +250,8 @@ var PlaylistPanel = {
             dataType:'json',
             success:function(data){
                 // If list receive with id in each element, add music
-                var ids = data.map(function(m){return parseInt(m.id);})
-                _self.addMusicsFromIds(ids);
+                var ids = data.filter(function(m){return m.id != null;}).map(function(m){return parseInt(m.id);})
+                _self.addMusicsFromIds({ids:ids});
             }
         })
     },
@@ -261,6 +299,9 @@ var PlaylistPanel = {
         }
         this.current++;
         this._selectLine();
+        if(this.shareManager!=null){
+            this.shareManager.event('next');
+        }
         if(!this.noLoadMusic){
             MusicPlayer.load(this.list[this.current]);
         }
@@ -271,6 +312,9 @@ var PlaylistPanel = {
         }
         this.current--;
         this._selectLine();
+        if(this.shareManager!=null){
+            this.shareManager.event('previous');
+        }
         if(!this.noLoadMusic){
             MusicPlayer.load(this.list[this.current]);
         }
@@ -286,6 +330,7 @@ var RemotePlaylist = {
         var _self = this;
         // Manage remote buton
         $('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
+            _self.previous();
             _self.shareManager.event("previous");
         });
         $('.controls>.glyphicon-fast-forward',this.div).bind('click',function(){

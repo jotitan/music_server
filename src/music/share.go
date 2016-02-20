@@ -60,13 +60,20 @@ type Device struct {
     connected bool
 }
 
-func (d Device)send(event string,data string){
+func (d Device)send(event string,data string)(success bool){
+    defer func(){
+        if e := recover() ; e!=nil{
+            success=false
+        }
+    }()
     logger.GetLogger().Info("=>SEND",event,data,d.sessionId)
     if event != "" {
         d.response.Write([]byte(fmt.Sprintf("event: %s\n",event)))
     }
     d.response.Write([]byte("data: " + data + "\n\n"))
     d.response.(http.Flusher).Flush()
+    success = true
+    return
 }
 
 var sharedSessions = make(map[int]*SharedSession)
@@ -114,13 +121,24 @@ func (ss *SharedSession)ConnectToShare(response http.ResponseWriter,deviceName,s
     }
     device.send("id",fmt.Sprintf("%d",ss.id))
     ss.original.send("askPlaylist","")
+    checkConnection(device)
+    // remove clone
+    ss.removeClone(sessionId)
+}
+
+func checkConnection(d *Device){
+    disconnect := false
+    go func() {
+        <-d.response.(http.CloseNotifier).CloseNotify()
+        disconnect = true
+    }()
     for {
-        if !device.connected {
+        if !d.connected || disconnect {
             break
         }
         time.Sleep(5*time.Second)
     }
-    logger.GetLogger().Info("End clone",device.sessionId)
+    logger.GetLogger().Info("End device",d.sessionId)
 }
 
 func CreateShareConnection(response http.ResponseWriter,deviceName,sessionId string){
@@ -131,13 +149,8 @@ func CreateShareConnection(response http.ResponseWriter,deviceName,sessionId str
     sharedSessions[ss.id] = ss
     ss.original.send("id",fmt.Sprintf("%d",ss.id))
     logger.GetLogger().Info("Create share",ss.id)
-    for {
-        if !device.connected {
-            break
-        }
-        time.Sleep(5*time.Second)
-    }
-    logger.GetLogger().Info("End original",device.sessionId)
+    checkConnection(device)
+    removeSharedSession(ss.id)
 }
 
 type ShareInfo struct {
@@ -151,21 +164,6 @@ func GetSharesInfo()[]ShareInfo{
         shares = append(shares,ShareInfo{Name:ss.original.name,Id:id})
     }
     return shares
-}
-
-func GetShares()[]int{
-    shares := make([]int,0,len(sharedSessions))
-    for id := range sharedSessions{
-        shares = append(shares,id)
-    }
-    return shares
-}
-
-func StopShare(id int){
-    if ss,exist := sharedSessions[id]; exist {
-        ss.connected = false
-        delete(sharedSessions,id)
-    }
 }
 
 // Generate unique code

@@ -92,16 +92,18 @@ var MusicPlayer = {
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
         next:function(){
-            MusicPlayer.playlist.next();
+            $(document).trigger('next_event');
+            /*MusicPlayer.playlist.next();
             if(this.shareManager!=null){
                 this.shareManager.event('next');
-           }
+           }  */
         },
         previous:function(){
-            MusicPlayer.playlist.previous();
+            $(document).trigger('previous_event');
+            /*MusicPlayer.playlist.previous();
             if(this.shareManager!=null){
                 this.shareManager.event('previous');
-           }
+           }  */
         },
         setShareManager:function(manager){
           this.shareManager = manager;
@@ -117,7 +119,9 @@ var MusicPlayer = {
         update:function(value){
             // Check value, if max == value, launch next song
             this.seeker.slider('option','value',value)
-            $('.position',this.div).text(MusicPlayer._formatTime(value));
+            var ftime = MusicPlayer._formatTime(value);
+            $('.position',this.div).text(ftime);
+            $(document).trigger('update_time',ftime);
         }
     },
     volume:{
@@ -167,7 +171,7 @@ var MusicPlayer = {
                 case 61 : if(e.shiftKey){$(document).trigger('volume_up');}break;
             }
         });
-        $(document).unbind('pause_event').bind('pause_event',function(){
+        $(document).unbind('pause_event.player').bind('pause_event.player',function(){
             if(MusicPlayer.player.src == ""){
                 return;
             }
@@ -185,10 +189,22 @@ var MusicPlayer = {
         this.controls.setTitle(music.title,music.artist);
         this.play();
     },
+    _showPlaying:function(play){
+        if(play){
+            $('.play',this.div).hide();
+            $('.pause',this.div).show();
+        }else{
+            $('.pause',this.div).hide();
+            $('.play',this.div).show();
+        }
+        $(document).trigger('playing_event');
+    },
     pause:function(){
         this.player.pause();
-        $('.pause',this.div).hide();
-        $('.play',this.div).show();
+        this._showPlaying(false);
+    },
+    isPause:function(){
+        return $('.pause',this.div).is(':visible');
     },
     play:function(){
         if(this.player.src == "" && this.playlist != null){
@@ -197,8 +213,7 @@ var MusicPlayer = {
             return
         }
         MusicPlayer.player.play();
-        $('.play',this.div).hide();
-        $('.pause',this.div).show();
+        this._showPlaying(true);
     },
     // launch after load
     initMusic:function(){

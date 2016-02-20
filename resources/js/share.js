@@ -4,9 +4,14 @@
 var Share = {
     original:null,
     enable:function(){
+        if(MusicPlayer.device.name == "No name"){
+            alert("Define a real name for device");
+            return;
+        }
         $('.share-button').addClass('active');
         // Get unique share id from server
         this.original = CreateOriginal(PlaylistPanel);
+        PlaylistPanel.open();
     },
     disable:function(){
         this.original.disable();
@@ -94,9 +99,10 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('askPlaylist',function(data){
          var ids = playlist.list.map(function(m){return parseInt(m.id)});
+         var data = {ids:ids,current:playlist.current};
          $.ajax({
              url:'/shareUpdate',
-             data:{id:manager.id,event:'playlist',data:JSON.stringify(ids)}
+             data:{id:manager.id,event:'playlist',data:JSON.stringify(data)}
          });
      });
      sse.addEventListener('remove',function(data){playlist.removeMusicId(data.data);});

@@ -1,0 +1,141 @@
+<style>
+    .black-bg {
+        background-color:black;
+        opacity:0.9;
+        position:absolute;
+        width:100%;
+        height:100%;
+        display:block;
+        top:0px;
+        z-index:1200;
+    }
+
+    .big-player {
+        position:absolute;
+        width:100%;
+        height:100%;
+        z-index:1201;
+        color:white;
+        top:0px;
+    }
+    .big-player .glyphicon {
+        color:white;
+        font-size:40px;
+        cursor:pointer;
+        border-radius:55px;
+    }
+
+    .big-player .glyphicon:hover {
+        background-color:#EEE;
+        color:#222;
+    }
+
+    .style-song {
+        font-size:60px;
+    }
+
+    .posN-3 {
+        top:-20px;
+        opacity:0;
+    }
+
+    .posN-2 {
+        top:0px;
+    }
+
+    .posN-1 {
+        top:30px;
+    }
+
+    .posN0 {
+        top:90px;
+    }
+
+    .posN1 {
+        top:300px;
+    }
+
+    .posN2 {
+        top:330px;
+    }
+
+    .posN3 {
+        top:430px;
+        opacity:0;
+    }
+
+    .level1 {
+        opacity:0.6;
+        font-size:18px;
+    }
+
+    .level2 {
+        opacity:0.2;
+    }
+
+    .hide-album {
+        opacity:0;
+        font-size:12px;
+    }
+
+    .show-album {
+        font-size:20px;
+    }
+
+    .album-song {
+        font-style:italic;
+        font-family:cursive;
+    }
+
+    .title-song {
+        font-variant:small-caps;
+    }
+
+    .pos {
+        position:absolute;
+        width:100%;
+        height:70px;
+    }
+
+    .info-playlist {
+        display:inline-block;
+        left:15%;
+        width:70%;
+        position:absolute;
+        text-align:center;
+        top:calc(50% - 165px)
+    }
+
+</style>
+
+<div id="idBigPlayer" style="display:none">
+<div class="black-bg"></div>
+
+<div class="big-player">
+    <div style="display:inline-block;margin-right:30px;margin-top:30px;float:right">
+        <span onclick="BigPlayerPanel.close()" class="glyphicon glyphicon-off" style="border:1px solid white;padding:18px;"></span>
+    </div>
+    <div style="display:inline-block;margin-left:10%;position:absolute;top:calc(50% - 50px);">
+        <span onclick="BigPlayerPanel.previous()" class="glyphicon glyphicon-backward" style="border:1px solid white;padding:22px 25px 22px 19px;"></span>
+    </div>
+    <div style="position:absolute;left:48%;top:60%;font-size:25px;font-family:fantasy" class="field-time">00:00</div>
+    <div class="info-playlist">
+        <div class="posN-3 pos"><div class="title-song"></div><div class="album-song hide-album"></div></div>
+        <div class="posN-2 level2 pos"><div class="title-song"></div><div class="album-song hide-album"></div></div>
+        <div class="posN-1 level1 pos"><div class="title-song"></div><div class="album-song hide-album"></div></div>
+        <div class="posN0 pos"><div class="title-song style-song"></div><div class="album-song show-album"></div></div>
+        <div class="posN1 level1 pos"><div class="title-song"></div><div class="album-song hide-album"></div></div>
+        <div class="posN2 level2 pos"><div class="title-song"></div><div class="album-song hide-album"></div></div>
+        <div class="posN3 pos"><div class="title-song"></div><div class="album-song hide-album"></div></div>
+    </div>
+    <div style="display:inline-block;left:85%;position:absolute;top:calc(50% - 50px);">
+        <span onclick="BigPlayerPanel.next()" class="glyphicon glyphicon-forward" style="border:1px solid white;padding:22px 19px 22px 25px;"></span>
+    </div>
+    <div class="pause-button" style="display:none;position:absolute;top:calc(50% - 50px);margin-left:47%;opacity:0.5;">
+        <span onclick="BigPlayerPanel.pause();" class="glyphicon glyphicon-pause" style="border:1px solid white;padding:22px 19px 22px 25px;"></span>
+    </div>
+    <div class="play-button" style="display:none;position:absolute;top:calc(50% - 50px);margin-left:47%;opacity:0.5;">
+        <span onclick="BigPlayerPanel.play();" class="glyphicon glyphicon-play" style="border:1px solid white;padding:22px 19px 22px 25px;"></span>
+    </div>
+</div>
+</div>
