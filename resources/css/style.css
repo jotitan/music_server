@@ -575,3 +575,7 @@ ul.taskbar > li {
     background-color:white;
     border:solid 0px white;
 }
+
+.navbar-brand {
+    padding:11px 15px;
+}

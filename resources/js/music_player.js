@@ -182,6 +182,10 @@ var MusicPlayer = {
             }
         });
         this.device.init();
+        // Get nb musics
+        $.ajax({url:'/nbMusics',success:function(data){
+            $('#nbMusics').html(data);
+        }});
     },
     load:function(music){
         if(music == null){return;}

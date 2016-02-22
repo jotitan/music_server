@@ -358,6 +358,11 @@ func NewDictionnary(workingDirectory string)MusicDictionnary {
     return MusicDictionnary{changeFolder:false, indexFolder:workingDirectory}
 }
 
+func GetNbMusics(workingDirectory string)int64{
+	md := LoadDictionnary(workingDirectory)
+	return md.nextId
+}
+
 // LoadDictionnary load the dictionnary which store music info by id
 func LoadDictionnary(workingDirectory string)MusicDictionnary{
     md := MusicDictionnary{changeFolder:false,indexFolder:workingDirectory}

@@ -28,9 +28,10 @@ var BigPlayerPanel = {
         if(!PlaylistPanel.isVisible()){
             return;
         }
+        PlaylistPanel.getOne();
         this.visible = true;
         var musics = PlaylistPanel.getNSongs(3);
-        this.currentSong = PlaylistPanel.current != -1 ? PlaylistPanel.current : 0;
+        this.currentSong = PlaylistPanel.current;
         for(var pos in musics){
             $('.posN' + pos + ' .title-song').html(musics[pos].title);
             $('.posN' + pos + ' .album-song').html(musics[pos].artist + " - " + musics[pos].album);
@@ -105,7 +106,7 @@ var BigPlayerPanel = {
         QueueEffectManager.add(function(time,manager){_self._doNext(noAction,time,manager)});
     },
     _doNext:function(noAction,time,manager){
-
+        if(this.currentSong>=PlaylistPanel.list.length -1){return;}
         this._showPause();
         $('.posN1 .album-song',this.playerDiv).switchClass('hide-album','show-album',time,this.ease);
         $('.posN1 .title-song',this.playerDiv).switchClass('','style-song',time,this.ease);

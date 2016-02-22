@@ -299,6 +299,7 @@ var PlaylistPanel = {
         }
         this.current++;
         this._selectLine();
+        this.saveCurrent();
         if(this.shareManager!=null){
             this.shareManager.event('next');
         }
@@ -312,6 +313,7 @@ var PlaylistPanel = {
         }
         this.current--;
         this._selectLine();
+        this.saveCurrent();
         if(this.shareManager!=null){
             this.shareManager.event('previous');
         }

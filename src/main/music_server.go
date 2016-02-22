@@ -246,6 +246,10 @@ func (ms MusicServer)browse(response http.ResponseWriter, request *http.Request)
 	ms.dico.Browse(folder)
 }
 
+func (ms MusicServer)nbMusics(response http.ResponseWriter, request *http.Request){
+	response.Write([]byte(fmt.Sprintf("%d",music.GetNbMusics(ms.folder))))
+}
+
 // Return music content
 func (ms MusicServer)readmusic(response http.ResponseWriter, request *http.Request){
 	id,_ := strconv.ParseInt(request.FormValue("id"),10,32)
@@ -384,6 +388,7 @@ func (ms MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/status",ms.status)
 	mux.HandleFunc("/statsAsSSE",ms.statsAsSSE)
 	mux.HandleFunc("/music",ms.readmusic)
+	mux.HandleFunc("/nbMusics",ms.nbMusics)
 	mux.HandleFunc("/musicInfo",ms.musicInfo)
 	mux.HandleFunc("/musicsInfo",ms.musicsInfo)
 	mux.HandleFunc("/listByArtist",ms.listByArtist)
