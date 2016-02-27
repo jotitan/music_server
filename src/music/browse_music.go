@@ -104,9 +104,9 @@ func (md * MusicDictionnary)browseFolder(folderName string){
 			} else{
 				if strings.HasSuffix(file.Name(), ".mp3") {
 					if _, exist := md.musicInIndex[inode] ; !exist {
-						if info := md.extractInfo(path); info != nil {
-							logger.GetLogger().Info("Index", info.Artist, info.Name, info.Album)
-							md.Add(path, *info)
+						if info,cover := md.extractInfo(path); info != nil {
+							logger.GetLogger().Info("Index", info.Artist, info.Name, info.Album,cover)
+							md.Add(path, *info,cover)
 							md.musicInIndex[inode] = struct{}{}
 						}else{
 							logger.GetLogger().Error("Impossible to add", path)
@@ -150,6 +150,7 @@ func (md MusicDictionnary)currentSize()int{
 type Music struct{
 	file id3.File
     path string
+    cover string
 	id int64
 }
 
@@ -163,6 +164,7 @@ func (m Music)toJSON()[]byte{
 	data["genre"] = m.file.Genre
 	data["track"] = m.file.Track
     data["path"] = m.path
+    data["cover"] = m.cover
 	jsonData,_ := json.Marshal(data)
 	return jsonData
 }
@@ -268,7 +270,7 @@ func (md * MusicDictionnary)Read(tab []byte)(int,error){
 }
 
 // Add music in dictionnary. If file limit is reach, save the file
-func (md * MusicDictionnary)Add(path string,music id3.File){
+func (md * MusicDictionnary)Add(path string,music id3.File, cover string){
     if md.currentSize() >= limitMusicFile {
         md.Save()
 		md.changeFolder = true
@@ -278,7 +280,7 @@ func (md * MusicDictionnary)Add(path string,music id3.File){
     }
     idMusic := md.nextId
     md.nextId++
-    md.musics = append(md.musics, Music{file:music,id:idMusic,path:path})
+    md.musics = append(md.musics, Music{file:music,id:idMusic,path:path,cover:cover})
 	// split artist when & or / or , is present
 	for _,artist := range  splitArtists(music.Artist) {
 		idArtist := md.artistIndex.Add(artist)
@@ -360,7 +362,7 @@ func NewDictionnary(workingDirectory string)MusicDictionnary {
 
 func GetNbMusics(workingDirectory string)int64{
 	md := LoadDictionnary(workingDirectory)
-	return md.nextId
+	return md.nextId-1
 }
 
 // LoadDictionnary load the dictionnary which store music info by id
@@ -391,15 +393,19 @@ func LoadDictionnary(workingDirectory string)MusicDictionnary{
 }
 
 // extractInfo get id3tag info
-func (md MusicDictionnary)extractInfo(filename string)*id3.File{
+func (md MusicDictionnary)extractInfo(filename string)(*id3.File,string){
   	r,_ := os.Open(filename)
 	defer r.Close()
 	music := id3.Read(r)
+	cover := ""
 	if music == nil {
 		music = &id3.File{}
 	}
 	if music.Name == "" {
 		music.Name = filepath.Base(filename)
+	}
+	if music.Artist!="" {
+		cover = GetCover(music.Artist,music.Album)
 	}
 	if music.Album == "" {
 		music.Album = "Unknown"
@@ -407,12 +413,12 @@ func (md MusicDictionnary)extractInfo(filename string)*id3.File{
 	if music.Artist == "" {
 		music.Artist = "Unknown"
 	}
+
 	// Too long where file is distant, copy in local
 	music.Length = md.getTimeMusic(filename)
 
-	return music
+	return music,cover
 }
-
 
 func (md MusicDictionnary)getTimeMusic(filename string) string{
 	f,_ := os.Open(filename)

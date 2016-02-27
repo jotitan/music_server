@@ -33,9 +33,11 @@ var BigPlayerPanel = {
         var musics = PlaylistPanel.getNSongs(3);
         this.currentSong = PlaylistPanel.current;
         for(var pos in musics){
+            this._loadCoverAt(musics[pos],$('.posN' + pos));
             $('.posN' + pos + ' .title-song').html(musics[pos].title);
             $('.posN' + pos + ' .album-song').html(musics[pos].artist + " - " + musics[pos].album);
         }
+        this._loadCover(musics[0]);
         this._showPlaying();
         var _self = this;
         $(document).unbind('playing_event.big').bind('playing_event.big',function(){
@@ -51,6 +53,20 @@ var BigPlayerPanel = {
             _self.timeField.html(ftime);
         });
         this.div.show();
+    },
+    _loadCover:function(music){
+        if(music == null || music.cover == ""){return;}
+        $('.posN0 .cover-album').html('<img src="' + music.cover + '"/>');
+      /*CoverHelper.get(music.artist,music.album,function(src){
+          $('.posN0 .cover-album').html('<img src="' + src + '"/>');
+      }); */
+    },
+    _loadCoverAt:function(music,div){
+        if(music == null || music.cover == ""){return;}
+        $('.cover-album',div).html('<img src="' + music.cover + '"/>');
+      /*CoverHelper.get(music.artist,music.album,function(src){
+          $('.cover-album',div).html('<img src="' + src + '"/>');
+      });*/
     },
     close:function(){
         this.div.hide();
@@ -85,7 +101,7 @@ var BigPlayerPanel = {
         $('.posN-1',this.playerDiv).switchClass('posN-1 level1','posN0',time,this.ease);
         $('.posN-2',this.playerDiv).switchClass('posN-2 level2','posN-1 level1',time,this.ease);
         $('.posN-3',this.playerDiv).switchClass('posN-3','posN-2 level2',time,this.ease);
-        $('.posN3',this.playerDiv).removeClass('posN3').addClass('posN-3 temp');
+        $('.posN3',this.playerDiv).removeClass('posN3').addClass('posN-3 temp').find('div').empty();
         $('.posN1',this.playerDiv).switchClass('posN1 level1','posN2 level2',time,this.ease);
         $('.posN2',this.playerDiv).switchClass('posN2 level2','posN3',time,this.ease);
         $('.posN0',this.playerDiv).switchClass('posN0','posN1 level1',time,this.ease);
@@ -96,6 +112,7 @@ var BigPlayerPanel = {
         }
         var music = PlaylistPanel.getSong(-3,--this.currentSong);
         if(music != null){
+            this._loadCoverAt(music,$('.posN-3.temp'));
             $('.posN-3.temp .title-song').html(music.title);
             $('.posN-3.temp .album-song').html(music.artist + " - " + music.album);
             $('.posN-3.temp').removeClass('temp');
@@ -116,7 +133,7 @@ var BigPlayerPanel = {
         $('.posN2',this.playerDiv).switchClass('posN2 level2','posN1 level1',time,this.ease);
         $('.posN1',this.playerDiv).switchClass('posN1 level1','posN0',time,this.ease);
         $('.posN0',this.playerDiv).switchClass('posN0','posN-1 level1',time,this.ease);
-        $('.posN-3',this.playerDiv).removeClass('posN-3').addClass('posN3 temp');
+        $('.posN-3',this.playerDiv).removeClass('posN-3').addClass('posN3 temp').find('div').empty();
         $('.posN-1',this.playerDiv).switchClass('posN-1 level1','posN-2 level2',time,this.ease);
         $('.posN-2',this.playerDiv).switchClass('posN-2 level2','posN-3',time,this.ease);
         manager.setBegin(new Date().getTime(),time);
@@ -125,6 +142,7 @@ var BigPlayerPanel = {
         }
         var music = PlaylistPanel.getSong(3,++this.currentSong);
         if(music != null){
+            this._loadCoverAt(music,$('.posN3.temp'));
             $('.posN3.temp .title-song').html(music.title);
             $('.posN3.temp .album-song').html(music.artist + " - " + music.album);
             $('.posN3.temp').removeClass('temp');
@@ -159,4 +177,52 @@ var QueueEffectManager = {
         // launch effect
         effect(timeEffect,this);
     }
+}
+
+
+var CoverHelper = {
+    get:function(artist,album,callback,useOnlyArtist,tries){
+        var params = encodeURIComponent(((!useOnlyArtist)?'release:"' + album + '" AND ':'') + 'artist:"' + artist + '"');
+        $.ajax(
+            {
+                url:'http://musicbrainz.org/ws/2/release/?query=' + params,
+                dataType:'xml',
+                success:function(data){
+                    var results = $(data).find('metadata release');
+                    if(results.length > 0){
+                        var r = results.get(0);
+                        // Get release group if exist
+                        if(r.getElementsByTagName('release-group').length > 0){
+                            var id = r.getElementsByTagName('release-group')[0].getAttribute('id');
+                            callback(CoverHelper._getReleaseGroupUrlCover(id));
+                        }else{
+                            var id = r.getAttribute("id");
+                            callback(CoverHelper._getReleaseUrlCover(id));
+                        }
+                    }else{
+                        // Keep the first word
+                        if(album.indexOf(" ")!=-1){
+                            album = album.substr(0,album.indexOf(" "));
+                            CoverHelper.get(artist,album,callback);
+                        }else{
+                            if(!useOnlyArtist){
+                                CoverHelper.get(artist,album,callback,true);
+                            }
+                        }
+                    }
+                },
+                error:function(){
+                    if(tries!=null && tries<=0){return;}
+                    console.log("error with server, retry",artist,album);
+                    setTimeout(function(){CoverHelper.get(artist,album,callback,useOnlyArtist,tries!=null ? --tries:3);},2000);
+                }
+            }
+        );
+    },
+    _getReleaseUrlCover:function(id){
+        return "http://coverartarchive.org/release/" + id + "/front-250";
+    },
+    _getReleaseGroupUrlCover:function(id){
+          return "http://coverartarchive.org/release-group/" + id + "/front-250";
+      }
 }

@@ -141,6 +141,12 @@ var PlaylistPanel = {
         var afters = $('.focused~div',this.listDiv).length
         return nb-afters;
     },
+    getCurrentMusic:function(){
+      if(this.current!=-1){
+        return this.list[this.current];
+      }
+      return null;
+    },
     // Return selected or first in list
     getOne:function(){
         var focused = $('div.focused',this.listDiv);

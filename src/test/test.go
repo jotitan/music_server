@@ -6,9 +6,59 @@ import (
 	"bufio"
 	"logger"
 	"strings"
+	"net/http"
+	"io/ioutil"
+	"net/url"
+	"time"
+	"encoding/xml"
+	"music"
 )
 
+
+
 func main(){
+
+	urlMB := "http://musicbrainz.org/ws/2/release/?query=artist%3A%22Minnie+Riperton%22"
+	if resp,e := http.Get(urlMB) ; e == nil {
+		if resp.StatusCode == 200 {
+			var rx music.RootResponse
+			data,_ := ioutil.ReadAll(resp.Body)
+			xml.Unmarshal(data,&rx)
+			logger.GetLogger().Info(rx)
+			logger.GetLogger().Info(rx.GetUrl())
+		}
+	}
+
+	return
+
+	//artist := "Queen"
+	artist := "Alicia%20Keys"
+	album := "Unplugged"
+	params := "artist:\"" + artist + "\"";
+	if album != "" {
+		params+=" AND release:\"" + album + "\""
+	}
+
+	u := url.Values{"query":[]string{params}}
+
+	params = u.Encode()
+
+	url := "http://musicbrainz.org/ws/2/release/?" + params
+	if resp,e := http.Get(url); e == nil {
+		// Quota exceed, relaunch after 1000ms
+		if resp.StatusCode == 503 {
+			time.Sleep(time.Second)
+		}
+		// Check if release field are present, if not, limit
+		d,_ := ioutil.ReadAll(resp.Body)
+		var m map[string]string
+		e := xml.Unmarshal(d,&m)
+
+		logger.GetLogger().Info(e,m)
+	}
+
+
+	return
 	//run()
 
 	//args := arguments.ParseArgs()
