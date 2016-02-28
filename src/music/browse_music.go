@@ -406,6 +406,7 @@ func (md MusicDictionnary)extractInfo(filename string)(*id3.File,string){
 	}
 	if music.Artist!="" {
 		cover = GetCover(music.Artist,music.Album)
+		coverCache[music.Artist + "-" + music.Album] = cover
 	}
 	if music.Album == "" {
 		music.Album = "Unknown"

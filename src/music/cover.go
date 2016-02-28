@@ -7,6 +7,7 @@ import (
     "time"
     "io/ioutil"
     "strings"
+    "logger"
 )
 
 type RootResponse struct {
@@ -60,6 +61,21 @@ func extractInfo(data []byte)(string,error){
 // key if composed of artist-album
 var coverCache = make(map[string]string)
 
+// use to request music brainz one time max by second
+var lastGet = 0
+
+func checkLastGet(){
+    defer func(){
+        lastGet = time.Now().Nanosecond()
+    }()
+    if lastGet == 0 {
+        return
+    }
+    if rest := 110000000 - time.Now().Nanosecond() - lastGet ; rest > 0 {
+        time.Sleep(time.Nanosecond * time.Duration(rest))
+    }
+}
+
 // Get cover musicbrainz id and check if resource exist
 func GetCover(artist,album string)string{
     key := artist + "-" + album
@@ -71,10 +87,11 @@ func GetCover(artist,album string)string{
         params+=" AND release:\"" + album + "\""
     }
     params = url.Values{"query":[]string{params}}.Encode()
+    checkLastGet()
     if resp,e := http.Get("http://musicbrainz.org/ws/2/release/?" + params); e == nil {
         // Quota exceed, relaunch after 1000ms
         if resp.StatusCode == 503 {
-            //logger.GetLogger().Error("Limit exceed, retry",params)
+            logger.GetLogger().Error("Limit exceed, retry",params)
             time.Sleep(time.Second)
             return GetCover(artist,album)
         }
