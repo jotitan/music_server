@@ -37,6 +37,9 @@ func (rl RootResponse)GetUrl()(string,error){
             // Check if exist
             urlImage := "http://coverartarchive.org/release-group/" + r.Group.Id + "/front-250"
             resp,_ := http.Get(urlImage)
+            if resp != nil && resp.Body!=nil {
+                defer resp.Body.Close()
+            }
             if resp.StatusCode == 200 {
                 return urlImage,nil
             }
@@ -44,6 +47,9 @@ func (rl RootResponse)GetUrl()(string,error){
         if r.Id != "" {
             urlImage := "http://coverartarchive.org/release/" + r.Id + "/front-250"
             resp,_ := http.Get(urlImage)
+            if resp != nil && resp.Body!=nil {
+                defer resp.Body.Close()
+            }
             if resp.StatusCode == 200 {
                 return urlImage,nil
             }
