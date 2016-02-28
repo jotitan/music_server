@@ -89,6 +89,7 @@ func GetCover(artist,album string)string{
     params = url.Values{"query":[]string{params}}.Encode()
     checkLastGet()
     if resp,e := http.Get("http://musicbrainz.org/ws/2/release/?" + params); e == nil {
+        defer resp.Body.Close()
         // Quota exceed, relaunch after 1000ms
         if resp.StatusCode == 503 {
             logger.GetLogger().Error("Limit exceed, retry",params)

@@ -51,6 +51,7 @@ func (md * MusicDictionnary)loadExistingMusic(){
 		for i := 0 ; i < len(data)/4 ; i++{
 			md.musicInIndex[int(binary.LittleEndian.Uint32(data[i*4:(i+1)*4]))] = struct{}{}
 		}
+		f.Close()
 	}else {
 		md.musicInIndex = make(map[int]struct{})
 	}
@@ -174,6 +175,7 @@ func findLastFile(folder,pattern string)(int64,error){
     r,_ := regexp.Compile(pattern)
     max := int64(-1)
     filesFolder,_ := os.Open(folder)
+	defer filesFolder.Close()
     names,_ := filesFolder.Readdirnames(-1)
     for _,name := range names {
         if result := r.FindStringSubmatch(name) ; len(result) >1 {
