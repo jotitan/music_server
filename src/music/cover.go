@@ -6,8 +6,8 @@ import (
     "net/url"
     "time"
     "io/ioutil"
-    "strings"
     "logger"
+    "regexp"
 )
 
 type RootResponse struct {
@@ -70,6 +70,8 @@ var coverCache = make(map[string]string)
 // use to request music brainz one time max by second
 var lastGet = 0
 
+var waitMBTime = 2000
+
 func checkLastGet(){
     defer func(){
         lastGet = time.Now().Nanosecond()
@@ -77,13 +79,26 @@ func checkLastGet(){
     if lastGet == 0 {
         return
     }
-    if rest := 110000000 - time.Now().Nanosecond() - lastGet ; rest > 0 {
+    if rest := waitMBTime * 1000000 - time.Now().Nanosecond() - lastGet ; rest > 0 {
         time.Sleep(time.Nanosecond * time.Duration(rest))
     }
 }
 
+var musicBrainzUrl = "http://musicbrainz.org/ws/2/release/?"
+var totalMBRequest = 0
+var retryMBRequest = 0
+
 // Get cover musicbrainz id and check if resource exist
-func GetCover(artist,album string)string{
+// Rules : check :
+// 1 : artist + album, then artist + first real word (not the, a...) of album
+// 2 : artist + song title (as release) for single case
+// 3 : artist only
+func GetCover(artist,album,title string)string{
+    // Take first artist (before ( , and &)
+    formatArtist,_ := regexp.Compile("[a-zA-Z0-9 ]*")
+    if values := formatArtist.FindAllString(artist,1) ; len(values) == 1 {
+        artist = values[0]
+    }
     key := artist + "-" + album
     if url,ok:= coverCache[key] ; ok {
         return url
@@ -91,16 +106,25 @@ func GetCover(artist,album string)string{
     params := "artist:\"" + artist + "\"";
     if album != "" {
         params+=" AND release:\"" + album + "\""
+    } else{
+        if title !="" {
+            params+=" AND release:\"" + title + "\""
+        }
     }
     params = url.Values{"query":[]string{params}}.Encode()
     checkLastGet()
-    if resp,e := http.Get("http://musicbrainz.org/ws/2/release/?" + params); e == nil {
+    totalMBRequest++
+    logger.GetLogger().Info("req",params,totalMBRequest,retryMBRequest)
+    if resp,e := http.Get(musicBrainzUrl + params); e == nil {
         defer resp.Body.Close()
-        // Quota exceed, relaunch after 1000ms
+        // Quota exceed, relaunch after time
         if resp.StatusCode == 503 {
-            logger.GetLogger().Error("Limit exceed, retry",params)
-            time.Sleep(time.Second)
-            return GetCover(artist,album)
+            retryMBRequest++
+            logger.GetLogger().Error("Limit exceed, retry",totalMBRequest,retryMBRequest,params)
+            d,_ := ioutil.ReadAll(resp.Body)
+            logger.GetLogger().Error(string(d))
+            time.Sleep(time.Duration(waitMBTime) * time.Millisecond)
+            return GetCover(artist,album,title)
         }
         // Check if release field are present, if not, limit
         d,_ := ioutil.ReadAll(resp.Body)
@@ -108,18 +132,28 @@ func GetCover(artist,album string)string{
             coverCache[key] = cover
             return cover
         } else{
-            if album == "" {
-                // No more solution
+            // case 3, only artist(title is already used as album
+            if title == ""{
+                return GetCover(artist, "", "")
+            }
+            countWords,_ := regexp.Compile("[a-zA-Z0-9]+")
+            // Case 2 (single release)
+            if len(countWords.FindAllString(album,-1)) ==1 {
+                return GetCover(artist, title, "")
+            }
+            // No cover
+            if album == "" && title == "" {
                 coverCache[key] = ""
                 return ""
             }
-            // try to relaunch with first word of album
-            if strings.Contains(album," ") {
-                album = album[:strings.Index(album," ")]
-                return GetCover(artist,album)
-            }else{
-                return GetCover(artist,"")
+            // Case 1 bis : try to relaunch with first real word of album (more than 3 carac, separator are different to [a-Z0-9]
+            sa,_ := regexp.Compile("[a-zA-Z0-9]{4,}")
+            if values := sa.FindAllString(album,1) ; len(values) == 1 {
+                return GetCover(artist,values[0],title)
             }
+            // Case 3, only artist
+            return GetCover(artist,"","")
+
         }
     }
     return ""

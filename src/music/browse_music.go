@@ -23,11 +23,12 @@ import (
 
 
 const (
-	limitMusicFile = 1000
+	limitMusicFile = 10
 )
 
 // Browse a folder to get all data
 func (md * MusicDictionnary)Browse(folderName string){
+	logger.GetLogger().Info("Begin index")
 	dictionnary := LoadDictionnary(md.indexFolder)
 
 	dictionnary.loadExistingMusic()
@@ -407,7 +408,7 @@ func (md MusicDictionnary)extractInfo(filename string)(*id3.File,string){
 		music.Name = filepath.Base(filename)
 	}
 	if music.Artist!="" {
-		cover = GetCover(music.Artist,music.Album)
+		cover = GetCover(music.Artist,music.Album,music.Name)
 		coverCache[music.Artist + "-" + music.Album] = cover
 	}
 	if music.Album == "" {

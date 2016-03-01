@@ -11,24 +11,16 @@ import (
 	"net/url"
 	"time"
 	"encoding/xml"
-	"music"
+	"regexp"
 )
 
 
 
 func main(){
 
-	urlMB := "http://musicbrainz.org/ws/2/release/?query=artist%3A%22Minnie+Riperton%22"
-	if resp,e := http.Get(urlMB) ; e == nil {
-		if resp.StatusCode == 200 {
-			var rx music.RootResponse
-			data,_ := ioutil.ReadAll(resp.Body)
-			xml.Unmarshal(data,&rx)
-			logger.GetLogger().Info(rx)
-			logger.GetLogger().Info(rx.GetUrl())
-		}
-	}
-
+	searchStr := "Thomas Newman and helmut   (ok bob)"
+	rrr,_ := regexp.Compile("[a-zA-Z0-9]+")
+	logger.GetLogger().Info(len(rrr.FindAllString(searchStr,-1)))
 	return
 
 	//artist := "Queen"
