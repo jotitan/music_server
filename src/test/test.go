@@ -12,14 +12,27 @@ import (
 	"time"
 	"encoding/xml"
 	"regexp"
+	"music"
 )
 
 
 
 func main(){
 
-	searchStr := "Thomas Newman and helmut   (ok bob)"
-	rrr,_ := regexp.Compile("[a-zA-Z0-9]+")
+	uuu := "http://musicbrainz.org/ws/2/release/?query=artist%3A%22John+Barry%22+AND+release%3A%22you%20only%20live%20twice%22"
+	if resp,e := http.Get(uuu); e == nil {
+		// Check if release field are present, if not, limit
+		d,_ := ioutil.ReadAll(resp.Body)
+		var m music.RootResponse
+		e := xml.Unmarshal(d,&m)
+
+		logger.GetLogger().Info(e,m)
+	}
+
+	return
+
+	searchStr := "Thomas Newman and helmut P.  (ok bob)"
+	rrr,_ := regexp.Compile("[a-zA-Z0-9\\.]+")
 	logger.GetLogger().Info(len(rrr.FindAllString(searchStr,-1)))
 	return
 

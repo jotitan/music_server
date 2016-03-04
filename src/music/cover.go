@@ -8,11 +8,19 @@ import (
     "io/ioutil"
     "logger"
     "regexp"
+    "strings"
+    "strconv"
 )
 
 type RootResponse struct {
     XMLName xml.Name `xml:"metadata"`
-    Releases []Release `xml:"release-list>release"`
+    Info InfoRelease `xml:"release-list"`
+    //Releases []Release `xml:"release-list>release"`
+}
+
+type InfoRelease struct {
+    Count string `xml:"count,attr"`
+    Releases []Release `xml:"release"`
 }
 
 type Release struct {
@@ -26,13 +34,21 @@ type ReleaseGroup struct {
     Id string `xml:"id,attr"`
 }
 
+func (rl RootResponse)GetCount()int{
+    //logger.GetLogger().Info("=>",rl.Info)
+    if val,err := strconv.ParseInt(rl.Info.Count,32,10) ; err == nil {
+        return int(val)
+    }
+    return 0
+}
+
 func (rl RootResponse)GetUrl()(string,error){
-    if len(rl.Releases) == 0 {
+    if len(rl.Info.Releases) == 0 {
         return "",errors.New("Impossible to get id")
     }
     // read 10 firsts
-    for i:= 0 ; i < 10 && i < len(rl.Releases) ; i++{
-        r := rl.Releases[i]
+    for i:= 0 ; i < 10 && i < len(rl.Info.Releases) ; i++{
+        r := rl.Info.Releases[i]
         if r.Group.Id != "" {
             // Check if exist
             urlImage := "http://coverartarchive.org/release-group/" + r.Group.Id + "/front-250"
@@ -58,9 +74,13 @@ func (rl RootResponse)GetUrl()(string,error){
     return "",errors.New("No id")
 }
 
-func extractInfo(data []byte)(string,error){
+// @param threashold : max number of results
+func extractInfo(data []byte,threashold int)(string,error){
     var r RootResponse
     xml.Unmarshal(data,&r)
+    if threashold!=0 && r.GetCount() > threashold {
+        return "",errors.New("Too much results")
+    }
     return r.GetUrl()
 }
 
@@ -88,73 +108,74 @@ var musicBrainzUrl = "http://musicbrainz.org/ws/2/release/?"
 var totalMBRequest = 0
 var retryMBRequest = 0
 
-// Get cover musicbrainz id and check if resource exist
-// Rules : check :
-// 1 : artist + album, then artist + first real word (not the, a...) of album
-// 2 : artist + song title (as release) for single case
-// 3 : artist only
-func GetCover(artist,album,title string)string{
-    // Take first artist (before ( , and &)
-    formatArtist,_ := regexp.Compile("[a-zA-Z0-9 ]*")
-    if values := formatArtist.FindAllString(artist,1) ; len(values) == 1 {
-        artist = values[0]
-    }
-    key := artist + "-" + album
-    if url,ok:= coverCache[key] ; ok {
-        return url
-    }
-    params := "artist:\"" + artist + "\"";
-    if album != "" {
-        params+=" AND release:\"" + album + "\""
-    } else{
-        if title !="" {
-            params+=" AND release:\"" + title + "\""
-        }
-    }
-    params = url.Values{"query":[]string{params}}.Encode()
+func doSearch(params string, threashold int)string{
+    fParams := url.Values{"query":[]string{params}}.Encode()
     checkLastGet()
     totalMBRequest++
-    logger.GetLogger().Info("req",params,totalMBRequest,retryMBRequest)
-    if resp,e := http.Get(musicBrainzUrl + params); e == nil {
+    //logger.GetLogger().Info("req",params,totalMBRequest,retryMBRequest)
+    if resp,e := http.Get(musicBrainzUrl + fParams); e == nil {
         defer resp.Body.Close()
         // Quota exceed, relaunch after time
         if resp.StatusCode == 503 {
             retryMBRequest++
-            logger.GetLogger().Error("Limit exceed, retry",totalMBRequest,retryMBRequest,params)
-            d,_ := ioutil.ReadAll(resp.Body)
-            logger.GetLogger().Error(string(d))
+            logger.GetLogger().Error("Limit exceed, retry", totalMBRequest, retryMBRequest, params)
             time.Sleep(time.Duration(waitMBTime) * time.Millisecond)
-            return GetCover(artist,album,title)
+            return doSearch(params,threashold)
         }
         // Check if release field are present, if not, limit
-        d,_ := ioutil.ReadAll(resp.Body)
-        if cover,err := extractInfo(d) ; err == nil {
-            coverCache[key] = cover
+        d, _ := ioutil.ReadAll(resp.Body)
+        if cover, err := extractInfo(d, threashold); err == nil {
             return cover
-        } else{
-            // case 3, only artist(title is already used as album
-            if title == ""{
-                return GetCover(artist, "", "")
-            }
-            countWords,_ := regexp.Compile("[a-zA-Z0-9]+")
-            // Case 2 (single release)
-            if len(countWords.FindAllString(album,-1)) ==1 {
-                return GetCover(artist, title, "")
-            }
-            // No cover
-            if album == "" && title == "" {
-                coverCache[key] = ""
-                return ""
-            }
-            // Case 1 bis : try to relaunch with first real word of album (more than 3 carac, separator are different to [a-Z0-9]
-            sa,_ := regexp.Compile("[a-zA-Z0-9]{4,}")
-            if values := sa.FindAllString(album,1) ; len(values) == 1 {
-                return GetCover(artist,values[0],title)
-            }
-            // Case 3, only artist
-            return GetCover(artist,"","")
-
         }
+    }
+    return ""
+}
+
+// Get cover musicbrainz id and check if resource exist
+// Rules : check :
+// 1 : artist + album
+// 2 : artist + song title (as release) for single case
+// 3 : artist and half album
+// 4 : only album with threashold
+// 3 : artist only
+func GetCover(artist,album,title string)string{
+    if artist == "" && album == ""{
+        return ""
+    }
+
+    // Take first artist (before ( , and &)
+    formatArtist,_ := regexp.Compile("[a-zA-Z0-9\\. ]*")
+    if values := formatArtist.FindAllString(artist,1) ; len(values) == 1 {
+        artist = values[0]
+    }
+    album = strings.Replace(strings.ToLower(album)," ost","",-1)
+    key := artist + "-" + album
+    if url,ok:= coverCache[key] ; ok {
+        return url
+    }
+
+    // 1
+    if cover := doSearch("artist:\"" + artist + "\" AND release:\"" + album + "\"",0) ; cover != "" {
+        return cover
+    }
+    // 2
+    if cover := doSearch("artist:\"" + artist + "\" AND release:\"" + title + "\"",0) ; cover != "" {
+        return cover
+    }
+    // 3 remove end useless of album : stop at first carac != aZ09., stop before CD and OST
+    patternAlbum,_ := regexp.Compile("[a-zA-Z0-9\\.]*")
+    if fAlbum := patternAlbum.FindAllString(album,1) ; len(fAlbum) == 1 && len(fAlbum[0])!= len(album){
+        if cover := doSearch("artist:\"" + artist + "\" AND release:\"" + fAlbum[0] + "\"",0) ; cover != "" {
+            return cover
+        }
+    }
+    // 4
+    if cover := doSearch("release:\"" + album + "\"",50) ; cover != "" {
+        return cover
+    }
+    // 5
+    if cover := doSearch("artist:\"" + artist + "\"",0) ; cover != "" {
+        return cover
     }
     return ""
 }

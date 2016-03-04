@@ -48,13 +48,14 @@ var Panel = {
             var _self = this;
             var other = window[$('.half-screen',this.div).data('split')];
             $('.half-screen',this.div).after('<span class="glyphicon glyphicon glyphicon-eye-open close end-half-screen" style="display:none"/>');
-            $('.half-screen',this.div).unbind('click').bind('click',function(){
+            $('.half-screen',this.div).unbind('click').bind('click',function(e){
                 // Check if explorer is open
                 if (other.isVisible()){
                     other.halfMaximize(_self);
                     $(this).hide();
                     $('.end-half-screen',_self.div).show();
                 }
+                e.stopPropagation();
             });
 
             $('.end-half-screen',this.div).unbind('click').bind('click',function(){
