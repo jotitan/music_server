@@ -4,7 +4,6 @@ import (
 	"os/exec"
 	"bytes"
 	"bufio"
-	"logger"
 	"strings"
 	"net/http"
 	"io/ioutil"
@@ -13,11 +12,18 @@ import (
 	"encoding/xml"
 	"regexp"
 	"music"
+	"logger"
 )
 
 
 
 func main(){
+
+	album := "totoand vvc cd 1"
+	if p:= strings.Index(album,"cd") ; p!=-1 {
+		logger.GetLogger().Info(album[:p] + "d")
+	}
+	return
 
 	uuu := "http://musicbrainz.org/ws/2/release/?query=artist%3A%22John+Barry%22+AND+release%3A%22you%20only%20live%20twice%22"
 	if resp,e := http.Get(uuu); e == nil {
@@ -38,7 +44,7 @@ func main(){
 
 	//artist := "Queen"
 	artist := "Alicia%20Keys"
-	album := "Unplugged"
+	album = "Unplugged"
 	params := "artist:\"" + artist + "\"";
 	if album != "" {
 		params+=" AND release:\"" + album + "\""

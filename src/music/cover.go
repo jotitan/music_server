@@ -149,6 +149,9 @@ func GetCover(artist,album,title string)string{
         artist = values[0]
     }
     album = strings.Replace(strings.ToLower(album)," ost","",-1)
+    if p:= strings.Index(album,"cd") ; p!=-1 {
+        album = album[:p]
+    }
     key := artist + "-" + album
     if url,ok:= coverCache[key] ; ok {
         return url
@@ -163,7 +166,7 @@ func GetCover(artist,album,title string)string{
         return cover
     }
     // 3 remove end useless of album : stop at first carac != aZ09., stop before CD and OST
-    patternAlbum,_ := regexp.Compile("[a-zA-Z0-9\\.]*")
+    patternAlbum,_ := regexp.Compile("[a-zA-Z0-9 \\.]*")
     if fAlbum := patternAlbum.FindAllString(album,1) ; len(fAlbum) == 1 && len(fAlbum[0])!= len(album){
         if cover := doSearch("artist:\"" + artist + "\" AND release:\"" + fAlbum[0] + "\"",0) ; cover != "" {
             return cover

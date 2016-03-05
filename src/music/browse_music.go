@@ -23,7 +23,7 @@ import (
 
 
 const (
-	limitMusicFile = 10
+	limitMusicFile = 1000
 )
 
 // Browse a folder to get all data
