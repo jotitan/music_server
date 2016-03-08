@@ -5,8 +5,8 @@
     background-color:white;
     z-index:1000;
     position:absolute;
-    top:100px;
-    left:100px;
+    /*top:100px;
+    left:100px;*/
 }
 
 .float-panel .title {
@@ -478,6 +478,10 @@ label > [type="checkbox"] {
 
 .folders.block > span > span.info {
     display:none;
+}
+
+.folders.line {
+    padding-left:25px;
 }
 
 .folders.line > span {

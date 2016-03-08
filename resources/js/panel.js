@@ -2,6 +2,8 @@ var FREQUENCE_REFRESH = 3000
 
 /* Panel mecanism (from all windows herit) */
 
+var moveOptions = {can:true};
+
 /* Represent a panel. Extend this. Don't use directly */
 var Panel = {
     div:null,
@@ -14,8 +16,9 @@ var Panel = {
         this.name = name;
         this.id = div.attr('id')
         this.div = div;
-        this.div.draggable({handle:".title",containment:"window"})
+        this.div.draggable({handle:".title",containment:"window",disabled:!moveOptions.can});
         this.singleton = singleton;
+        this.div.offset(PanelPositionManager.get());
 
         $('.title > span:first',this.div).after('<span class="glyphicon glyphicon-minus close minimize_button"></span>');
         if($('.title',this.div).data('nomaximize') == null){
@@ -169,6 +172,17 @@ function CloneDiv(id,prefix){
     $('body').append(div)
     return div;
 }
+
+// Give the position of the new panel
+var PanelPositionManager = {
+    top:100,
+    left:100,
+    get:function(){
+        this.top +=20;
+        this.left+=20;
+        return {top:this.top,left:this.left};
+    }
+};
 
 /* Use to manage window display in the taskbar. Manipulate Panel */
 var WindowsNavManager = {

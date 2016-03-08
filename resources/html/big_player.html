@@ -20,21 +20,18 @@
     }
     .big-player .glyphicon {
         color:white;
-        font-size:40px;
+        font-size:3vw;
         cursor:pointer;
-        border-radius:55px;
+        border-radius:75px;
+    }
+
+    .big-player .glyphicon.glyphicon-play,.glyphicon.glyphicon-pause {
+        font-size:4vw;
     }
 
     .big-player .glyphicon:hover {
         background-color:#EEE;
         color:#222;
-    }
-
-    .style-song {
-        font-size:60px;
-        text-overflow:ellipsis;
-        overflow:hidden;
-        white-space:nowrap;
     }
 
     .posN-3 {
@@ -82,7 +79,11 @@
     }
 
     .show-album {
-        font-size:20px;
+        font-size:2vw;
+    }
+
+    .style-song {
+        font-size:5vw;
     }
 
     .album-song {
@@ -110,8 +111,18 @@
     }
 
     .posN0 .title-song,.posN0 .album-song  {
-        width:calc(100% - 200px);
+        width:calc(100% - 150px);
         text-align:left;
+        position:absolute;
+        margin-left:140px;
+        text-overflow:ellipsis;
+        overflow:hidden;
+        white-space:nowrap;
+        font-family:Lucida Grande;
+    }
+
+    .posN0 .album-song  {
+        margin-top:82px;
     }
 
     .posN0 .cover-album {
@@ -120,7 +131,7 @@
         height:120px;
         display:inline-block;
         float:left;
-        margin:0px 30px 0px 50px;
+        /*margin:0px 30px 0px 50px;*/
     }
 
     .cover-album {
@@ -141,8 +152,8 @@
     <div style="display:inline-block;margin-right:30px;margin-top:30px;float:right">
         <span onclick="BigPlayerPanel.close()" class="glyphicon glyphicon-off" style="border:1px solid white;padding:18px;"></span>
     </div>
-    <div style="display:inline-block;margin-left:5%;position:absolute;top:calc(50% - 50px);">
-        <span onclick="BigPlayerPanel.previous()" class="glyphicon glyphicon-backward" style="border:1px solid white;padding:22px 25px 22px 19px;"></span>
+    <div style="display:inline-block;margin-left:10px;position:absolute;top:calc(50% - 5vw);">
+        <span onclick="BigPlayerPanel.previous()" class="glyphicon glyphicon-backward" style="border:1px solid white;padding:2.2vw 2.5vw 2.2vw 1.9vw;"></span>
     </div>
     <div style="position:absolute;left:48%;top:60%;font-size:25px;font-family:fantasy" class="field-time">00:00</div>
     <div class="info-playlist">
@@ -154,14 +165,14 @@
         <div class="posN2 level2 pos"><div class="cover-album"></div><div class="title-song"></div><div class="album-song hide-album"></div></div>
         <div class="posN3 pos"><div class="cover-album"></div><div class="title-song"></div><div class="album-song hide-album"></div></div>
     </div>
-    <div style="display:inline-block;left:90%;position:absolute;top:calc(50% - 50px);">
-        <span onclick="BigPlayerPanel.next()" class="glyphicon glyphicon-forward" style="border:1px solid white;padding:22px 19px 22px 25px;"></span>
+    <div style="display:inline-block;right:10px;position:absolute;top:calc(50% - 5vw);">
+        <span onclick="BigPlayerPanel.next()" class="glyphicon glyphicon-forward" style="border:1px solid white;padding:2.2vw 1.9vw 2.2vw 2.5vw;"></span>
     </div>
-    <div class="pause-button" style="display:none;position:absolute;top:calc(50% - 50px);margin-left:47%;opacity:0.5;">
-        <span onclick="BigPlayerPanel.pause();" class="glyphicon glyphicon-pause" style="border:1px solid white;padding:22px 19px 22px 25px;"></span>
+    <div class="pause-button" style="display:none;position:absolute;top:calc(50% - 5vw);margin-left:47%;opacity:0.5;">
+        <span onclick="BigPlayerPanel.pause();" class="glyphicon glyphicon-pause" style="border:1px solid white;padding:2.2vw 1.9vw 2.2vw 2.5vw;"></span>
     </div>
-    <div class="play-button" style="display:none;position:absolute;top:calc(50% - 50px);margin-left:47%;opacity:0.5;">
-        <span onclick="BigPlayerPanel.play();" class="glyphicon glyphicon-play" style="border:1px solid white;padding:22px 19px 22px 25px;"></span>
+    <div class="play-button" style="display:none;position:absolute;top:calc(50% - 5vw);margin-left:47%;opacity:0.5;">
+        <span onclick="BigPlayerPanel.play();" class="glyphicon glyphicon-play" style="border:1px solid white;padding:2.2vw 1.9vw 2.2vw 2.5vw;"></span>
     </div>
 </div>
 </div>
