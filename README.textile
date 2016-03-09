@@ -1,4 +1,3 @@
-h1. Music Server
 Music server is a server which index musics on a specific folder (over network too).
 
 h2. Developpment
