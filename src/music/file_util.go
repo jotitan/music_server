@@ -63,6 +63,10 @@ func getInt64FromFile(f *os.File,pos int64)int64{
 	return int64(binary.LittleEndian.Uint64(tab))
 }
 
+func getInt64FromBytes(data []byte)int64{
+	return int64(binary.LittleEndian.Uint64(data))
+}
+
 func getInt32FromFile(f *os.File,pos int64)int32{
 	tab := make([]byte,4)
 	f.ReadAt(tab,pos)

@@ -26,20 +26,61 @@ const (
 	limitMusicFile = 1000
 )
 
+// Download all index to increase indexation (key is music path)
+func (md * MusicDictionnary)FullReindex(folderName string){
+	// Load in map (by path) music info
+	musicsMap := make(map[string]map[string]string)
+	for fileId := 0 ; ; fileId++ {
+		path := filepath.Join(md.indexFolder,fmt.Sprintf("music_%d.dico",fileId))
+		if f,err := os.Open(path) ; err == nil {
+			data,_ := ioutil.ReadAll(f)
+			total := int(getInt64FromBytes(data[0:8]))
+			for j := 0 ; j < total ; j++ {
+				pos := getInt64FromBytes(data[(j+1)*8:(j+2)*8])
+				lengthInfo := getInt64FromBytes(data[pos:pos+8])
+				musicInfo := data[pos+8:pos+8+lengthInfo]
+				var results map[string]string
+				json.Unmarshal(musicInfo,&results)
+				musicsMap[results["path"]] = results
+			}
+			f.Close()
+		}
+		break
+	}
+	md.tempMusicInfo = musicsMap
+
+	// Remove index, dico and map
+	if dir,err := os.Open(md.indexFolder) ; err == nil {
+		if names,err := dir.Readdirnames(-1) ; err == nil {
+			for _,n := range names {
+				if strings.HasSuffix(n,".index") || strings.HasSuffix(n,".dico") || strings.HasSuffix(n,".map"){
+					os.Remove(filepath.Join(md.indexFolder,n))
+				}
+			}
+		}
+	}
+	md.Browse2(folderName)
+	md.tempMusicInfo = nil
+}
+
 // Browse a folder to get all data
 func (md * MusicDictionnary)Browse(folderName string){
 	logger.GetLogger().Info("Begin index")
 	dictionnary := LoadDictionnary(md.indexFolder)
+	dictionnary.Browse2(folderName)
+}
 
-	dictionnary.loadExistingMusic()
-	dictionnary.browseFolder(folderName)
-	dictionnary.saveExistingMusic()
-	dictionnary.Save()
-	dictionnary.artistIndex.Save(md.indexFolder)
-	dictionnary.artistMusicIndex.Save(md.indexFolder)
+func (md * MusicDictionnary)Browse2(folderName string){
+	md.loadExistingMusic()
+	md.browseFolder(folderName)
+	md.saveExistingMusic()
+	md.Save()
+	md.artistIndex.Save(md.indexFolder)
+	md.artistMusicIndex.Save(md.indexFolder)
 
 	IndexArtists(md.indexFolder)
 }
+
 
 // Load existing music (by inode) in index
 func (md * MusicDictionnary)loadExistingMusic(){
@@ -143,6 +184,8 @@ type MusicDictionnary struct{
     artistMusicIndex ArtistMusicIndex
 	// Map which contains inode of indexed music
 	musicInIndex map[int]struct{}
+	// Map with current information about musics
+	tempMusicInfo map[string]map[string]string
 }
 
 func (md MusicDictionnary)currentSize()int{
@@ -156,8 +199,21 @@ type Music struct{
 	id int64
 }
 
+func fromJSON(data map[string]string)(*id3.File,string){
+	file := id3.File{}
+	file.Name = data["title"]
+	file.Artist = data["artist"]
+	file.Album = data["album"]
+	file.Length = data["length"]
+	file.Year = data["year"]
+	file.Genre = data["genre"]
+	file.Track = data["track"]
+
+	return &file,data["path"]
+}
+
 func (m Music)toJSON()[]byte{
-	data := make(map[string]string,7)
+	data := make(map[string]string,9)
 	data["title"] = m.file.Name
 	data["artist"] = m.file.Artist
 	data["album"] = m.file.Album
@@ -397,7 +453,14 @@ func LoadDictionnary(workingDirectory string)MusicDictionnary{
 
 // extractInfo get id3tag info
 func (md MusicDictionnary)extractInfo(filename string)(*id3.File,string){
-  	r,_ := os.Open(filename)
+  	// check in temp cache
+	if md.tempMusicInfo!=nil{
+		if info,ok := md.tempMusicInfo[filename] ; ok {
+			logger.GetLogger().Info("Find info in cache",info)
+			return fromJSON(info)
+		}
+	}
+	r,_ := os.Open(filename)
 	defer r.Close()
 	music := id3.Read(r)
 	cover := ""

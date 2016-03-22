@@ -98,6 +98,13 @@ func (ms MusicServer)update(response http.ResponseWriter, request *http.Request)
 	}
 }
 
+func (ms MusicServer)fullReindex(response http.ResponseWriter, request *http.Request){
+	if ms.musicFolder!="" {
+		dico := music.LoadDictionnary(ms.folder)
+		dico.FullReindex(ms.musicFolder)
+	}
+}
+
 func (ms MusicServer)createSSEHeader(response http.ResponseWriter){
 	response.Header().Set("Content-Type","text/event-stream")
 	response.Header().Set("Cache-Control","no-cache")
@@ -397,6 +404,7 @@ func (ms MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/browse",ms.browse)
 	mux.HandleFunc("/update",ms.update)
 	mux.HandleFunc("/index",ms.index)
+	mux.HandleFunc("/fullReindex",ms.fullReindex)
 	mux.HandleFunc("/share",ms.share)
 	mux.HandleFunc("/killshare",ms.killShare)
 	mux.HandleFunc("/shares",ms.getShares)
