@@ -56,7 +56,7 @@ func (rl RootResponse)GetUrl()(string,error){
             if resp != nil && resp.Body!=nil {
                 defer resp.Body.Close()
             }
-            if resp.StatusCode == 200 {
+            if resp!=nil && resp.StatusCode == 200 {
                 return urlImage,nil
             }
         }
@@ -66,7 +66,7 @@ func (rl RootResponse)GetUrl()(string,error){
             if resp != nil && resp.Body!=nil {
                 defer resp.Body.Close()
             }
-            if resp.StatusCode == 200 {
+            if resp!=nil && resp.StatusCode == 200 {
                 return urlImage,nil
             }
         }
