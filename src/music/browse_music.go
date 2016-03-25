@@ -48,6 +48,7 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 		break
 	}
 	md.tempMusicInfo = musicsMap
+	logger.GetLogger().Info("Load",len(md.tempMusicInfo),"elements")
 
 	// Remove index, dico and map
 	if dir,err := os.Open(md.indexFolder) ; err == nil {
