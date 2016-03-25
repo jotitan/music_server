@@ -13,11 +13,22 @@ import (
 	"regexp"
 	"music"
 	"logger"
+	"github.com/mjibson/id3"
+	"os"
 )
 
 
 
 func main(){
+
+
+	pathMu := "D:\\test\\audio\\02-II. Dies Irae - Dies Irae.mp3"
+	//pathMu := "D:\\test\\audio\\01-I. Requiem.mp3"
+	ff,_ := os.Open(pathMu)
+	defer ff.Close()
+	info := id3.Read(ff)
+	logger.GetLogger().Info(info)
+	return
 
 	album := "totoand vvc cd 1"
 	if p:= strings.Index(album,"cd") ; p!=-1 {

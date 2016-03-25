@@ -59,6 +59,7 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 			}
 		}
 	}
+	md.nextId = 1
 	md.Browse2(folderName)
 	md.tempMusicInfo = nil
 }
@@ -339,7 +340,7 @@ func (md * MusicDictionnary)Add(path string,music id3.File, cover string){
     }
     idMusic := md.nextId
     md.nextId++
-    md.musics = append(md.musics, Music{file:music,id:idMusic,path:path,cover:cover})
+	md.musics = append(md.musics, Music{file:music,id:idMusic,path:path,cover:cover})
 	// split artist when & or / or , is present
 	for _,artist := range  splitArtists(music.Artist) {
 		idArtist := md.artistIndex.Add(artist)
@@ -384,6 +385,7 @@ func (md MusicDictionnary)GetMusicsFromIds(ids []int)[]map[string]string{
 				data := make([]byte,lengthData)
 				f.ReadAt(data,posInFile+8)
 
+				logger.GetLogger().Info(id,string(data))
 				var results map[string]string
 				json.Unmarshal(data,&results)
 				results["id"] = fmt.Sprintf("%d",id)
