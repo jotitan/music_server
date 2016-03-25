@@ -32,6 +32,7 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 	musicsMap := make(map[string]map[string]string)
 	for fileId := 0 ; ; fileId++ {
 		path := filepath.Join(md.indexFolder,fmt.Sprintf("music_%d.dico",fileId))
+		logger.GetLogger().Info("Full RI",path)
 		if f,err := os.Open(path) ; err == nil {
 			data,_ := ioutil.ReadAll(f)
 			total := int(getInt64FromBytes(data[0:8]))
