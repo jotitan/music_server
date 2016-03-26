@@ -151,8 +151,8 @@ func (md * MusicDictionnary)browseFolder(folderName string){
 				if strings.HasSuffix(file.Name(), ".mp3") {
 					if _, exist := md.musicInIndex[inode] ; !exist {
 						if info,cover := md.extractInfo(path); info != nil {
-							logger.GetLogger().Info("Index", info.Artist, info.Name, info.Album,cover)
-							md.Add(path, *info,cover)
+							m := md.Add(path, *info,cover)
+							logger.GetLogger().Info("Index", m.id,info.Artist, info.Name, info.Album,cover)
 							md.musicInIndex[inode] = struct{}{}
 						}else{
 							logger.GetLogger().Error("Impossible to add", path)
@@ -332,7 +332,7 @@ func (md * MusicDictionnary)Read(tab []byte)(int,error){
 }
 
 // Add music in dictionnary. If file limit is reach, save the file
-func (md * MusicDictionnary)Add(path string,music id3.File, cover string){
+func (md * MusicDictionnary)Add(path string,music id3.File, cover string)Music{
     if md.currentSize() >= limitMusicFile {
         md.Save()
 		md.changeFolder = true
@@ -342,7 +342,8 @@ func (md * MusicDictionnary)Add(path string,music id3.File, cover string){
     }
     idMusic := md.nextId
     md.nextId++
-	md.musics = append(md.musics, Music{file:music,id:idMusic,path:path,cover:cover})
+	musicInfo := Music{file:music,id:idMusic,path:path,cover:cover}
+	md.musics = append(md.musics, musicInfo)
 	// split artist when & or / or , is present
 	for _,artist := range  splitArtists(music.Artist) {
 		idArtist := md.artistIndex.Add(artist)
@@ -350,6 +351,7 @@ func (md * MusicDictionnary)Add(path string,music id3.File, cover string){
 	}
 	//idArtist := md.artistIndex.Add(music.Artist)
 	//md.artistMusicIndex.Add(idArtist,int(idMusic))
+	return musicInfo
 }
 
 func splitArtists(artistsList string)[]string{
