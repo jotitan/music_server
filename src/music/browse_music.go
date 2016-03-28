@@ -45,8 +45,9 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 				musicsMap[results["path"]] = results
 			}
 			f.Close()
+		}else {
+			break
 		}
-		break
 	}
 	md.tempMusicInfo = musicsMap
 	logger.GetLogger().Info("Load",len(md.tempMusicInfo),"elements")
