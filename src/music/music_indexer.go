@@ -2,9 +2,9 @@ package music
 import "logger"
 
 func IndexArtists(folder string){
-    logger.GetLogger().Info("Launch index")
     // Recreate albums index at each time (very quick)
     artists := LoadArtists(folder)
+    logger.GetLogger().Info("Launch index with",len(artists),"artists")
     dico := LoadDictionnary(folder)
     musicsByArtist := LoadArtistMusicIndex(folder)
 
@@ -12,10 +12,11 @@ func IndexArtists(folder string){
 
     // Index album by genre (consider only one genre by album)
 
-    for _, artistId := range artists {
+    for n, artistId := range artists {
         musicsIds := musicsByArtist.Get(artistId)
         // Load all tracks and group by album
         albums  := make(map[string][]int)
+        logger.GetLogger().Info("=>",n,artistId,dico.GetMusicsFromIds(musicsIds))
         for i,music := range dico.GetMusicsFromIds(musicsIds)  {
             musicId := musicsIds[i]
             if ids,ok := albums[music["album"]] ; ok {

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"encoding/binary"
 	"encoding/gob"
+	"logger"
 )
 
 
@@ -35,7 +36,7 @@ func (is * IndexSaver)Save(pathfile string,trunc bool){
 		}
 	}
 	is.current = 0
-	io.Copy(f,is)
+	logger.GetLogger().Info(io.Copy(f,is))
 	f.Close()
 }
 
@@ -154,6 +155,7 @@ func (ai ArtistIndex)FindAll()map[string]int {
 // Save only new artists
 func (ai * ArtistIndex)Save(folder string){
 	is := IndexSaver{ai.artistsToSave,0}
+	logger.GetLogger().Info("Save artists",len(ai.artistsToSave))
 	is.Save(filepath.Join(folder,"artist.dico"),false)
 }
 
