@@ -62,6 +62,9 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 			}
 		}
 	}
+	// Reinit artist index
+	md.artistIndex = LoadArtistIndex(md.indexFolder)
+	md.musics = make([]Music,0)
 	md.nextId = 1
 	md.Browse2(folderName)
 	md.tempMusicInfo = nil

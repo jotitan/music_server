@@ -36,7 +36,7 @@ func (is * IndexSaver)Save(pathfile string,trunc bool){
 		}
 	}
 	is.current = 0
-	logger.GetLogger().Info(io.Copy(f,is))
+	io.Copy(f,is)
 	f.Close()
 }
 
