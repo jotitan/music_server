@@ -394,7 +394,6 @@ func (md MusicDictionnary)GetMusicsFromIds(ids []int)[]map[string]string{
 				data := make([]byte,lengthData)
 				f.ReadAt(data,posInFile+8)
 
-				logger.GetLogger().Info(id,string(data))
 				var results map[string]string
 				json.Unmarshal(data,&results)
 				results["id"] = fmt.Sprintf("%d",id)
