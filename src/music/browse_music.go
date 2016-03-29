@@ -64,6 +64,7 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 	}
 	// Reinit artist index
 	md.artistIndex = LoadArtistIndex(md.indexFolder)
+	md.artistMusicIndex = LoadArtistMusicIndex(md.indexFolder)
 	md.musics = make([]Music,0)
 	md.nextId = 1
 	md.previousSize = 0
