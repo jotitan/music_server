@@ -469,12 +469,12 @@ func (md MusicDictionnary)extractInfo(filename string)(*id3.File,string){
 		if jsonInfo,ok := md.tempMusicInfo[filename] ; ok {
 			logger.GetLogger().Info("Find info in cache")
 			if info,oldcover := fromJSON(jsonInfo); strings.HasSuffix(oldcover,".mp3") {
-				cover = GetCover(info.Artist,info.Album,info.Name)
+				cover := GetCover(info.Artist,info.Album,info.Name)
 				logger.GetLogger().Info("Bad cover",oldcover,", find",cover	)
 				coverCache[info.Artist + "-" + info.Album] = cover
 				return info, cover
 			}else {
-				return info, cover
+				return info, oldcover
 			}
 		}
 	}
