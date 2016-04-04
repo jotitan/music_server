@@ -218,7 +218,7 @@ func fromJSON(data map[string]string)(*id3.File,string){
 	file.Genre = data["genre"]
 	file.Track = data["track"]
 
-	return &file,data["path"]
+	return &file,data["cover"]
 }
 
 func (m Music)toJSON()[]byte{
@@ -466,9 +466,16 @@ func LoadDictionnary(workingDirectory string)MusicDictionnary{
 func (md MusicDictionnary)extractInfo(filename string)(*id3.File,string){
   	// check in temp cache
 	if md.tempMusicInfo!=nil{
-		if info,ok := md.tempMusicInfo[filename] ; ok {
-			logger.GetLogger().Info("Find info in cache",info)
-			return fromJSON(info)
+		if jsonInfo,ok := md.tempMusicInfo[filename] ; ok {
+			logger.GetLogger().Info("Find info in cache")
+			if info,oldcover := fromJSON(jsonInfo); strings.HasSuffix(oldcover,".mp3") {
+				cover = GetCover(info.Artist,info.Album,info.Name)
+				logger.GetLogger().Info("Bad cover",oldcover,", find",cover	)
+				coverCache[info.Artist + "-" + info.Album] = cover
+				return info, cover
+			}else {
+				return info, cover
+			}
 		}
 	}
 	r,_ := os.Open(filename)
