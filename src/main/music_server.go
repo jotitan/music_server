@@ -80,7 +80,6 @@ func (ms MusicServer)index(response http.ResponseWriter, request *http.Request){
 	if !ms.checkRequester(request){
 		return
 	}
-
 	if ms.musicFolder!="" {
 		music.IndexArtists(ms.folder)
 	}
@@ -99,6 +98,9 @@ func (ms MusicServer)update(response http.ResponseWriter, request *http.Request)
 }
 
 func (ms MusicServer)fullReindex(response http.ResponseWriter, request *http.Request){
+	if !ms.checkRequester(request){
+		return
+	}
 	if ms.musicFolder!="" {
 		dico := music.LoadDictionnary(ms.folder)
 		dico.FullReindex(ms.musicFolder)
