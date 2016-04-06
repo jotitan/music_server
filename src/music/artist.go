@@ -131,6 +131,7 @@ func LoadArtistIndex(folder string)ArtistIndex{
 	ai := ArtistIndex{artists:make(map[string]int),artistsToSave:make([]string,0)}
 	ai.artists = LoadArtists(folder)
 	ai.currentId = len(ai.artists) + 1
+	logger.GetLogger().Info("Current artist id",ai.currentId)
 	return ai
 }
 
@@ -143,6 +144,7 @@ func (ai * ArtistIndex)Add(artist string)int{
 	id := ai.currentId
 	ai.artists[artist] = id
 	ai.artistsToSave = append(ai.artistsToSave,artist)
+	logger.GetLogger().Info("Add artist",artist," :",ai.currentId)
 	ai.currentId++
 	return id
 }

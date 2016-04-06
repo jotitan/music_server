@@ -355,8 +355,6 @@ func (md * MusicDictionnary)Add(path string,music id3.File, cover string)Music{
 		idArtist := md.artistIndex.Add(artist)
 		md.artistMusicIndex.Add(idArtist,int(idMusic))
 	}
-	//idArtist := md.artistIndex.Add(music.Artist)
-	//md.artistMusicIndex.Add(idArtist,int(idMusic))
 	return musicInfo
 }
 
