@@ -28,6 +28,7 @@ const (
 
 // Download all index to increase indexation (key is music path)
 func (md * MusicDictionnary)FullReindex(folderName string){
+	logger.GetLogger().Info("Launch FullReindex")
 	// Load in map (by path) music info
 	musicsMap := make(map[string]map[string]string)
 	for fileId := 0 ; ; fileId++ {
