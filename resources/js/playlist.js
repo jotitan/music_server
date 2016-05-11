@@ -139,7 +139,7 @@ var PlaylistPanel = {
     getFocusedPosition:function(){
         var nb = $('> div',this.listDiv).length;
         var afters = $('.focused~div',this.listDiv).length
-        return nb-afters;
+        return nb-afters-1;
     },
     getCurrentMusic:function(){
       if(this.current!=-1){
@@ -172,11 +172,9 @@ var PlaylistPanel = {
         if(this.saveInLS && localStorage && localStorage["playlist"]!=null){
             var musics = JSON.parse(localStorage["playlist"]);
             var currentMusic = localStorage["current"];
+            this.current = parseInt(currentMusic);
             musics.forEach(function(m,i){
                 this.add(m,true);
-                if(currentMusic == m.id){
-                    this.current = i;
-                }
             },this);
             this._selectLine();
             this.open();
@@ -193,7 +191,7 @@ var PlaylistPanel = {
     },
     saveCurrent:function(){
         if(this.saveInLS && localStorage){
-            localStorage["current"] = this.list[this.current].id;
+            localStorage["current"] = this.current;//this.list[this.current].id;
         }
     },
     removeMusicId:function(id,noShare){
@@ -275,7 +273,10 @@ var PlaylistPanel = {
             if(_self.shareManager!=null){
                 _self.shareManager.event('playMusic',music.id);
             }
-            MusicPlayer.load(music);
+            if(!_self.noLoadMusic) {
+                MusicPlayer.load(music);
+                _self.saveCurrent();
+            }
         });
         $('.glyphicon-remove',line).bind('click',function(){
             var nb = _self.listDiv.find('div').length;
