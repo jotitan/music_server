@@ -129,6 +129,11 @@ func (ss *SharedSession)ConnectToShare(response http.ResponseWriter,deviceName,s
 func checkConnection(d *Device){
     disconnect := false
     go func() {
+        defer func(){
+           if err := recover(); err != nil {
+               disconnect = true
+           }
+        }()
         <-d.response.(http.CloseNotifier).CloseNotify()
         disconnect = true
     }()

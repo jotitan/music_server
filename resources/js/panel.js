@@ -83,7 +83,8 @@ var Panel = {
         WindowsNavManager.add(this);
     },
     close:function(){
-        WindowsNavManager.remove(this)
+        WindowsNavManager.remove(this);
+        PanelPositionManager.closeOne();
         this.div.trigger('close');
         this.hide()
     },
@@ -175,12 +176,20 @@ function CloneDiv(id,prefix){
 
 // Give the position of the new panel
 var PanelPositionManager = {
+    total:0,
+    nb:0,
     top:100,
     left:100,
     get:function(){
-        this.top +=20;
-        this.left+=20;
-        return {top:this.top,left:this.left};
+        this.total++;
+        this.nb++;
+        return {top:this.top + 20*this.total,left:this.left + 20*this.total};
+    },
+    closeOne:function(){
+        if(--this.nb <=0){
+            this.total = 0;
+            this.nb = 0;
+        }
     }
 };
 

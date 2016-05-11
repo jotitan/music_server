@@ -50,23 +50,22 @@ function CreateClone(id,remotePlaylist){
      sse.addEventListener('add',function(data){
          remotePlaylist.addMusicFromId(data.data,true);
      });
-     sse.addEventListener('clone',function(data){
+     sse.addEventListener('close',function(data){
           manager.disable();
       });
      sse.addEventListener('playlist',function(data){
          remotePlaylist.addMusicsFromIds(JSON.parse(data.data),true);
      });
      sse.addEventListener('remove',function(data){remotePlaylist.removeMusicId(data.data,true);});
-     sse.addEventListener('remove',function(data){remotePlaylist.removeMusicId(data.data,true);});
-     sse.addEventListener('playMusic',function(data){remotePlaylist.showMusic(data.data);});
-     sse.addEventListener('next',function(){remotePlaylist.next();});
-     sse.addEventListener('previous',function(){remotePlaylist.previous();});
+     sse.addEventListener('playMusic',function(data){console.log(data.data);remotePlaylist.showMusicByPosition(data.data);});
+     sse.addEventListener('next',function(){remotePlaylist.next(true);});
+     sse.addEventListener('previous',function(){remotePlaylist.previous(true);});
      sse.addEventListener('pause',function(){remotePlaylist.pause();});
      sse.addEventListener('play',function(){remotePlaylist.play();});
 
     manager.sse = sse;
     manager.event = function(event,data){
-        data = data || "";
+        data = data == null ? "" : data;
         $.ajax({
             url:'/shareUpdate',
             data:{id:this.id,event:event,data:data}
@@ -107,14 +106,14 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('remove',function(data){playlist.removeMusicId(data.data);});
      sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
-     sse.addEventListener('next',function(){playlist.next();});
-     sse.addEventListener('previous',function(){playlist.previous();});
+     sse.addEventListener('next',function(){console.log("ne");playlist.next(true);});
+     sse.addEventListener('previous',function(){playlist.previous(true);});
      sse.addEventListener('pause',function(){MusicPlayer.pause();});
      sse.addEventListener('play',function(){MusicPlayer.play();});
     manager.sse = sse;
 
     manager.event = function(event,data){
-        data = data || "";
+        data = data == null ? "" : data;
         $.ajax({
             url:'/shareUpdate',
             data:{id:this.id,event:event,data:data}
