@@ -346,6 +346,7 @@ var RemotePlaylist = {
             _self.play();
         });
         $('.controls>.glyphicon-play',this.div).bind('click',function(){
+            _self.shareManager.event("play");
             _self.play();
         });
         $('.controls>.glyphicon-pause',this.div).bind('click',function(){

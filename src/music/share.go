@@ -66,7 +66,7 @@ func (d Device)send(event string,data string)(success bool){
             success=false
         }
     }()
-    logger.GetLogger().Info("=>SEND",event,data,d.sessionId)
+    logger.GetLogger().Info("SEND",event,data,d.sessionId)
     if event != "" {
         d.response.Write([]byte(fmt.Sprintf("event: %s\n",event)))
     }
