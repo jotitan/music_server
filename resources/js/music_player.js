@@ -208,7 +208,7 @@ var MusicPlayer = {
         this._showPlaying(false);
     },
     isPause:function(){
-        return $('.pause',this.div).is(':visible');
+        return !$('.pause',this.div).is(':visible');
     },
     play:function(){
         if(this.player.src == "" && this.playlist != null){

@@ -270,7 +270,7 @@ var PlaylistPanel = {
         $('.glyphicon-play',line).bind('click',function(){
             _self.setActualPlayed($(this).closest('div'));
             if(_self.shareManager!=null){
-                _self.shareManager.event('playMusic',music.id);
+                _self.shareManager.event('playMusic',_self.current);
             }
             if(!_self.noLoadMusic) {
                 MusicPlayer.load(music);
@@ -336,12 +336,14 @@ var RemotePlaylist = {
     init2:function(){
         // If remote player, shareManager exist for sure
         var _self = this;
-        // Manage remote buton
+        // Manage remote button
         $('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
             _self.previous();
+            _self.play();
         });
         $('.controls>.glyphicon-fast-forward',this.div).bind('click',function(){
             _self.next();
+            _self.play();
         });
         $('.controls>.glyphicon-play',this.div).bind('click',function(){
             _self.play();

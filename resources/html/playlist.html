@@ -1,8 +1,6 @@
 <style>
-    @media (max-width:1280px){
-        .playlist .glyphicon {
-            font-size:24px;
-        }
+    .playlist.remote{
+        height:calc(100% - 54px);
     }
     .playlist .head > span {
         text-align:center;
@@ -44,6 +42,30 @@
     .playlist .glyphicon.remove {
         color:red;
     }
+    .controls > .glyphicon {
+        cursor:pointer;
+    }
+    .controls_footer {
+        height:20px;
+    }
+    @media (max-width:1280px) {
+        .controls_footer {
+           padding-top:3px;
+        }
+        .controls {
+            margin-top:-3px;
+        }
+        .playlist.remote{
+            height:calc(100% - 62px);
+        }
+        .controls > .glyphicon {
+            font-size:24px;
+        }
+        .controls_footer {
+            height:24px;
+        }
+    }
+
 </style>
 
 <div id="idPlaylist" class="float-panel normal-panel-size">
@@ -64,16 +86,17 @@
         <span class="glyphicon glyphicon-eye-close close half-screen" data-split="Explorer"/>
     </div>
 
-    <div style="height:calc(100% - 54px);overflow:auto;padding-left:5px;position:relative;" class="playlist">
+    <div style="overflow:auto;padding-left:5px;position:relative;" class="playlist remote">
         <!--div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div-->
     </div>
-    <div style="height:20px;border-top:solid 1px lightgray;padding-left:10px">
-        <span class="total_playlist"></span> music(s) in playlist
+    <div style="border-top:solid 1px lightgray;padding-left:10px" class="controls_footer">
+        <span><span class="total_playlist"></span> music(s) in playlist</span>
         <div style="display:inline-block;float:right;padding-right:20px;" class="controls">
             <span class="glyphicon glyphicon-fast-backward"></span>
             <span class="glyphicon glyphicon-play"></span>
             <span class="glyphicon glyphicon-pause" style="display:none"></span>
             <span class="glyphicon glyphicon-fast-forward"></span>
+            <span class="glyphicon glyphicon glyphicon-phone"></span>
         </div>
     </div>
 

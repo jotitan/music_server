@@ -19,9 +19,9 @@ var BigPlayerPanel = {
     },
     _showPlaying:function(){
         if(MusicPlayer.isPause()){
-            this._showPause();
-        }else{
             this._showPlay();
+        }else{
+            this._showPause();
         }
     },
     open:function(){

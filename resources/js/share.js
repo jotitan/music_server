@@ -54,10 +54,12 @@ function CreateClone(id,remotePlaylist){
           manager.disable();
       });
      sse.addEventListener('playlist',function(data){
-         remotePlaylist.addMusicsFromIds(JSON.parse(data.data),true);
+         var info = JSON.parse(data.data);
+         remotePlaylist.addMusicsFromIds(info,true);
+         info.playing ? remotePlaylist.play() : remotePlaylist.pause();
      });
      sse.addEventListener('remove',function(data){remotePlaylist.removeMusicId(data.data,true);});
-     sse.addEventListener('playMusic',function(data){console.log(data.data);remotePlaylist.showMusicByPosition(data.data);});
+     sse.addEventListener('playMusic',function(data){remotePlaylist.showMusicByPosition(data.data);});
      sse.addEventListener('next',function(){remotePlaylist.next(true);});
      sse.addEventListener('previous',function(){remotePlaylist.previous(true);});
      sse.addEventListener('pause',function(){remotePlaylist.pause();});
@@ -98,7 +100,7 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('askPlaylist',function(data){
          var ids = playlist.list.map(function(m){return parseInt(m.id)});
-         var data = {ids:ids,current:playlist.current};
+         var data = {ids:ids,current:playlist.current,playing:!MusicPlayer.isPause()};
          $.ajax({
              url:'/shareUpdate',
              data:{id:manager.id,event:'playlist',data:JSON.stringify(data)}
@@ -106,7 +108,7 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('remove',function(data){playlist.removeMusicId(data.data);});
      sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
-     sse.addEventListener('next',function(){console.log("ne");playlist.next(true);});
+     sse.addEventListener('next',function(){playlist.next(true);});
      sse.addEventListener('previous',function(){playlist.previous(true);});
      sse.addEventListener('pause',function(){MusicPlayer.pause();});
      sse.addEventListener('play',function(){MusicPlayer.play();});
