@@ -2,6 +2,9 @@
 
 if(Loader){Loader.toLoad("html/playlist.html","PlaylistPanel");}
 
+
+
+
 var PlaylistPanel = {
     listDiv:null,
     list:[],
@@ -73,13 +76,33 @@ var PlaylistPanel = {
             this.saveInLS = false;
         }
         this.load();
+        this.initSearch();
     },
     // return songs around current
-    getSong:function(shift){
+    /*getSong:function(shift){
         if(this.current != -1 && this.current + shift >=0 && this.current+shift <this.list.length){
             return this.list[this.current+shift];
         }
             return null;
+    },*/
+    initSearch:function(){
+         $('#idSearch').autocomplete({
+           source:'search?size=5&',
+            minLength:2,
+            position:{ my: "left bottom", at: "left top", collision: "none" },
+            focus:function(e,ui){
+                $('#idSearch').val(ui.item.title);
+                return false;
+            },
+            select:function(event,ui){
+                PlaylistPanel.open();
+                PlaylistPanel.add(ui.item);
+            }
+        }).autocomplete( "instance" )._renderItem = function( ul, item ) {
+              return $( "<li>" )
+                .append( "<a><b>" + item.title + "</b><br>" + item.artist + "</a>" )
+                .appendTo( ul );
+        };
     },
     getSong:function(shift,from){
         from = from || this.current;
@@ -172,7 +195,7 @@ var PlaylistPanel = {
         if(this.saveInLS && localStorage && localStorage["playlist"]!=null){
             var musics = JSON.parse(localStorage["playlist"]);
             var currentMusic = localStorage["current"];
-            this.current = parseInt(currentMusic);
+            this.current = currentMusic!=null ? parseInt(currentMusic): -1;
             musics.forEach(function(m,i){
                 this.add(m,true);
             },this);
@@ -293,7 +316,7 @@ var PlaylistPanel = {
         }
     },
     _selectLine:function(){
-        if(this.current == -1){
+        if(this.current!=null && this.current == -1){
             return
         }
         var line = $('div:nth-child(' + (this.current+1) + ')',this.listDiv);

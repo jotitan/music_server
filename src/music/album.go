@@ -193,6 +193,8 @@ type AlbumManager struct{
     mbaa * AlbumsIndex
     // Working folder
     folder string
+    // Text indexer
+    textIndexer TextIndexer
 }
 
 func NewAlbumManager(folder string)*AlbumManager{
@@ -201,6 +203,7 @@ func NewAlbumManager(folder string)*AlbumManager{
     am.musicsByAlbum = make([][]int,0)
     am.aba = NewAlbumByArtist()
     am.mbaa = NewAlbumsIndex()
+    am.textIndexer = NewTextIndexer()
     return &am
 }
 
@@ -209,6 +212,12 @@ func (am * AlbumManager)AddAlbumsByArtist(artistId int,albums map[string][]int) 
         idAlbum := len(am.musicsByAlbum)+1
         am.musicsByAlbum = append(am.musicsByAlbum,musicsIds)
         am.aba.AddAlbum(artistId,NewAlbum(idAlbum,album))
+    }
+}
+
+func (am * AlbumManager)IndexText(idMusic int,keys ...string){
+    for _,value := range am.textIndexer.Filter(keys...){
+        am.textIndexer.Add(value,idMusic)
     }
 }
 
@@ -223,6 +232,7 @@ func (am * AlbumManager) Save(){
 	(&(IndexSaver{am.mbaa.toSave,0})).Save(filepath.Join(am.folder,"albums.dico"),true)
 
     am.aba.Save(am.folder)
+    am.textIndexer.Save(am.folder)
 }
 
 func (am * AlbumManager)getMusicsFrom(filename string,albumId int)[]int{

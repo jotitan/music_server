@@ -55,6 +55,7 @@ function CreateClone(id,remotePlaylist){
       });
      sse.addEventListener('playlist',function(data){
          var info = JSON.parse(data.data);
+         remotePlaylist.cleanPlaylist();
          remotePlaylist.addMusicsFromIds(info,true);
          info.playing ? remotePlaylist.play() : remotePlaylist.pause();
      });

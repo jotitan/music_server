@@ -15,11 +15,57 @@ import (
 	"logger"
 	"github.com/mjibson/id3"
 	"os"
+	"fmt"
+	"math"
 )
 
 
 
 func main(){
+
+	tL := []int{2,4,5}
+	fmt.Println(tL[:int(math.Min(10,float64(len(tL))))])
+
+	return
+
+	fmt.Println(music.Intersect([]int{1,3,5,6},[]int{2,3,4,5,6,7}))
+	fmt.Println(music.Intersect([]int{1,3,5,6},[]int{2,4,7,9}))
+	fmt.Println(music.Intersect([]int{1,2,3,5,6,7},[]int{4,7,9}))
+	fmt.Println(music.Intersect([]int{4,7,9},[]int{1,2,3,5,6,7}))
+
+	ti := music.NewTextIndexer()
+	ti.Add("aaa",1)
+	ti.Add("aaa",22)
+	ti.Add("aaa",222)
+	ti.Add("cc",45)
+	ti.Add("ccc",3)
+	ti.Add("ccc",33)
+	ti.Add("ccc",333)
+	ti.Add("bbb",2)
+	ti.Add("bbb",22)
+	ti.Add("bbb",222)
+	ti.Add("ddd",4)
+	ti.Add("ggg",7)
+	ti.Add("fff",6)
+	ti.Add("lll",12)
+
+	ti.Build()
+
+	fmt.Println(ti.Search("bbb"))
+	fmt.Println(ti.Search("d"))
+	fmt.Println(ti.Search("g"))
+	fmt.Println(ti.Search("t"))
+	fmt.Println(ti.Search("l"))
+	fmt.Println(ti.Search("a"))
+	fmt.Println(ti.Search("c"))
+	fmt.Println(ti.Search("de"))
+	fmt.Println(ti.Search("aab"))
+	fmt.Println(ti.Search("bbb a"))
+
+
+
+
+	return
 
 
 	pathMu := "D:\\test\\audio\\02-II. Dies Irae - Dies Irae.mp3"

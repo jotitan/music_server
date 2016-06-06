@@ -74,13 +74,13 @@ func (md * MusicDictionnary)FullReindex(folderName string){
 }
 
 // Browse a folder to get all data
-func (md * MusicDictionnary)Browse(folderName string){
+func (md * MusicDictionnary)Browse(folderName string)TextIndexer{
 	logger.GetLogger().Info("Begin index")
 	dictionnary := LoadDictionnary(md.indexFolder)
-	dictionnary.Browse2(folderName)
+	return dictionnary.Browse2(folderName)
 }
 
-func (md * MusicDictionnary)Browse2(folderName string){
+func (md * MusicDictionnary)Browse2(folderName string)TextIndexer{
 	md.loadExistingMusic()
 	md.browseFolder(folderName)
 	md.saveExistingMusic()
@@ -88,7 +88,7 @@ func (md * MusicDictionnary)Browse2(folderName string){
 	md.artistIndex.Save(md.indexFolder)
 	md.artistMusicIndex.Save(md.indexFolder)
 
-	IndexArtists(md.indexFolder)
+	return IndexArtists(md.indexFolder)
 }
 
 

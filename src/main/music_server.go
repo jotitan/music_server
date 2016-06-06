@@ -18,6 +18,7 @@ import (
 	"crypto/md5"
 	"math/rand"
 	"encoding/hex"
+	"math"
 )
 
 /* Launch a server to treat resize image */
@@ -35,13 +36,13 @@ type MusicServer struct{
 	addressMask [4]int
 	dico music.MusicDictionnary
 	albumManager *music.AlbumManager
+	textIndexer music.TextIndexer
 }
 
 func (sse SSEWriter)Write(message string){
 	sse.w.Write([]byte("data: " + message + "\n\n"))
 	sse.f.Flush()
 }
-
 
 func (ms MusicServer)root(response http.ResponseWriter, request *http.Request){
 	if url := request.RequestURI ; url == "/"{
@@ -75,28 +76,30 @@ func (ms MusicServer)checkRequester(request *http.Request)bool{
 	return true
 }
 
-func (ms MusicServer)index(response http.ResponseWriter, request *http.Request){
+// Create index used by search
+func (ms * MusicServer)index(response http.ResponseWriter, request *http.Request){
 	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
 	if !ms.checkRequester(request){
 		return
 	}
 	if ms.musicFolder!="" {
-		music.IndexArtists(ms.folder)
+		ms.textIndexer = music.IndexArtists(ms.folder)
 	}
 }
 
 // update local folder if exist
-func (ms MusicServer)update(response http.ResponseWriter, request *http.Request){
+func (ms * MusicServer)update(response http.ResponseWriter, request *http.Request){
 	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
 	if !ms.checkRequester(request){
 		return
 	}
 	if ms.musicFolder!="" {
 		dico := music.LoadDictionnary(ms.folder)
-		dico.Browse(ms.musicFolder)
+		ms.textIndexer = dico.Browse(ms.musicFolder)
 	}
 }
 
+// Redindex all data but keep all index in memories to increase treatment
 func (ms MusicServer)fullReindex(response http.ResponseWriter, request *http.Request){
 	if !ms.checkRequester(request){
 		return
@@ -241,6 +244,10 @@ func (ms MusicServer)musicsInfo(response http.ResponseWriter, request *http.Requ
 	json.Unmarshal([]byte(request.FormValue("ids")),&ids)
 	logger.GetLogger().Info("Load musics",len(ids))
 
+	ms.musicsResponse(ids,response)
+}
+
+func (ms MusicServer)musicsResponse(ids []int,response http.ResponseWriter){
 	musics := ms.dico.GetMusicsFromIds(ids)
 	for _,musicInfo := range musics{
 		delete(musicInfo,"path")
@@ -253,6 +260,20 @@ func (ms MusicServer)musicsInfo(response http.ResponseWriter, request *http.Requ
 func (ms MusicServer)browse(response http.ResponseWriter, request *http.Request){
 	folder := request.FormValue("folder")
 	ms.dico.Browse(folder)
+}
+
+//search musics by free text
+func (ms * MusicServer)search(response http.ResponseWriter, request *http.Request){
+	text := request.FormValue("term")
+	size := float64(10)
+	if s := request.FormValue("size") ; s != "" {
+		if intSize,e := strconv.ParseInt(s,10,32) ; e == nil {
+			size = float64(intSize)
+		}
+	}
+	musics := ms.textIndexer.Search(text)
+	logger.GetLogger().Info("Search",text,len(musics))
+	ms.musicsResponse(musics[:int(math.Min(size,float64(len(musics))))],response)
 }
 
 func (ms MusicServer)nbMusics(response http.ResponseWriter, request *http.Request){
@@ -363,6 +384,7 @@ func (ms MusicServer)findExposedURL()string{
 
 func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webfolder string){
 	ms.folder = indexFolder
+	ms.textIndexer = music.LoadTextIndexer(ms.folder)
 	ms.albumManager = music.NewAlbumManager(ms.folder)
 	ms.webfolder = "resources/"
 	if musicFolder != "" {
@@ -391,11 +413,12 @@ func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webf
 	logger.GetLogger().Error("Runner ko")
 }
 
-func (ms MusicServer)createRoutes()*http.ServeMux{
+func (ms *MusicServer)createRoutes()*http.ServeMux{
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/status",ms.status)
 	mux.HandleFunc("/statsAsSSE",ms.statsAsSSE)
+
 	mux.HandleFunc("/music",ms.readmusic)
 	mux.HandleFunc("/nbMusics",ms.nbMusics)
 	mux.HandleFunc("/musicInfo",ms.musicInfo)
@@ -404,9 +427,12 @@ func (ms MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/listByAlbum",ms.listByAlbum)
 	mux.HandleFunc("/listByOnlyAlbums",ms.listByOnlyAlbums)
 	mux.HandleFunc("/browse",ms.browse)
+	mux.HandleFunc("/search",ms.search)
+
 	mux.HandleFunc("/update",ms.update)
 	mux.HandleFunc("/index",ms.index)
 	mux.HandleFunc("/fullReindex",ms.fullReindex)
+
 	mux.HandleFunc("/share",ms.share)
 	mux.HandleFunc("/killshare",ms.killShare)
 	mux.HandleFunc("/shares",ms.getShares)
