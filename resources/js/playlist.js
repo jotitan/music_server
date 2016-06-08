@@ -87,7 +87,7 @@ var PlaylistPanel = {
     },*/
     initSearch:function(){
          $('#idSearch').autocomplete({
-           source:'search?size=5&',
+           source:'search?size=8&',
             minLength:2,
             position:{ my: "left bottom", at: "left top", collision: "none" },
             focus:function(e,ui){

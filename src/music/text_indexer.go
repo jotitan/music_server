@@ -77,9 +77,23 @@ func (ti * TextIndexer)Build(){
     ti.Index = make([]Token,0,len(ti.temp))
     for value,ids := range ti.temp {
         sort.Ints(ids)
+        RemoveDuplicates(&ids)
         ti.Index = append(ti.Index,Token{value,ids})
     }
     sort.Sort(ti.Index)
+}
+
+// list is sorted
+func RemoveDuplicates(list *[]int){
+    noDoubles := make([]int,0,len(*list))
+    last := 0
+    for i,value := range *list {
+        if i == 0 || value != last {
+            noDoubles = append(noDoubles,value)
+            last = value
+        }
+    }
+    *list = noDoubles
 }
 
 func Intersect(a,b []int)[]int{
@@ -115,16 +129,18 @@ func (ti TextIndexer)Search(text string)[]int{
     text = strings.ToLower(text)
     results := make([]int,0)
     for i,sub := range strings.Split(text," ") {
-        //r := ti.subSearch(ti.Index, sub)
-        r := ti.IntSearch(sub)
-        if len(r) == 0 {
-            return []int{}
-        }
-        if i == 0 {
-            results = r
-        }else{
-            if results = Intersect(results,r) ; len(results) == 0{
+        if sub != "" {
+            //r := ti.subSearch(ti.Index, sub)
+            r := ti.IntSearch(sub)
+            if len(r) == 0 {
                 return []int{}
+            }
+            if i == 0 {
+                results = r
+            }else {
+                if results = Intersect(results, r); len(results) == 0 {
+                    return []int{}
+                }
             }
         }
     }
@@ -141,6 +157,7 @@ func (ti TextIndexer)IntSearch(text string)[]int{
         for i := pos+1 ; i < len(ti.Index) && strings.HasPrefix(ti.Index[i].Value, text) ; i++ {
             results = append(results,ti.Index[i].Musics...)
         }
+        sort.Ints(results)
         return results
     }
     return []int{}
