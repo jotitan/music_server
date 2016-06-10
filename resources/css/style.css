@@ -152,15 +152,6 @@
     position:relative;
 }
 
-.light_node {
-    width:30px;
-    height:30px;
-    margin:5px;
-    border: solid 1px black;
-    float:left;
-    cursor:pointer;
-}
-
 .node hr {
     margin-top:5px;
     margin-bottom:10px;
@@ -168,42 +159,6 @@
 
 .node span.status {
     display:none
-}
-
-.node_up {
-   background-color:lightgreen
-}
-
-.node_up span.status.status-up {
-    display:inline-block
-}
-
-.node_down {
-    background-color:red
-}
-
-.node_down span.status.status-down {
-    display:inline-block
-}
-
-.node_no_id {
-    background-color:yellow
-}
-
-.node_wait_topo {
-    background-color:orange
-}
-
-.node_wait_topo span.status.status-wait-topo {
-    display:inline-block
-}
-
-.node_synchro {
-    background-color:lightblue
-}
-
-.node_synchro span.status.status-synchro {
-    display:inline-block
 }
 
 .disconnect {
@@ -223,104 +178,8 @@
     padding-left:20px;
 }
 
-.progressbar {
-    display:inline-block;
-    width:110px;
-    height:7px;
-}
-
-.temp_message {
-    opacity:0;
-    font-size:18px;
-    font-weight:bold;
-    position:absolute;
-    width:100%;
-    text-align:center;
-    color:white;
-    background-color:grey;
-    left:0px;
-    top:25px;
-    padding-top:5px;
-    padding-bottom:5px
-}
-
-.disconnect_bloc {
-font-weight:bold;
-color:red;
-padding-left:10px
-}
-
-/* Request panel */
-table.data-request {
-    table-layout : fixed;
-    width:100%;
-}
-
-table.head {
-border-collapse: collapse;
-width:calc(100% - 17px);
-}
-
-table.head th {
-    text-align:center;
-    cursor:pointer;
-    overflow: hidden;
-    max-width: 0px;
-    text-overflow: ellipsis;
-    border-left:1px solid white;
-    padding:0px 5px 0px 5px;
-}
-
-table.data-request td{
-    word-wrap:break-word;
-    padding:0px 5px 0px 5px;
-    cursor:pointer;
-    font-size:12px;
-    border-left:solid 1px lightgrey
-}
-
-table.data-request tr:nth-child(even) {
-background-color:deepskyblue
-}
-
-table.data-request tr:hover {
-    background-color:lightblue
-}
-
 div.error-message {
     color:red
-}
-
-#deleteCriterias input[type="text"] {
-    width:120px;
-}
-
-/* Format history text block */
-div.history {
-    border-bottom-right-radius:10px;
-    box-shadow: -1px 2px 5px 1px rgba(0, 0, 0, 0.7);
-    background-color:rgb(225,255,225);
-    z-index:10000;
-    position:absolute;
-    width:300px;
-    max-height:200px;
-    overflow:auto;
-    font-size:9px;
-}
-
-div.history > span {
-    padding-left:10px;
-    padding-right:10px;
-    overflow:hidden;
-    width:100%;
-    display:inline-block;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-div.history > span:hover {
-    cursor:pointer;
-    background-color:#99DDFF;
 }
 
 .template {
@@ -330,31 +189,6 @@ div.history > span:hover {
 .popover {
     max-width:600px;
 }
-
-.popover table {
-    border:solid 1px grey;
-     border-collapse:collapse
-}
-
-.popover table td {
-    padding-left:5px;
-    padding-right:5px;
-    font-size:12px;
-    border:solid 1px lightgrey;
-}
-
-.popover table th {
-    text-align:center;
-    padding-left:10px;
-    padding-right:10px;
-    font-size:14px;
-}
-
-.popover table  tr.total > td {
-    text-align:center;
-    font-weight:bold;
-}
-
 
 .task-button {
     margin-left:10px
@@ -437,19 +271,6 @@ label > [type="checkbox"] {
     margin-bottom:10px;
 }
 
-.log-box {
-    width:100%;
-    height:calc(100% - 30px);
-    overflow:auto;
-    padding-left:5px;
-    font-size:12px;
-}
-
-.nb-results {
-    font-size:11px;
-    font-family:Georgia;
-}
-
 .breadcrumb {
     margin-bottom:0px;
 }
@@ -506,27 +327,6 @@ label > [type="checkbox"] {
 .normal-panel-size {
     width:500px;
     height:430px;
-}
-
-
-
-/* Message info */
-.message-cluster {
-    padding-left:30px;
-    display:none;
-    cursor:pointer;
-}
-
-.message-cluster > span.title {
-    font-weight:bold;
-}
-
-.message-cluster.success {
-    color:green;
-}
-
-.message-cluster.error{
-    color:red;
 }
 
 /* Tasks table */
