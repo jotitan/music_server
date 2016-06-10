@@ -3,8 +3,8 @@
 var Loader = {
     modules : [],
     current:0,
-    toLoad:function(url,initFct){
-        this.modules.push({url:url,fct:initFct});
+    toLoad:function(url,initFct,urlCss){
+        this.modules.push({url:url,fct:initFct,css:urlCss});
     },
     launch:function(callback){
         this.current = 0;
@@ -25,6 +25,9 @@ var Loader = {
                 Loader._load(callback);
             });
             $('body').append(div);
+            if(element.css!=null && element.css!=""){
+                $('head').append('<link rel="stylesheet" href="' + element.css + '"/>');
+            }
         }
     }
 
