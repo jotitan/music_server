@@ -1,80 +1,10 @@
-<style>
-    .playlist.remote{
-        height:calc(100% - 54px);
-    }
-    .playlist .head > span {
-        text-align:center;
-        border-left-color:darkgray;
-        font-weight:bold;
-    }
-    .playlist div {
-        cursor:pointer;
-    }
-    .playlist div > span {
-        display:inline-block;
-        border-left:solid 1px white;
-    }
-
-    .playlist div > span:nth-child(1){
-        width:25px;
-        text-align:center;
-    }
-
-    .playlist div > span:nth-child(2){
-        width:calc(100% - 132px);
-        padding-left:5px;
-    }
-
-    .playlist div > span:nth-child(3){
-        width:80px;
-        text-align:center;
-    }
-
-
-    .playlist div.focused {
-        background-color:salmon;
-    }
-
-    .playlist div.played {
-        background-color:lightblue;
-    }
-
-    .playlist .glyphicon.remove {
-        color:red;
-    }
-    .controls > .glyphicon {
-        cursor:pointer;
-    }
-    .controls_footer {
-        height:20px;
-    }
-    @media (max-width:1280px) {
-        .controls_footer {
-           padding-top:6px;
-        }
-        .controls {
-            margin-top:-6px;
-        }
-        .playlist.remote{
-            height:calc(100% - 72px);
-        }
-        .controls > .glyphicon {
-            font-size:34px;
-        }
-        .controls_footer {
-            height:34px;
-        }
-    }
-
-</style>
-
 <div id="idPlaylist" class="float-panel normal-panel-size">
     <div style="border-bottom:solid 1px lightgray;padding:5px" class="title">
         <span>Playlist</span>
         <span class="glyphicon glyphicon-eye-close close half-screen" data-split="Explorer"/>
     </div>
 
-    <div style="height:calc(100% - 58px);overflow:auto;padding-left:5px;position:relative;" class="playlist">
+    <div style="height:calc(100% - 58px);width:100%;overflow:auto;padding-left:5px;position:relative;" class="playlist">
         <!--div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div-->
     </div>
     <div style="height:15px;border-top:solid 1px lightgray;padding-left:10px"><span class="total_playlist"></span> music(s) in playlist
