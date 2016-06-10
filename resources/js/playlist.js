@@ -1,6 +1,6 @@
 /* Show tasks from server */
 
-if(Loader){Loader.toLoad("html/playlist.html","PlaylistPanel");}
+if(Loader){Loader.toLoad("html/playlist.html","PlaylistPanel","css/playlist.css");}
 
 
 
