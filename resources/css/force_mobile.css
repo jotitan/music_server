@@ -1,0 +1,113 @@
+#player .glyphicon {
+    font-size:3vw;
+    width:3vw;
+    height:3vw;
+    margin-right:10px;
+}
+
+#player .glyphicon.little {
+    font-size:2.5vw;
+}
+
+#idWindowsNav {
+    display:none;
+}
+
+.mobileBloc {
+    display:block;
+    margin-top:10px;
+}
+.pcBloc {
+    display:none;
+}
+#player {
+    height:3vw;
+    width:calc(100% - 40px);
+}
+#player canvas{
+    padding-top:5px;
+}
+
+#player .seeker {
+    display:none;
+}
+.little-navbar {
+    background-color:white;
+    border:solid 1px white;
+}
+
+/* Playlist style */
+
+.controls_footer {
+   padding-top:6px;
+}
+.controls {
+    margin-top:-6px;
+}
+.playlist.remote{
+    height:calc(100% - 72px);
+}
+.controls > .glyphicon {
+    font-size:34px;
+}
+.controls_footer {
+    height:34px;
+}
+
+.playlist div > span {
+    position:relative;
+    height:30px;
+}
+
+.playlist div > span:nth-child(2),.playlist div > span:nth-child(3) {
+    top:-8px;
+    font-size:16px;
+    font-weight:bold;
+}
+
+.playlist div > span:nth-child(1){
+    width:35px;
+}
+
+.playlist div > span:nth-child(2){
+    width:calc(100% - 130px);
+}
+
+.playlist div > span:nth-child(3){
+    width:60px;
+}
+
+#idPlaylist .playlist .glyphicon {
+    font-size:30px;
+}
+
+.half-left-panel {
+    width:calc(50% - 4px);
+    height:calc(100% - 80px);
+    top:47px;
+    left:0px;
+ }
+
+ .maximize-panel-size {
+   width:calc(100% - 4px);
+   height:calc(100% - 3.5vw);
+   top:0px;
+   left:0px;
+ }
+
+ .half-right-panel {
+    width:calc(50% - 8px);
+    height:calc(100% - 80px);
+    top:47px;
+    left:50%;
+ }
+
+ .navbar-md {
+     min-height:47px;
+     height:47px;
+}
+
+canvas#idVolume {
+    height:2.5vw;
+    width:2.5vw;
+}
