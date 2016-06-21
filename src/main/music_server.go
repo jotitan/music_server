@@ -287,6 +287,7 @@ func (ms MusicServer)readmusic(response http.ResponseWriter, request *http.Reque
 	musicInfo := ms.dico.GetMusicFromId(int(id))
 
 	m,err := os.Open(musicInfo["path"])
+	logger.GetLogger().Info("load",musicInfo["path"])
 	if err != nil{
 		logger.GetLogger().Error(err,id)
 	}
