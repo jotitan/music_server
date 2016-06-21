@@ -64,3 +64,9 @@
         height:34px;
     }
 }
+
+.ui-autocomplete {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }

@@ -87,7 +87,7 @@ var PlaylistPanel = {
     },*/
     initSearch:function(){
          $('#idSearch').autocomplete({
-           source:'search?size=8&',
+           source:'search?size=20&',
             minLength:2,
             position:{ my: "left bottom", at: "left top", collision: "none" },
             focus:function(e,ui){
@@ -100,7 +100,7 @@ var PlaylistPanel = {
             }
         }).autocomplete( "instance" )._renderItem = function( ul, item ) {
               return $( "<li>" )
-                .append( "<a><b>" + item.title + "</b><br>" + item.artist + "</a>" )
+                .append( "<a><b>" + item.title + "</b><br>" + item.artist + " (<font size='-2'>" + item.album + "</font>)</a>" )
                 .appendTo( ul );
         };
     },

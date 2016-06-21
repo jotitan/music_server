@@ -191,6 +191,7 @@ var MusicPlayer = {
         if(music == null){return;}
         this.player.src = music.src;
         this.controls.setTitle(music.title,music.artist);
+        this.controls.setMax(music.length);
         this.play();
     },
     _showPlaying:function(play){
@@ -221,7 +222,7 @@ var MusicPlayer = {
     },
     // launch after load
     initMusic:function(){
-        this.controls.setMax(this.player.duration);
+        //this.controls.setMax(this.player.duration);
         this.controls.update(0);
     },
     // Format time in second in minutes:secondes
