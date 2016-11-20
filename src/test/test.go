@@ -16,15 +16,12 @@ import (
 	"github.com/mjibson/id3"
 	"os"
 	"fmt"
-	"math"
 )
 
 
 
 func main(){
 
-	tL := []int{2,4,5}
-	fmt.Println(tL[:int(math.Min(10,float64(len(tL))))])
 
 	return
 

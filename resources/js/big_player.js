@@ -32,7 +32,7 @@ var BigPlayerPanel = {
         var musics = PlaylistPanel.getNSongs(3);
         this.currentSong = PlaylistPanel.current;
 
-        console.log(musics);
+        //console.log(musics);
         $('.title-song,.album-song').empty();
         for(var pos in musics){
             this._loadCoverAt(musics[pos],$('.posN' + pos));

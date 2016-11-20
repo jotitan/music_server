@@ -236,7 +236,7 @@ var PlaylistPanel = {
     // Add many musics from list of id
     addMusicsFromIds:function(datas,noShare){
         var ids = datas.ids;
-        this.current = datas.current !=null ? datas.current : -1;
+        this.current = datas.current !=null ? datas.current : this.current;
         var _self = this;
         $.ajax({
             url:'/musicsInfo?ids=' + JSON.stringify(ids),

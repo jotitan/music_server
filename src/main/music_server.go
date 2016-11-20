@@ -286,15 +286,9 @@ func (ms MusicServer)readmusic(response http.ResponseWriter, request *http.Reque
 	logger.GetLogger().Info("Get music id",id)
 	musicInfo := ms.dico.GetMusicFromId(int(id))
 
-	m,err := os.Open(musicInfo["path"])
+	m,_ := os.Open(musicInfo["path"])
+	info,_ := m.Stat()
 	logger.GetLogger().Info("load",musicInfo["path"])
-	if err != nil{
-		logger.GetLogger().Error(err,id)
-	}
-	info,err := m.Stat()
-	if err != nil{
-		logger.GetLogger().Error(err,id)
-	}
 	response.Header().Set("Content-type","audio/mpeg")
 	response.Header().Set("Content-Length",fmt.Sprintf("%d",info.Size()))
 	io.Copy(response,m)
