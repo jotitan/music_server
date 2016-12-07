@@ -226,6 +226,10 @@ func (ms MusicServer)listByAlbum(response http.ResponseWriter, request *http.Req
 
 }
 
+func writeCrossAccessHeader(response http.ResponseWriter){
+	response.Header().Set("Access-Control-Allow-Origin","*")
+}
+
 // Return info about music
 func (ms MusicServer)musicInfo(response http.ResponseWriter, request *http.Request){
 	id,_ := strconv.ParseInt(request.FormValue("id"),10,32)
@@ -235,6 +239,7 @@ func (ms MusicServer)musicInfo(response http.ResponseWriter, request *http.Reque
 	musicInfo["id"] = fmt.Sprintf("%d",id)
 	musicInfo["src"] = fmt.Sprintf("music?id=%d",id)
 	bdata,_ := json.Marshal(musicInfo)
+	writeCrossAccessHeader(response)
 	response.Write(bdata)
 }
 
@@ -318,6 +323,7 @@ func sessionID(response http.ResponseWriter,request *http.Request)string{
 
 func (ms MusicServer)getShares(response http.ResponseWriter, request *http.Request){
 	data,_ := json.Marshal(music.GetSharesInfo())
+	writeCrossAccessHeader(response)
 	response.Write(data)
 }
 
@@ -345,6 +351,7 @@ func (ms MusicServer)share(response http.ResponseWriter, request *http.Request){
 
 func (ms MusicServer)shareUpdate(response http.ResponseWriter, request *http.Request){
 	if ss := getShare(request,"id") ; ss!=nil{
+		writeCrossAccessHeader(response)
 		ss.ForwardEvent(sessionID(response,request),request.FormValue("event"),request.FormValue("data"))
 	}
 }

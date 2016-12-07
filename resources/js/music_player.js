@@ -61,16 +61,10 @@ var MusicPlayer = {
             });
             var _self = this;
             $('.play',this.div).bind('click',function(){
-               MusicPlayer.play();
-               if(_self.shareManager!=null){
-                _self.shareManager.event('play');
-               }
+                _self.play();
             });
             $('.pause',this.div).bind('click',function(){
-               MusicPlayer.pause();
-               if(_self.shareManager!=null){
-                   _self.shareManager.event('pause');
-                  }
+                _self.pause();
             });
             $('.next',this.div).bind('click',function(){
                 _self.next();
@@ -91,26 +85,34 @@ var MusicPlayer = {
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
+        play:function(){
+            MusicPlayer.play();
+            if(this.shareManager!=null){
+                this.shareManager.event('play');
+            }
+        },
+        pause:function(){
+            MusicPlayer.pause();
+            if(this.shareManager!=null){
+                this.shareManager.event('pause');
+            }
+        },
         next:function(){
             $(document).trigger('next_event');
-            /*MusicPlayer.playlist.next();
-            if(this.shareManager!=null){
-                this.shareManager.event('next');
-           }  */
         },
         previous:function(){
             $(document).trigger('previous_event');
-            /*MusicPlayer.playlist.previous();
-            if(this.shareManager!=null){
-                this.shareManager.event('previous');
-           }  */
         },
         setShareManager:function(manager){
           this.shareManager = manager;
         },
-        setTitle:function(title,artist){
-            $('.title',this.div).text(title);
-            $('title').html(artist + " - " + title);
+        setTitle:function(music){
+            $('.title',this.div).text(music.title);
+            $('title').html(music.artist + " - " + music.title);
+            if(this.shareManager!=null){
+                // Trigger that a music is loaded
+                this.shareManager.event('load',music.id)
+            }
         },
         setMax:function(value){
             this.seeker.slider('option','max',value)
@@ -176,9 +178,9 @@ var MusicPlayer = {
                 return;
             }
             if(MusicPlayer.player.paused){
-                MusicPlayer.play();
+                MusicPlayer.controls.play();
             }else{
-                MusicPlayer.pause();
+                MusicPlayer.controls.pause();
             }
         });
         this.device.init();
@@ -190,7 +192,7 @@ var MusicPlayer = {
     load:function(music){
         if(music == null){return;}
         this.player.src = music.src;
-        this.controls.setTitle(music.title,music.artist);
+        this.controls.setTitle(music);
         this.controls.setMax(music.length);
         this.play();
     },
