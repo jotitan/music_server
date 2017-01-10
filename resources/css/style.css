@@ -51,6 +51,9 @@
         position:relative;
         float:left;
      }
+    .pc {
+        display:block;
+     }
      .pcBloc {
         display:block;
         padding-bottom:50px;
@@ -99,6 +102,9 @@
     .mobileBloc {
         display:block;
         margin-top:10px;
+    }
+    .pc {
+        display:none;
     }
     .pcBloc {
         display:none;
@@ -174,7 +180,7 @@
 }
 
 .check{
-    background-color:'yellow';
+    background-color:yellow;
     padding-left:20px;
 }
 

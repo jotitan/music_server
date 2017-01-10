@@ -20,6 +20,11 @@
 .pcBloc {
     display:none;
 }
+
+.pc {
+    display:none;
+}
+
 #player {
     height:3vw;
     width:calc(100% - 40px);

@@ -134,6 +134,7 @@ var MusicPlayer = {
                  MusicPlayer.player.volume+=0.1;
              }
              VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+            $.ajax({url:'/volume?volume=up'});
         },
         down:function(){
             if(MusicPlayer.player.volume <= 0.1){
@@ -141,7 +142,8 @@ var MusicPlayer = {
             }else{
                 MusicPlayer.player.volume-=0.1;
             }
-            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10));
+            $.ajax({url:'/volume?volume=down'});
         }
     },
     init:function(){

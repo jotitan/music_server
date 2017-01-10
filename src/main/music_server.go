@@ -37,6 +37,8 @@ type MusicServer struct{
 	dico music.MusicDictionnary
 	albumManager *music.AlbumManager
 	textIndexer music.TextIndexer
+	// Set true for an ip if a remote server to control volume exist (port 9098 by default)
+	remoteServers map[string]bool
 }
 
 func (sse SSEWriter)Write(message string){
@@ -44,8 +46,10 @@ func (sse SSEWriter)Write(message string){
 	sse.f.Flush()
 }
 
-func (ms MusicServer)root(response http.ResponseWriter, request *http.Request){
+func (ms * MusicServer)root(response http.ResponseWriter, request *http.Request){
+	ms.remoteServers = make(map[string]bool)
 	if url := request.RequestURI ; url == "/"{
+		// Reinit at each reload page
 		http.ServeFile(response,request,filepath.Join(ms.webfolder,"music.html"))
 	}else{
 		http.ServeFile(response,request,filepath.Join(ms.webfolder,url[1:]))
@@ -285,6 +289,27 @@ func (ms MusicServer)nbMusics(response http.ResponseWriter, request *http.Reques
 	response.Write([]byte(fmt.Sprintf("%d",music.GetNbMusics(ms.folder))))
 }
 
+// Modify volumn of music on different server by calling a distant service on 9098
+func (ms * MusicServer)volume(response http.ResponseWriter, request *http.Request){
+	volume := "volumeUp"
+	if request.FormValue("volume") == "down"{
+		volume = "volumeDown"
+	}
+	// Get the host
+	host := request.Host[:strings.Index(request.Host,":")]
+	// Check if service it's not already check or it's true
+	if serverRunning,exist := ms.remoteServers[host] ; serverRunning || !exist{
+		if _,err := http.Get("http://" + host + ":9098/" + volume) ; err!= nil {
+			// Close it
+			ms.remoteServers[host] = false
+		}else{
+			if !exist {
+				ms.remoteServers[host] = true
+			}
+		}
+	}
+}
+
 // Return music content
 func (ms MusicServer)readmusic(response http.ResponseWriter, request *http.Request){
 	id,_ := strconv.ParseInt(request.FormValue("id"),10,32)
@@ -393,6 +418,7 @@ func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webf
 	ms.folder = indexFolder
 	ms.textIndexer = music.LoadTextIndexer(ms.folder)
 	ms.albumManager = music.NewAlbumManager(ms.folder)
+	ms.remoteServers = make(map[string]bool)
 	ms.webfolder = "resources/"
 	if musicFolder != "" {
 		ms.musicFolder = musicFolder
@@ -444,6 +470,8 @@ func (ms *MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/killshare",ms.killShare)
 	mux.HandleFunc("/shares",ms.getShares)
 	mux.HandleFunc("/shareUpdate",ms.shareUpdate)
+
+	mux.HandleFunc("/volume",ms.volume)
 	mux.HandleFunc("/",ms.root)
 	return mux
 }
