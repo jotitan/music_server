@@ -286,7 +286,7 @@ var PlaylistPanel = {
     add:function(music,noSave,noTotal){
         var line = $('<div></div>');
         line.append('<span class="glyphicon glyphicon-remove remove" title="Remove"></span>');
-        line.append('<span>' + music.title + '</span>');
+        line.append('<span><span class="pc">' + music.artist + ' -</span> ' + music.title + '</span>');
         line.append('<span>' + MusicPlayer._formatTime(music.length) + '</span>');
         line.append('<span class="glyphicon glyphicon-play" title="Play"></span>');
         var _self = this;
