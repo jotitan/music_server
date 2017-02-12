@@ -90,9 +90,7 @@ func (ms * MusicServer)index(response http.ResponseWriter, request *http.Request
 	if ms.musicFolder!="" {
 		ms.textIndexer = music.IndexArtists(ms.folder)
 		// Recreate genre index reader
-		logger.GetLogger().Info("BEFORE",ms.genreReader)
 		ms.genreReader = music.NewGenreReader(ms.folder)
-		logger.GetLogger().Info("AFTER",ms.genreReader)
 	}
 }
 
@@ -262,7 +260,7 @@ func writeCrossAccessHeader(response http.ResponseWriter){
 	response.Header().Set("Access-Control-Allow-Origin","*")
 }
 
-func (ms MusicServer)listGenres(response http.ResponseWriter, request *http.Request){
+func (ms * MusicServer)listGenres(response http.ResponseWriter, request *http.Request){
 	data,_ := json.Marshal(ms.genreReader.GetGenres())
 	response.Write(data)
 }
