@@ -43,6 +43,10 @@ func getInt32AsByte(n int32) []byte {
 	return []byte{byte(n), byte(n >> 8), byte(n >> 16), byte(n >> 24)}
 }
 
+func getIntAsByte(n int) []byte {
+	return getInt32AsByte(int32(n))
+}
+
 func getInts32AsByte(ns []int) []byte {
 	tab := make([]byte,0,4*len(ns))
 	for _,n := range ns {
@@ -63,8 +67,18 @@ func getInt64FromFile(f *os.File,pos int64)int64{
 	return int64(binary.LittleEndian.Uint64(tab))
 }
 
+func getNextInt32FromFile(f *os.File)int32{
+	tab := make([]byte,4)
+	f.Read(tab)
+	return int32(binary.LittleEndian.Uint32(tab))
+}
+
 func getInt64FromBytes(data []byte)int64{
 	return int64(binary.LittleEndian.Uint64(data))
+}
+
+func getInt32FromBytes(data []byte)int32{
+	return int32(binary.LittleEndian.Uint32(data))
 }
 
 func getInt32FromFile(f *os.File,pos int64)int32{

@@ -168,7 +168,7 @@
     $(function(){
        WindowsNavManager.init('idWindowsNav');
         Loader.launch(function(){
-            Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);})
+            Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);});
             // Show just display the block, no reload block
             Explorer.byArtist = function(show){
                 this.open(show ? null : "/listByArtist","Explore by artist");

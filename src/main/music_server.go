@@ -37,6 +37,7 @@ type MusicServer struct{
 	dico music.MusicDictionnary
 	albumManager *music.AlbumManager
 	textIndexer music.TextIndexer
+	genreReader *music.GenreReader
 	// Set true for an ip if a remote server to control volume exist (port 9098 by default)
 	remoteServers map[string]bool
 }
@@ -88,6 +89,10 @@ func (ms * MusicServer)index(response http.ResponseWriter, request *http.Request
 	}
 	if ms.musicFolder!="" {
 		ms.textIndexer = music.IndexArtists(ms.folder)
+		// Recreate genre index reader
+		logger.GetLogger().Info("BEFORE",ms.genreReader)
+		ms.genreReader = music.NewGenreReader(ms.folder)
+		logger.GetLogger().Info("AFTER",ms.genreReader)
 	}
 }
 
@@ -144,28 +149,41 @@ func (a sortByAlbum)Less(i, j int) bool{
 }
 func (a sortByAlbum)Swap(i, j int) {a[i],a[j] = a[j],a[i]}
 
-func (ms MusicServer)getAllArtists(response http.ResponseWriter){
-	logger.GetLogger().Info("Get all artists")
-	// Response with nampe and url
+func (ms * MusicServer)getAllArtists(response http.ResponseWriter,request *http.Request){
+	genre := request.FormValue("genre")
+	logger.GetLogger().Info("Get all artists",genre)
+	// if genre exist, filter artist list
+	filterArtist := map[int]struct{}{}
+	if genre!="" {
+		filterArtist = ms.genreReader.GetArtist(genre)
+	}
+	// Response with name and url
 	artists := music.LoadArtistIndex(ms.folder).FindAll()
 	artistsData := make([]map[string]string,0,len(artists))
 	for artist,id := range artists{
-		artistsData = append(artistsData,map[string]string{"name":artist,"url":fmt.Sprintf("id=%d",id)})
+		// test if artist id is in the filtered genre list
+		if _,exist := filterArtist[id] ; exist || len(filterArtist) == 0 {
+			artistsData = append(artistsData, map[string]string{"name":artist, "url":fmt.Sprintf("id=%d", id)})
+		}
 	}
 	sort.Sort(sortByArtist(artistsData))
 	bdata,_ := json.Marshal(artistsData)
 	response.Write(bdata)
 }
 
-func (ms MusicServer)getMusics(response http.ResponseWriter,musicsIds []int,sortByTrack bool){
-	musics := make([]map[string]interface{},len(musicsIds))
-	for i,musicId := range musicsIds{
+func (ms MusicServer)getMusics(response http.ResponseWriter,request *http.Request,musicsIds []int,sortByTrack bool){
+	// Get genre, if exist, filter music with
+	genre := request.FormValue("genre")
+	musics := make([]map[string]interface{},0,len(musicsIds))
+	for _,musicId := range musicsIds{
 		m := ms.dico.GetMusicFromId(musicId)
-		delete(m,"path")	// Cause no need to return
-		infos := make(map[string]string)
-		infos["track"] = "#" + m["track"]
-		infos["time"] = m["length"]
-		musics[i] = map[string]interface{}{"name":m["title"],"id":fmt.Sprintf("%d",musicId),"infos":infos}
+		if genre == "" || m["genre"] == genre {
+			delete(m, "path")    // Cause no need to return
+			infos := make(map[string]string)
+			infos["track"] = "#" + m["track"]
+			infos["time"] = m["length"]
+			musics = append(musics,map[string]interface{}{"name":m["title"], "id":fmt.Sprintf("%d", musicId), "infos":infos})
+		}
 	}
 	if sortByTrack {
 	   sort.Sort(sortByAlbum(musics))
@@ -174,30 +192,40 @@ func (ms MusicServer)getMusics(response http.ResponseWriter,musicsIds []int,sort
 	response.Write(data)
 }
 
-func (ms MusicServer)listByArtist(response http.ResponseWriter, request *http.Request){
+func (ms * MusicServer)listByArtist(response http.ResponseWriter, request *http.Request){
 	if id := request.FormValue("id") ; id == "" {
-		ms.getAllArtists(response)
+		ms.getAllArtists(response,request)
 	}else{
 		logger.GetLogger().Info("Load music of artist",id)
 		artistId,_ := strconv.ParseInt(id,10,32)
 		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistId)]
-		ms.getMusics(response,musicsIds,false)
+		ms.getMusics(response,request,musicsIds,false)
 	}
 }
 
-func (ms MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *http.Request){
+func (ms *MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *http.Request){
 	switch{
 		// return albums of artist
 		case request.FormValue("id") != "" :
 		logger.GetLogger().Info("Get musics of album")
 		idAlbum,_ := strconv.ParseInt(request.FormValue("id"),10,32)
-		    musics := ms.albumManager.GetMusicsAll(int(idAlbum))
-			ms.getMusics(response,musics,true)
+		musics := ms.albumManager.GetMusicsAll(int(idAlbum))
+		ms.getMusics(response,request,musics,true)
 	default :
+		filterAlbums := map[int]struct{}{}
+		if request.FormValue("genre")!="" {
+			filterAlbums = ms.genreReader.GetAlbum(request.FormValue("genre"))
+		}
 		albums := ms.albumManager.LoadAllAlbums()
+		logger.GetLogger().Info("ALBUMS",ms.genreReader.GetAlbum(request.FormValue("genre")))
+		logger.GetLogger().Info("ARTISTS",ms.genreReader.GetArtist(request.FormValue("genre")))
+		logger.GetLogger().Info(albums,request.FormValue("genre"))
 		albumsData := make([]map[string]string,0,len(albums))
 		for album,id := range albums{
-			albumsData = append(albumsData,map[string]string{"name":album,"url":fmt.Sprintf("id=%d",id)})
+			// test if album id is in the filtered genre list
+			if _,exist := filterAlbums[id] ; exist || len(filterAlbums) == 0 {
+				albumsData = append(albumsData, map[string]string{"name":album, "url":fmt.Sprintf("id=%d", id)})
+			}
 		}
 		sort.Sort(sortByArtist(albumsData))
 		data,_ := json.Marshal(albumsData)
@@ -223,15 +251,20 @@ func (ms MusicServer)listByAlbum(response http.ResponseWriter, request *http.Req
 	  case request.FormValue("idAlbum") != "" :
 	  	idAlbum,_ := strconv.ParseInt(request.FormValue("idAlbum"),10,32)
 	  	  musics := ms.albumManager.GetMusics(int(idAlbum))
-	  	ms.getMusics(response,musics,true)
+	  	ms.getMusics(response,request,musics,true)
 
-	  default : ms.getAllArtists(response)
+	  default : ms.getAllArtists(response,request)
 	}
 
 }
 
 func writeCrossAccessHeader(response http.ResponseWriter){
 	response.Header().Set("Access-Control-Allow-Origin","*")
+}
+
+func (ms MusicServer)listGenres(response http.ResponseWriter, request *http.Request){
+	data,_ := json.Marshal(ms.genreReader.GetGenres())
+	response.Write(data)
 }
 
 // Return info about music
@@ -434,6 +467,7 @@ func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webf
 		ms.webfolder = webfolder
 	}
 	ms.dico = music.LoadDictionnary(ms.folder)
+	ms.genreReader = music.NewGenreReader(ms.folder)
 	if port == ""{
 		logger.GetLogger().Fatal("Impossible to run node, port is not defined")
 	}
@@ -460,6 +494,7 @@ func (ms *MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/listByAlbum",ms.listByAlbum)
 	mux.HandleFunc("/listByOnlyAlbums",ms.listByOnlyAlbums)
 	mux.HandleFunc("/browse",ms.browse)
+	mux.HandleFunc("/genres",ms.listGenres)
 	mux.HandleFunc("/search",ms.search)
 
 	mux.HandleFunc("/update",ms.update)

@@ -8,6 +8,7 @@ var Explorer = {
     currentPath :"",
     currentTypeLoad:"",
     urlServer:"",
+    baseServer:"",
     fctClick:null,
     init:function(){
         $.extend(true,this,Panel) ;
@@ -29,6 +30,7 @@ var Explorer = {
         this.div.bind('open',function(){
            Explorer._open(arguments);
         });
+        this._loadGenres();
         $('.info-folders > span.filter > :text',this.div).bind('keyup',function(e){
             var value = $(this).val().toLowerCase();
             if (value.length <=2){
@@ -44,8 +46,31 @@ var Explorer = {
             e.stopPropagation();
         });
     },
+    // Load genres and add behaviour to list
+    _loadGenres:function(){
+        var select = $('.info-folders > span.filter > select.genres',this.div);
+        $('option:not(:first)',select).remove();
+        $.ajax({
+            url:'/genres',
+            dataType:'json',
+            success:function(genres){
+                for(var i in genres){
+                   select.append('<option value="' + genres[i] + '">' + genres[i] + '</option>');
+                };
+            }
+        });
+        var _self = this;
+        select.bind('change',function(){
+            _self.urlServer = _self.baseUrl + "?genre=" + $(this).val();
+            _self.reloadPath();
+        });
+    },
     addClickBehave:function(fct){
        this.fctClick = fct;
+    },
+    // Reload same data (maybe new data or different urlServer
+    reloadPath:function(){
+        this.loadPath(this.currentPath,"",true);
     },
     loadPath:function(path,display,noAddBC){
         $('.info-folders > span.filter > :text',this.div).val("")
@@ -58,7 +83,7 @@ var Explorer = {
             var url = "";
         }
         $.ajax({
-            url:this.urlServer + '?' + path,
+            url:this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + path,
             dataType:'json',
             success:function(data){
                 Explorer.display(data);
@@ -77,11 +102,13 @@ var Explorer = {
         if(arguments[0][1] == null){return;}
         this.breadcrumb.empty();
         this.urlServer = arguments[0][1];
+        this.baseUrl = arguments[0][1];
         var title = arguments[0][2];
         if(title!=null){
             this.div.find('.title>span:first').html(title);
         }
         this.loadPath("","Home");
+        $('.info-folders > span.filter > select.genres',this.div).val("");
     },
     addBreadcrumb:function(path,display){
         display = display || path;
@@ -124,7 +151,7 @@ var Explorer = {
             if(url != null){
                 // Can add all data in playlist if drag and drop
                 var dragStart = false;
-                span.data("url_drag",this.urlServer + '?' + url);
+                span.data("url_drag",this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + url);
                 span.draggable({delay:300,helper:'clone',start:function(){dragStart=true;},stop:function(){dragStart=false;}})
                 span.bind('mouseup',function(){
                     if(dragStart){return;}

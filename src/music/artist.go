@@ -79,6 +79,7 @@ type IndexReader struct{
 
 
 // LoadArtistIndex Get artist index to search...
+// first id start at 1
 func (ir IndexReader)Load(path string)map[string]int{
 	f,err := os.Open(path)
 	if err == nil {
@@ -91,6 +92,7 @@ func (ir IndexReader)Load(path string)map[string]int{
 
 // Write get data in p and write in object
 // nb artist (4) | lenght name (2) | data name...
+// The id of element is position when reading (start at 1)
 func (ir * IndexReader)Write(p []byte)(int,error){
 	pos := 0
 	if ir.data == nil || len(ir.data) == 0{

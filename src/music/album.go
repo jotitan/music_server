@@ -221,8 +221,9 @@ func (am * AlbumManager)IndexText(idMusic int,keys ...string){
     }
 }
 
-func (am * AlbumManager)AddMusic(album string,idMusic int){
-    am.mbaa.Add(album,idMusic)
+// return id of the album
+func (am * AlbumManager)AddMusic(album string,idMusic int)int{
+    return am.mbaa.Add(album,idMusic)
 }
 
 func (am * AlbumManager) Save(){
@@ -332,7 +333,6 @@ func (mas * musicByAlbumSaver)Read(p []byte)(int,error){
             writeBytes(p,data,lengthData)
             mas.data[mas.current] = album[nbWritable:]
             lengthData+=len(data)
-            //logger.GetLogger().Fatal(nbWritable,len(p),lengthData,len(data),mba.currentWriteId)
             return lengthData,nil
         }else{
             // write all music
@@ -357,13 +357,19 @@ func NewAlbumsIndex()*AlbumsIndex{
     return &AlbumsIndex{make(map[string]int),[]string{},make([][]int,0)}
 }
 
-func (ai * AlbumsIndex)Add(album string,idMusic int){
+// If album no already exist, create it
+// @return : the id of the album
+func (ai * AlbumsIndex)Add(album string,idMusic int)int{
     lowerAlbum := strings.ToLower(album)
 	if id,ok := ai.names[lowerAlbum];!ok {
-		ai.names[lowerAlbum] = len(ai.names)
+		id = len(ai.names)+1
+        ai.names[lowerAlbum] = id
 		ai.toSave = append(ai.toSave,album)
 		ai.index = append(ai.index,[]int{idMusic})
+        return id
 	}else{
-		ai.index[id] = append(ai.index[id],idMusic)
+        // Position in index list is id - 1
+		ai.index[id-1] = append(ai.index[id-1],idMusic)
+        return id
 	}
 }
