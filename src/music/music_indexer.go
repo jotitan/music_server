@@ -2,6 +2,7 @@ package music
 
 import (
 	"logger"
+	"strings"
 )
 
 func IndexArtists(folder string)TextIndexer{
@@ -29,8 +30,12 @@ func IndexArtists(folder string)TextIndexer{
             musicId := musicsIds[i]
 			// Index genre by artist
 			// TODO transform empty as undefined
+			genre := ""
 			if music["genre"] != "" {
-				genres[music["genre"]] = struct{}{}
+				// Reformat genre
+				genre = strings.Replace(strings.Replace(music["genre"],"/"," ",-1),"-"," ",-1)
+				genre = strings.ToUpper(genre[0:1]) + strings.ToLower(genre[1:])
+				genres[genre] = struct{}{}
 			}
             if ids,ok := albums[music["album"]] ; ok {
                 albums[music["album"]] = append(ids,musicId)
@@ -38,12 +43,12 @@ func IndexArtists(folder string)TextIndexer{
                 albums[music["album"]] = []int{musicId}
             }
             albumId := am.AddMusic(music["album"],musicId)
-			logger.GetLogger().Info("Info album",music["album"],albumId)
+			//logger.GetLogger().Info("Info album",music["album"],albumId)
 			am.IndexText(musicId,music["title"],music["artist"])
 			// Index genre by album
-			if music["genre"] != "" {
-				if listAlbums, exist := albumsByGenre[music["genre"]]; !exist {
-					albumsByGenre[music["genre"]] = map[int]struct{}{albumId:struct{}{}}
+			if genre != "" {
+				if listAlbums, exist := albumsByGenre[genre]; !exist {
+					albumsByGenre[genre] = map[int]struct{}{albumId:struct{}{}}
 				}else{
 					listAlbums[albumId] = struct{}{}
 					//albumsByGenre[music["genre"]] = append(listAlbums,albumId)
