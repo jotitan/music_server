@@ -284,11 +284,11 @@ var PlaylistPanel = {
     },
     // Add a new music in list
     add:function(music,noSave,noTotal){
-        var line = $('<div></div>');
+        var line = $('<div class="music"></div>');
         line.append('<span class="glyphicon glyphicon-remove remove" title="Remove"></span>');
-        line.append('<span><span class="pc">' + music.artist + ' -</span> ' + music.title + '</span>');
-        line.append('<span>' + MusicPlayer._formatTime(music.length) + '</span>');
-        line.append('<span class="glyphicon glyphicon-play" title="Play"></span>');
+        line.append('<span><span class="pc artist">' + music.artist + ' -</span> <span class="music-title">' + music.title + '</span><span class="artist2">' + music.artist + '</span></span>');
+        line.append('<span class="time">' + MusicPlayer._formatTime(music.length) + '</span>');
+        line.append('<span class="glyphicon glyphicon-play play" title="Play"></span>');
         var _self = this;
         $('.glyphicon-play',line).bind('click',function(){
             _self.setActualPlayed($(this).closest('div'));
