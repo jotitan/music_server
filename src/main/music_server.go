@@ -160,7 +160,7 @@ func (ms * MusicServer)getAllArtists(response http.ResponseWriter,request *http.
 	artistsData := make([]map[string]string,0,len(artists))
 	for artist,id := range artists{
 		// test if artist id is in the filtered genre list
-		if _,exist := filterArtist[id] ; exist || len(filterArtist) == 0 {
+		if _,exist := filterArtist[id] ; exist || (len(filterArtist) == 0 && genre == "") {
 			artistsData = append(artistsData, map[string]string{"name":artist, "url":fmt.Sprintf("id=%d", id)})
 		}
 	}
@@ -171,11 +171,11 @@ func (ms * MusicServer)getAllArtists(response http.ResponseWriter,request *http.
 
 func (ms MusicServer)getMusics(response http.ResponseWriter,request *http.Request,musicsIds []int,sortByTrack bool){
 	// Get genre, if exist, filter music with
-	genre := request.FormValue("genre")
+	genre := strings.ToLower(request.FormValue("genre"))
 	musics := make([]map[string]interface{},0,len(musicsIds))
 	for _,musicId := range musicsIds{
 		m := ms.dico.GetMusicFromId(musicId)
-		if genre == "" || m["genre"] == genre {
+		if genre == "" || strings.ToLower(m["genre"]) == genre {
 			delete(m, "path")    // Cause no need to return
 			infos := make(map[string]string)
 			infos["track"] = "#" + m["track"]
