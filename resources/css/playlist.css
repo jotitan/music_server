@@ -80,38 +80,42 @@
 
 
 @media (min-width:1280px) {
-    #idPlaylist .artist2 {
+    .div-playlist .artist2 {
         display: none;
     }
 }
 
 @media (max-width:1280px) {
 
-    #idPlaylist.maximize-panel-size .artist2 {
+    .artist2 {
+        display: none;
+    }
+
+    .div-playlist.maximize-panel-size .artist2 {
         display: block;
         font-size: 2vw;
     }
 
-    #idPlaylist.maximize-panel-size div.music {
+    .div-playlist.maximize-panel-size div.music {
         border-bottom: solid 2px darkgray;
     }
 
-    #idPlaylist.maximize-panel-size .music-title {
+    .div-playlist.maximize-panel-size .music-title {
         display: block;
         font-size: 3.2vw;
         font-weight: bold;
     }
 
-    #idPlaylist.maximize-panel-size .artist {
+    .div-playlist.maximize-panel-size .artist {
         display: none;
     }
 
-    #idPlaylist.maximize-panel-size span.time {
+    .div-playlist.maximize-panel-size span.time {
         position: relative;
         top: -20px;
     }
 
-    #idPlaylist.maximize-panel-size div > span.glyphicon.remove,#idPlaylist.maximize-panel-size div > span.glyphicon.play {
+    .div-playlist.maximize-panel-size div > span.glyphicon.remove,.div-playlist.maximize-panel-size div > span.glyphicon.play {
         top: -20px;
         font-size:20px;
     }

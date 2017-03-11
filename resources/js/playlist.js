@@ -64,6 +64,9 @@ var PlaylistPanel = {
                 }
             }
         });
+        $('.trash-playlist',this.div).bind('click',function(){
+            _self.cleanPlaylist();
+        });
         this.div.bind('close',function(){
            _self.cleanPlaylist();
            // If share, close it
