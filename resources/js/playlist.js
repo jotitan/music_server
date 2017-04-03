@@ -67,6 +67,9 @@ var PlaylistPanel = {
         $('.trash-playlist',this.div).bind('click',function(){
             _self.cleanPlaylist();
         });
+        $('.shuffle-playlist',this.div).bind('click',function(){
+            _self.shuffle();
+        });
         this.div.bind('close',function(){
            _self.cleanPlaylist();
            // If share, close it
@@ -82,12 +85,6 @@ var PlaylistPanel = {
         this.initSearch();
     },
     // return songs around current
-    /*getSong:function(shift){
-        if(this.current != -1 && this.current + shift >=0 && this.current+shift <this.list.length){
-            return this.list[this.current+shift];
-        }
-            return null;
-    },*/
     initSearch:function(){
          $('#idSearch').autocomplete({
            source:'search?size=20&',
@@ -106,6 +103,23 @@ var PlaylistPanel = {
                 .append( "<a><b>" + item.title + "</b><br>" + item.artist + " (<font size='-2'>" + item.album + "</font>)</a>" )
                 .appendTo( ul );
         };
+    },
+    shuffle:function(){
+        var shuffle = [];
+        for(var i = 0 ; i < this.list.length ; i++){
+            shuffle.push({value:Math.random(),index:i});
+        }
+        shuffle = shuffle.sort(function(a,b){return a.value < b.value;});
+        var shuffleList = [];
+        for(var i = 0 ; i < shuffle.length ; i++){
+            shuffleList.push(this.list[shuffle[i].index]);
+        }
+        this.list = [];
+        this.listDiv.empty();
+        for(var i = 0 ; i < shuffleList.length ; i++){
+            this.add(shuffleList[i],true,true);
+        }
+        this.save();
     },
     getSong:function(shift,from){
         from = from || this.current;
