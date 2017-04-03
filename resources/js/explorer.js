@@ -170,7 +170,7 @@ var Explorer = {
             }
             this.panelFolder.append(span);
         }
-        $('.info-folders > span.counter',this.div).html('' + this.panelFolder.find('>span').length + ' element(s)');
+        $('.info-folders > span.counter',this.div).html('' + this.panelFolder.find('>span').length + ' - ');
     },
     setInfoKey:function(key,span){
         span.attr('data-trigger','focus').attr('tabindex','0').popover({
