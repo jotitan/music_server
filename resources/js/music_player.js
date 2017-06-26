@@ -18,7 +18,7 @@ var MusicPlayer = {
             if(localStorage && localStorage["deviceName"]!=null){
                 this.name =localStorage["deviceName"];
             }else {
-                this.name = "No name";
+                this.name = "Default";
             }
             this.input.val(this.name);
              this.input.bind('click',function(){
