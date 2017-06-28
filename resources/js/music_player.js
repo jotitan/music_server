@@ -200,11 +200,11 @@ var MusicPlayer = {
     },
     _showPlaying:function(play){
         if(play){
-            $('.play',this.div).hide();
-            $('.pause',this.div).show();
+            $('.play',this.controls.div).hide();
+            $('.pause',this.controls.div).show();
         }else{
-            $('.pause',this.div).hide();
-            $('.play',this.div).show();
+            $('.pause',this.controls.div).hide();
+            $('.play',this.controls.div).show();
         }
         $(document).trigger('playing_event');
     },
