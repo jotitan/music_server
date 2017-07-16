@@ -265,6 +265,15 @@ func (ms * MusicServer)listGenres(response http.ResponseWriter, request *http.Re
 	response.Write(data)
 }
 
+// Load a resource like a cover
+func (ms MusicServer)get(response http.ResponseWriter, request *http.Request){
+	url := request.FormValue("src")
+	if f,e := os.Open(url) ; e == nil {
+		defer f.Close()
+		io.Copy(response,f)
+	}
+}
+
 // Return info about music
 func (ms MusicServer)musicInfo(response http.ResponseWriter, request *http.Request){
 	id,_ := strconv.ParseInt(request.FormValue("id"),10,32)
@@ -487,6 +496,7 @@ func (ms *MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/music",ms.readmusic)
 	mux.HandleFunc("/nbMusics",ms.nbMusics)
 	mux.HandleFunc("/musicInfo",ms.musicInfo)
+	mux.HandleFunc("/get",ms.get)
 	mux.HandleFunc("/musicsInfo",ms.musicsInfo)
 	mux.HandleFunc("/listByArtist",ms.listByArtist)
 	mux.HandleFunc("/listByAlbum",ms.listByAlbum)

@@ -16,12 +16,15 @@ import (
 	"github.com/mjibson/id3"
 	"os"
 	"fmt"
+	"path/filepath"
 )
 
 
 
 func main(){
 
+
+	fmt.Println(filepath.Dir("c:/toto/blabla"))
 
 	return
 

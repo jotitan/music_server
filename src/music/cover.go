@@ -10,6 +10,8 @@ import (
     "regexp"
     "strings"
     "strconv"
+    "path/filepath"
+    "os"
 )
 
 type RootResponse struct {
@@ -133,16 +135,23 @@ func doSearch(params string, threashold int)string{
 
 // Get cover musicbrainz id and check if resource exist
 // Rules : check :
+// 0 : check if cover.jpg exist in music folder
 // 1 : artist + album
 // 2 : artist + song title (as release) for single case
 // 3 : artist and half album
 // 4 : only album with threashold
 // 3 : artist only
-func GetCover(artist,album,title string)string{
+func GetCover(artist,album,title,filename string)string{
     if artist == "" && album == ""{
         return ""
     }
 
+    // Check if cover.jpg exist in folder, if true, return url like file:/
+    if cover,e := os.Open(filepath.Join(filepath.Dir(filename),"cover.jpg")) ; e == nil {
+        // A jpg cover is found, return it
+        cover.Close()
+        return "/get?src=" + filepath.Join(filepath.Dir(filename),"cover.jpg")
+    }
     // Take first artist (before ( , and &)
     formatArtist,_ := regexp.Compile("[a-zA-Z0-9\\. ]*")
     if values := formatArtist.FindAllString(artist,1) ; len(values) == 1 {
