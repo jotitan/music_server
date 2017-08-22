@@ -215,8 +215,8 @@ func (ms *MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *ht
 			filterAlbums = ms.genreReader.GetAlbum(request.FormValue("genre"))
 		}
 		albums := ms.albumManager.LoadAllAlbums()
-		logger.GetLogger().Info("ALBUMS",ms.genreReader.GetAlbum(request.FormValue("genre")))
-		logger.GetLogger().Info("ARTISTS",ms.genreReader.GetArtist(request.FormValue("genre")))
+		//logger.GetLogger().Info("ALBUMS",ms.genreReader.GetAlbum(request.FormValue("genre")))
+		//logger.GetLogger().Info("ARTISTS",ms.genreReader.GetArtist(request.FormValue("genre")))
 		logger.GetLogger().Info(albums,request.FormValue("genre"))
 		albumsData := make([]map[string]string,0,len(albums))
 		for album,id := range albums{

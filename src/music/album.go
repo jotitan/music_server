@@ -5,6 +5,7 @@ import (
     "path/filepath"
     "io"
     "strings"
+    "errors"
 )
 
 // Give methods to manage album
@@ -222,7 +223,7 @@ func (am * AlbumManager)IndexText(idMusic int,keys ...string){
 }
 
 // return id of the album
-func (am * AlbumManager)AddMusic(album string,idMusic int)int{
+func (am * AlbumManager)AddMusic(album string,idMusic int)(int,error){
     return am.mbaa.Add(album,idMusic)
 }
 
@@ -351,25 +352,34 @@ type AlbumsIndex struct{
 	names map[string]int
 	toSave []string
     index [][]int
+    exists []map[int]struct{}
 }
 
 func NewAlbumsIndex()*AlbumsIndex{
-    return &AlbumsIndex{make(map[string]int),[]string{},make([][]int,0)}
+    return &AlbumsIndex{make(map[string]int),[]string{},make([][]int,0),make([]map[int]struct{},0)}
 }
 
 // If album no already exist, create it
 // @return : the id of the album
-func (ai * AlbumsIndex)Add(album string,idMusic int)int{
+func (ai * AlbumsIndex)Add(album string,idMusic int)(int,error){
     lowerAlbum := strings.ToLower(album)
-	if id,ok := ai.names[lowerAlbum];!ok {
-		id = len(ai.names)+1
-        ai.names[lowerAlbum] = id
+	if idAlbum,ok := ai.names[lowerAlbum];!ok {
+        idAlbum = len(ai.names)+1
+        ai.names[lowerAlbum] = idAlbum
 		ai.toSave = append(ai.toSave,album)
 		ai.index = append(ai.index,[]int{idMusic})
-        return id
+        ai.exists = append(ai.exists,map[int]struct{}{idMusic:struct{}{}})
+        return idAlbum,nil
 	}else{
-        // Position in index list is id - 1
-		ai.index[id-1] = append(ai.index[id-1],idMusic)
-        return id
+        // Check if music already indexed
+        if _,ok := ai.exists[idAlbum-1][idMusic] ; !ok {
+            // Position in index list is id - 1
+            ai.index[idAlbum-1] = append(ai.index[idAlbum-1], idMusic)
+            ai.exists[idAlbum-1][idMusic] = struct{}{}
+            return idAlbum,nil
+        }else{
+            // Already exists
+            return idAlbum,errors.New("Music already indexed")
+        }
 	}
 }
