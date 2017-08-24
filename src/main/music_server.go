@@ -342,6 +342,7 @@ func (ms * MusicServer)volume(response http.ResponseWriter, request *http.Reques
 		if _,err := http.Get("http://" + host + ":9098/" + volume) ; err!= nil {
 			// Close it
 			ms.remoteServers[host] = false
+			logger.GetLogger().Info("Impossible to contact server",host,"on port 9098 :",err)
 		}else{
 			if !exist {
 				ms.remoteServers[host] = true
