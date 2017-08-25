@@ -55,6 +55,8 @@ func IndexArtists(folder string)TextIndexer{
                         //albumsByGenre[music["genre"]] = append(listAlbums,albumId)
                     }
                 }
+            } else{
+                logger.GetLogger().Info(music["title"],":",err.Error())
             }
         }
         genreIndexer.AddManyGenresForArtist(genres,artistId)
