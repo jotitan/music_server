@@ -37,13 +37,14 @@ func IndexArtists(folder string)TextIndexer{
                 genre = strings.ToUpper(genre[0:1]) + strings.ToLower(genre[1:])
                 genres[genre] = struct {}{}
             }
-            if ids, ok := albums[music["album"]]; ok {
-                albums[music["album"]] = append(ids, musicId)
-            }else {
-                albums[music["album"]] = []int{musicId}
-            }
+
             // If returned error, id is already indexed
-            if albumId, err := am.AddMusic(music["album"], musicId); err == nil {
+            if albumId, err := am.AddMusic(music["album"], musicId,music["title"]); err == nil {
+                if ids, ok := albums[music["album"]]; ok {
+                    albums[music["album"]] = append(ids, musicId)
+                }else {
+                    albums[music["album"]] = []int{musicId}
+                }
                 //logger.GetLogger().Info("Info album",music["album"],albumId)
                 am.IndexText(musicId, music["title"], music["artist"])
                 // Index genre by album
@@ -56,7 +57,7 @@ func IndexArtists(folder string)TextIndexer{
                     }
                 }
             } else{
-                logger.GetLogger().Info(music["title"],":",err.Error())
+                //logger.GetLogger().Info(music["title"],":",err.Error())
             }
         }
         genreIndexer.AddManyGenresForArtist(genres,artistId)

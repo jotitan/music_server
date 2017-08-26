@@ -223,8 +223,8 @@ func (am * AlbumManager)IndexText(idMusic int,keys ...string){
 }
 
 // return id of the album
-func (am * AlbumManager)AddMusic(album string,idMusic int)(int,error){
-    return am.mbaa.Add(album,idMusic)
+func (am * AlbumManager)AddMusic(album string,idMusic int,title string)(int,error){
+    return am.mbaa.Add(album,idMusic,strings.ToLower(title))
 }
 
 func (am * AlbumManager) Save(){
@@ -353,33 +353,42 @@ type AlbumsIndex struct{
 	toSave []string
     index [][]int
     exists []map[int]struct{}
+    existsName []map[string]struct{}
 }
 
 func NewAlbumsIndex()*AlbumsIndex{
-    return &AlbumsIndex{make(map[string]int),[]string{},make([][]int,0),make([]map[int]struct{},0)}
+    return &AlbumsIndex{make(map[string]int),[]string{},make([][]int,0),make([]map[int]struct{},0),make([]map[string]struct{},0)}
 }
 
 // If album no already exist, create it
 // @return : the id of the album
-func (ai * AlbumsIndex)Add(album string,idMusic int)(int,error){
+func (ai * AlbumsIndex)Add(album string,idMusic int, title string)(int,error){
     lowerAlbum := strings.ToLower(album)
-	if idAlbum,ok := ai.names[lowerAlbum];!ok {
+    if idAlbum,ok := ai.names[lowerAlbum];!ok {
         idAlbum = len(ai.names)+1
         ai.names[lowerAlbum] = idAlbum
 		ai.toSave = append(ai.toSave,album)
 		ai.index = append(ai.index,[]int{idMusic})
         ai.exists = append(ai.exists,map[int]struct{}{idMusic:struct{}{}})
+        ai.existsName = append(ai.existsName,map[string]struct{}{title:struct{}{}})
         return idAlbum,nil
 	}else{
-        // Check if music already indexed
+        // Check if id music already indexed
         if _,ok := ai.exists[idAlbum-1][idMusic] ; !ok {
-            // Position in index list is id - 1
-            ai.index[idAlbum-1] = append(ai.index[idAlbum-1], idMusic)
-            ai.exists[idAlbum-1][idMusic] = struct{}{}
-            return idAlbum,nil
+            // Check if name is not already indexed
+            if _,ok := ai.existsName[idAlbum-1][title] ; !ok {
+                // Position in index list is id - 1
+                ai.index[idAlbum-1] = append(ai.index[idAlbum-1], idMusic)
+                ai.exists[idAlbum-1][idMusic] = struct {}{}
+                ai.existsName[idAlbum-1][title] = struct {}{}
+                return idAlbum, nil
+            }else{
+                // Already exists
+                return idAlbum,errors.New("Music name is already indexed")
+            }
         }else{
             // Already exists
-            return idAlbum,errors.New("Music already indexed")
+            return idAlbum,errors.New("Music id is already indexed")
         }
 	}
 }
