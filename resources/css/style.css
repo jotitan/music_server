@@ -13,6 +13,10 @@
     font-weight:bold;
 }
 
+.float-panel > .content {
+    height: calc(100% - 58px);
+}
+
 .float-panel.active {
     z-index:100;
     box-shadow: 2px 4px 5px 1px rgba(150, 100, 0, 0.7);
@@ -21,6 +25,10 @@
 
 /* Create a medium height at 40px */
 @media (min-width:1280px) {
+     .folders.line > span {
+         font-size: 12px;
+     }
+
      .mobileBloc {
         display:none;
      }
@@ -76,6 +84,21 @@
  }
 
 @media (max-width:1280px) {
+    .float-panel > .title > .glyphicon {
+            font-size:30px;
+    }
+
+    .float-panel > .content {
+        height: calc(100% - 68px);
+    }
+
+    .float-panel > .title {
+        height:40px;
+    }
+
+    .folders.line > span {
+        font-size: 22px;
+    }
     #idWindowsNav {
         display:none;
     }
@@ -287,7 +310,7 @@ label > [type="checkbox"] {
 
 .folders {
     overflow:auto;
-    height:calc(100% - 105px);
+    height:calc(100% - 50px);
 }
 
 .folders.block > span {
@@ -318,7 +341,6 @@ label > [type="checkbox"] {
     width:98%;
     text-align:left;
     cursor:pointer;
-    font-size:12px;
 }
 
 .folders.line > span > span.info {

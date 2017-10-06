@@ -141,9 +141,18 @@ func (a sortByAlbum)Len() int{return len(a)}
 func (a sortByAlbum)Less(i, j int) bool{
 	infos1 := a[i]["infos"].(map[string]string)
 	infos2 := a[j]["infos"].(map[string]string)
-	t1,_ := strconv.ParseInt(infos1["track"][1:],10,32)
-	t2,_ := strconv.ParseInt(infos2["track"][1:],10,32)
+	t1 := getTrack(infos1["track"])
+	t2 := getTrack(infos2["track"])
 	return t1 < t2
+}
+func getTrack(track string)int{
+	if pos := strings.Index(track,"/") ; pos != -1 {
+		track = track[1:pos]
+	}
+	if n,err := strconv.ParseInt(track,10,32) ; err == nil {
+		return int(n)
+	}
+	return 0
 }
 func (a sortByAlbum)Swap(i, j int) {a[i],a[j] = a[j],a[i]}
 
@@ -207,8 +216,8 @@ func (ms *MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *ht
 		case request.FormValue("id") != "" :
 		logger.GetLogger().Info("Get musics of album")
 		idAlbum,_ := strconv.ParseInt(request.FormValue("id"),10,32)
-		musics := ms.albumManager.GetMusicsAll(int(idAlbum))
-		ms.getMusics(response,request,musics,true)
+		musicsIds := ms.albumManager.GetMusicsAll(int(idAlbum))
+		ms.getMusics(response,request,musicsIds,true)
 	default :
 		filterAlbums := map[int]struct{}{}
 		if request.FormValue("genre")!="" {
@@ -329,6 +338,11 @@ func (ms MusicServer)nbMusics(response http.ResponseWriter, request *http.Reques
 	response.Write([]byte(fmt.Sprintf("%d",music.GetNbMusics(ms.folder))))
 }
 
+func (ms * MusicServer)test(response http.ResponseWriter, request *http.Request){
+	logger.GetLogger2().Info(request.Header)
+	response.Write([]byte(request.RequestURI + " " + request.RemoteAddr))
+
+}
 // Modify volumn of music on different server by calling a distant service on 9098
 func (ms * MusicServer)volume(response http.ResponseWriter, request *http.Request){
 	volume := "volumeUp"
@@ -516,6 +530,7 @@ func (ms *MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/shareUpdate",ms.shareUpdate)
 
 	mux.HandleFunc("/volume",ms.volume)
+	mux.HandleFunc("/test",ms.test)
 	mux.HandleFunc("/",ms.root)
 	return mux
 }

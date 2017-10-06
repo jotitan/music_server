@@ -168,9 +168,9 @@ var Panel = {
 }
 
 function CloneDiv(id,prefix){
-    var div = $('#' + id).clone()
-    div.attr('id',prefix + '_' + new Date().getTime()).css('display','')
-    $('body').append(div)
+    var div = $('#' + id).clone();
+    div.attr('id',prefix + '_' + new Date().getTime()).css('display','');
+    $('body').append(div);
     return div;
 }
 
@@ -183,7 +183,7 @@ var PanelPositionManager = {
     get:function(){
         this.total++;
         this.nb++;
-        return {top:this.top + 20*this.total,left:this.left + 20*this.total};
+        return {top:this.top + 40*this.total,left:this.left + 30*this.total};
     },
     closeOne:function(){
         if(--this.nb <=0){
