@@ -525,7 +525,6 @@ func (ms *MusicServer)createRoutes()*http.ServeMux{
 	mux.HandleFunc("/shareUpdate",ms.shareUpdate)
 
 	mux.HandleFunc("/volume",ms.volume)
-	mux.HandleFunc("/test",ms.test)
 	mux.HandleFunc("/",ms.root)
 	return mux
 }
