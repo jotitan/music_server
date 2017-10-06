@@ -338,11 +338,6 @@ func (ms MusicServer)nbMusics(response http.ResponseWriter, request *http.Reques
 	response.Write([]byte(fmt.Sprintf("%d",music.GetNbMusics(ms.folder))))
 }
 
-func (ms * MusicServer)test(response http.ResponseWriter, request *http.Request){
-	logger.GetLogger2().Info(request.Header)
-	response.Write([]byte(request.RequestURI + " " + request.RemoteAddr))
-
-}
 // Modify volumn of music on different server by calling a distant service on 9098
 func (ms * MusicServer)volume(response http.ResponseWriter, request *http.Request){
 	volume := "volumeUp"
