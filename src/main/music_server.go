@@ -141,13 +141,14 @@ func (a sortByAlbum)Len() int{return len(a)}
 func (a sortByAlbum)Less(i, j int) bool{
 	infos1 := a[i]["infos"].(map[string]string)
 	infos2 := a[j]["infos"].(map[string]string)
-	t1 := getTrack(infos1["track"])
-	t2 := getTrack(infos2["track"])
-	return t1 < t2
+	return getTrack(infos1["track"]) < getTrack(infos2["track"])
 }
 func getTrack(track string)int{
+	if track[0] == '#'{
+		track = track[1:]
+	}
 	if pos := strings.Index(track,"/") ; pos != -1 {
-		track = track[1:pos]
+		track = track[:pos]
 	}
 	if n,err := strconv.ParseInt(track,10,32) ; err == nil {
 		return int(n)
