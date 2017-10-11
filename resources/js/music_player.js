@@ -196,6 +196,9 @@ var MusicPlayer = {
         this.player.src = music.src;
         this.controls.setTitle(music);
         this.controls.setMax(music.length);
+        if(MusicProgressBar!=null){
+            MusicProgressBar.load(parseInt(music.length));
+        }
         this.play();
     },
     _showPlaying:function(play){

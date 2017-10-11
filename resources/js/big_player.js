@@ -13,6 +13,7 @@ var BigPlayerPanel = {
     timeField : null,
     currentSong:0,
     init:function(){
+        MusicProgressBar.init('idProgressTime');
         this.div = $('#idBigPlayer');
         this.playerDiv = $('.big-player',this.div);
         this.timeField = $('.field-time',this.div);
@@ -28,6 +29,7 @@ var BigPlayerPanel = {
         if(!PlaylistPanel.isVisible()){
             return;
         }
+        MusicProgressBar.setVisible(true);
         this.visible = true;
         var musics = PlaylistPanel.getNSongs(3);
         this.currentSong = PlaylistPanel.current;
@@ -52,6 +54,7 @@ var BigPlayerPanel = {
             _self.previous(true);
         });
         $(document).unbind('update_time.big').bind('update_time.big',function(e,ftime){
+            MusicProgressBar.updateStr(ftime);
             _self.timeField.html(ftime);
         });
         this.div.show();
@@ -72,6 +75,7 @@ var BigPlayerPanel = {
     },
     close:function(){
         this.div.hide();
+        MusicProgressBar.setVisible(false);
     },
     _showPause:function(){
         $('.pause-button',this.playerDiv).show();
