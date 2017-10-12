@@ -10,6 +10,7 @@
     <script src="vendors/jquery/jquery-2.1.3.min.js"></script>
     <script src="vendors/jquery/jquery-ui.min.js"></script>
     <script src="vendors/punch/jquery.ui.touch-punch.min.js"></script>
+    <script src="vendors/nosleep/NoSleep.min.js"></script>
     <link rel="stylesheet" href="vendors/jquery/jquery-ui.min.css"/>
     <link rel="stylesheet" href="vendors/bootstrap/css/bootstrap.min.css">
 
@@ -176,6 +177,18 @@
             MusicPlayer.setPlaylist(PlaylistPanel);
         });
     })
+</script>
+
+<script>
+    var noSleep = new NoSleep();
+    var isScreenLock = false;
+    document.addEventListener('click', function() {
+        if (!isScreenLock) {
+            noSleep.enable();
+            wakeLockEnabled = true;
+        }
+    }, false);
+
 </script>
 
 </body>
