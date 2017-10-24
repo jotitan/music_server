@@ -10,6 +10,8 @@ var Explorer = {
     urlServer:"",
     baseServer:"",
     fctClick:null,
+    // Store the position of scroll on home (to restore when returning to home). Reset on genre. Update when click on folder
+    scrollPosition:0,
     init:function(){
         $.extend(true,this,Panel) ;
         this.initPanel($('#idExplorePanel'),'<span class="glyphicon glyphicon-hdd"></span> Explore');
@@ -73,9 +75,10 @@ var Explorer = {
         this.loadPath(this.currentPath,"",true);
     },
     loadPath:function(path,display,noAddBC){
-        $('.info-folders > span.filter > :text',this.div).val("")
+        $('.info-folders > span.filter > :text',this.div).val("");
         this.currentPath = path;
         // Add element in breadcrumb
+        var currentScrollPosition = this.panelFolder.scrollTop();
         if(!noAddBC){
             this.addBreadcrumb(path,display);
         }
@@ -87,8 +90,13 @@ var Explorer = {
             dataType:'json',
             success:function(data){
                 Explorer.display(data);
+                if(path == ""){
+                    // Restore home scroll
+                    Explorer.panelFolder.scrollTop(Explorer.scrollPosition);
+                }
+                Explorer.scrollPosition = currentScrollPosition;
             }
-        })
+        });
     },
     changeZoom:function(){
         if ($('.folders',this.div).hasClass('block')){
@@ -100,6 +108,7 @@ var Explorer = {
     // Call when first open
     _open:function(){
         if(arguments[0][1] == null){return;}
+        this.scrollPosition = 0;
         this.breadcrumb.empty();
         this.urlServer = arguments[0][1];
         this.baseUrl = arguments[0][1];
