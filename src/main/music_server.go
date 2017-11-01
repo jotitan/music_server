@@ -215,8 +215,8 @@ func (ms *MusicServer)listByOnlyAlbums(response http.ResponseWriter, request *ht
 	switch{
 		// return albums of artist
 		case request.FormValue("id") != "" :
-		logger.GetLogger().Info("Get musics of album")
 		idAlbum,_ := strconv.ParseInt(request.FormValue("id"),10,32)
+		logger.GetLogger().Info("Get all musics of album",idAlbum)
 		musicsIds := ms.albumManager.GetMusicsAll(int(idAlbum))
 		ms.getMusics(response,request,musicsIds,true)
 	default :

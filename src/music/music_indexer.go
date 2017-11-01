@@ -12,8 +12,9 @@ func IndexArtists(folder string)TextIndexer{
     dico := LoadDictionnary(folder)
     musicsByArtist := LoadArtistMusicIndex(folder)
 
-    am := NewAlbumManager(folder)
     // Contains all album name and id
+    am := NewAlbumManager(folder)
+
     genreIndexer := NewGenreIndexer()
     // Index album by genre (consider only one genre by album)
 

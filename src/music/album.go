@@ -6,6 +6,7 @@ import (
     "io"
     "strings"
     "errors"
+    "logger"
 )
 
 // Give methods to manage album
@@ -187,6 +188,7 @@ func (mba AlbumByArtist)GetAlbums(folder string,artistId int)[]Album{
 }
 
 type AlbumManager struct{
+    // Store musics by album for one artist (not forcebly all music of album). Position is id of album for an artist
     musicsByAlbum [][]int
     // Store albums by artist
     aba * AlbumByArtist
@@ -211,6 +213,7 @@ func NewAlbumManager(folder string)*AlbumManager{
 func (am * AlbumManager)AddAlbumsByArtist(artistId int,albums map[string][]int) {
     for album,musicsIds := range albums {
         idAlbum := len(am.musicsByAlbum)+1
+        logger.GetLogger().Info("ALB-ART",artistId,idAlbum,album,len(musicsIds))
         am.musicsByAlbum = append(am.musicsByAlbum,musicsIds)
         am.aba.AddAlbum(artistId,NewAlbum(idAlbum,album))
     }
@@ -228,8 +231,10 @@ func (am * AlbumManager)AddMusic(album string,idMusic int,title string)(int,erro
 }
 
 func (am * AlbumManager) Save(){
+    logger.GetLogger().Info("Save musics by album by artist")
     NewMusicAlbumSaver(am.musicsByAlbum).Save(filepath.Join(am.folder,"album_music.index"))
 
+    logger.GetLogger().Info("Save all musics of albums")
 	NewMusicAlbumSaver(am.mbaa.index).Save(filepath.Join(am.folder,"all_albums_music.index"))
 	(&(IndexSaver{am.mbaa.toSave,0})).Save(filepath.Join(am.folder,"albums.dico"),true)
 
@@ -251,7 +256,7 @@ func (am * AlbumManager)getMusicsFrom(filename string,albumId int)[]int{
 	posInHeader := int64((albumId-1)*8+4)
 	posInFile :=  getInt64FromFile(f,posInHeader)
 	nbMusics := int32(getInt16FromFile(f,posInFile))
-
+    logger.GetLogger().Info("Load musics of album",albumId,", pos :",posInFile,", musics :",nbMusics)
 	musicsTab := make([]byte,nbMusics*4)
 	f.ReadAt(musicsTab,posInFile+2)
 	return getBytesAsInts32Int(musicsTab)
@@ -309,19 +314,20 @@ func (mas * musicByAlbumSaver)Read(p []byte)(int,error){
         }
         album := mas.data[mas.current]
 
+        // Write in header in not already done
         if mas.header[mas.current] == 0{
-
-            // Only if not write already
             writeBytes(p,getInt16AsByte(int16(len(album))),lengthData)
+
             lengthData+=2
-            if mas.current == 0 {
-                // first position is just after the header
-                mas.header[mas.current] = int64(4 + 8*len(mas.data))
-            }else{
+            // first position is just after the header
+            dataPosition := int64(4 + 8*len(mas.data))
+            if mas.current > 0 {
                 // When new turn, album size can be change. Impossible to get correct position. Save in file
                 // Take last position and add last length data
-                mas.header[mas.current] = mas.header[mas.current-1] + int64(mas.currentAlbumSize*4 + 2)
+                dataPosition  = mas.header[mas.current-1] + int64(mas.currentAlbumSize*4 + 2)
             }
+            logger.GetLogger().Info("Write album header",mas.current,"length",len(album),"with pos in file",dataPosition)
+            mas.header[mas.current] = dataPosition
             mas.currentAlbumSize = len(album)
         }
 
@@ -329,6 +335,7 @@ func (mas * musicByAlbumSaver)Read(p []byte)(int,error){
         // Check enough place to write musics. If not, check number of music which can be written
         nbWritable := (len(p) - lengthData)/4
         if len(album)>nbWritable {
+            logger.GetLogger().Info("Write partial",nbWritable)
             // Partial write, just some musics
             data := getInts32AsByte(album[:nbWritable])
             writeBytes(p,data,lengthData)
@@ -366,6 +373,7 @@ func (ai * AlbumsIndex)Add(album string,idMusic int, title string)(int,error){
     lowerAlbum := strings.ToLower(album)
     if idAlbum,ok := ai.names[lowerAlbum];!ok {
         idAlbum = len(ai.names)+1
+        logger.GetLogger().Info("ALB",album,idAlbum)
         ai.names[lowerAlbum] = idAlbum
 		ai.toSave = append(ai.toSave,album)
 		ai.index = append(ai.index,[]int{idMusic})
@@ -383,11 +391,9 @@ func (ai * AlbumsIndex)Add(album string,idMusic int, title string)(int,error){
                 ai.existsName[idAlbum-1][title] = struct {}{}
                 return idAlbum, nil
             }else{
-                // Already exists
                 return idAlbum,errors.New("Music name is already indexed")
             }
         }else{
-            // Already exists
             return idAlbum,errors.New("Music id is already indexed")
         }
 	}
