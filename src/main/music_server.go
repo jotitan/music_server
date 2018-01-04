@@ -493,9 +493,9 @@ func (ms MusicServer)create(port string,indexFolder,musicFolder,addressMask,webf
 
 	mux := ms.createRoutes()
 	logger.GetLogger().Info("Runner ok on :",localIP,port)
-    http.ListenAndServe(":" + port,mux)
+    e:=http.ListenAndServe(":" + port,mux)
 
-	logger.GetLogger().Error("Runner ko")
+	logger.GetLogger().Error("Runner ko",e)
 }
 
 func (ms *MusicServer)createRoutes()*http.ServeMux{

@@ -169,7 +169,13 @@ var PlaylistPanel = {
         $('div',this.listDiv).removeClass('played selected focused');
         line.addClass('played');
         this.current = this.getPlayedPosition();
-        this.listDiv.scrollTop(line.position().top);
+
+        var position = Math.max(0,this.listDiv.scrollTop() + line.position().top - this.listDiv.height()/2);
+
+        if(this.listDiv.scrollTop() != position){
+            this.listDiv.scrollTop(position);
+        }
+        //this.listDiv.scrollTop(line.position().top);
     } ,
     getPlayedPosition:function(){
         var nb = $('> div',this.listDiv).length
