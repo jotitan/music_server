@@ -16,15 +16,56 @@ import (
 	"github.com/mjibson/id3"
 	"os"
 	"fmt"
-	"path/filepath"
 )
 
 
+type ITest interface{
+	Add(value string)
+	Size()int
+	Reset()
+}
 
-func main(){
+type Test1 struct {
+	list *[]string
+}
 
+func (t Test1)Add(value string){
+	*t.list = append(*t.list,value)
+}
 
-	fmt.Println(filepath.Dir("c:/toto/blabla"))
+func (t Test1)Size()int{
+	return len(*t.list)
+}
+
+func (t Test1)Reset(){
+	*t.list = make([]string,0,10)
+}
+
+func add(t ITest,value string){
+	t.Add(value)
+}
+
+func main() {
+	music.CreateNewDictionnary("D:\\test\\audio\\idx2","D:\\test\\audio\\new_version_local")
+
+	//library := music.NewMusicLibrary("D:\\test\\audio\\new_version")
+	//fmt.Println(library.GetMusicInfo(12))
+	//fmt.Println(library.GetMusicsInfo([]int32{12,14,25}))
+
+	return
+
+	out := music.NewOutputDictionnary("D:\\test\\audio\\new_version")
+
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 1",Artist:"Artist 1"},1,"p1","c1"))
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 2",Artist:"Artist 1"},2,"p1","c1"))
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 3",Artist:"Artist 2"},3,"p1","c3"))
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 4",Artist:"Artist 2"},4,"p1","c6"))
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 5",Artist:"Artist 5"},5,"p1","c5"))
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 6",Artist:"Artist 4"},6,"p1","c4"))
+	out.AddToSave(music.NewMusic(id3.File{Name:"Title 7",Artist:"Artist 3"},7,"p1","c2"))
+
+	out.FinishEnd()
+
 
 	return
 

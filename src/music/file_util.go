@@ -81,6 +81,12 @@ func getInt32FromBytes(data []byte)int32{
 	return int32(binary.LittleEndian.Uint32(data))
 }
 
+func getBytesFromFile(f * os.File,pos,size int64)[]byte{
+	data := make([]byte,size)
+	f.ReadAt(data,pos)
+	return data
+}
+
 func getInt32FromFile(f *os.File,pos int64)int32{
 	tab := make([]byte,4)
 	f.ReadAt(tab,pos)

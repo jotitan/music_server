@@ -1,0 +1,10 @@
+Indexation avec id ancien garde.
+Pas de recuperation des trous dans les ids, trop long et complexe (risque d'etaler un album sur plusieurs)
+On ecrit les donnees en append dans les fichiers mais on n'ecrit pas le header dans le fichier mais dans un meta fichier.
+Le meta fichier est ecrit a la main, on peut le lire en une fois et le garder en memoire (num fichier + pos fichier)
+Possibilite de compactage pour recuperer les ids mais besoin de modifier favoris et playlist (pas forcement utile sauf si on risque de depasser le nombre)
+
+A faire :
+* Separer sauvegarde dans meta fichier avec header et fichier de data
+* Modifier la sauvegarde pour sauver le meta fichier a la fin, et append sur le reste
+* Prevoir le mecanisme de compactage
