@@ -26,16 +26,19 @@ const (
 	limitMusicFile = 1000
 )
 
+//MusicSaver represent the contract to be able to save musics
 type MusicSaver interface {
 	AddToSave(music Music)
 	FinishEnd()
 	LoadExistingMusicsInfo() map[string]map[string]string
 }
 
+//NewOldMusicSaver create an old implementation
 func NewOldMusicSaver(folder string) OldMusicSaver {
 	return OldMusicSaver{folder: folder}
 }
 
+//OldMusicSaver is the old implementation of index
 type OldMusicSaver struct {
 	// If file is full, change directory
 	changeFolder bool
@@ -57,16 +60,17 @@ func foundMusicInCache(musics map[string]map[string]string, filename string) (*i
 	return nil, "", 0
 }
 
+//LoadExistingMusicsInfo load already existing music in index
 func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 	musicsMap := make(map[string]map[string]string)
-	for fileId := 0; ; fileId++ {
-		path := filepath.Join(oms.folder, fmt.Sprintf("music_%d.dico", fileId))
+	for fileID := 0; ; fileID++ {
+		path := filepath.Join(oms.folder, fmt.Sprintf("music_%d.dico", fileID))
 		logger.GetLogger().Info("Full RI", path)
 		if f, err := os.Open(path); err == nil {
 			data, _ := ioutil.ReadAll(f)
 			total := int(getInt64FromBytes(data[0:8]))
 			for j := 0; j < total; j++ {
-				id := fileId*limitMusicFile + j + 1
+				id := fileID*limitMusicFile + j + 1
 				pos := getInt64FromBytes(data[(j+1)*8 : (j+2)*8])
 				lengthInfo := getInt64FromBytes(data[pos : pos+8])
 				musicInfo := data[pos+8 : pos+8+lengthInfo]
@@ -83,103 +87,7 @@ func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 	return musicsMap
 }
 
-// Save the file. Header with fix size (fixe number of element, 10000 for example). Header link position of element.
-// nb element (8) | pos 1 (8) | pos 2 (8) | ... | dataLength 1 (4) | data 1 (n) | ...
-/*func (oms * OldMusicSaver)Save(){
-	// Save in the file. Create data in buffer instead of write everytime
-	fileId,_ := findLastFile("","")
-	// Get next file
-	if oms.changeFolder {
-		fileId++
-		oms.changeFolder = false
-	}
-	path := filepath.Join("folder",fmt.Sprintf("music_%d.dico",fileId))
-	logger.GetLogger().Info("Save in file",path)
-	f,err := os.OpenFile(path,os.O_CREATE|os.O_RDWR|os.O_EXCL,os.ModePerm)
-	// If exist, just append result at the end
-	*oms.header = make([]int64,0,len(oms.musics))
-	headerPos := int64(8)
-	totalElements := int64(0)
-	if err != nil {
-		f,_ = os.OpenFile(path,os.O_RDWR,os.ModePerm)
-		defer f.Close()
-		info,_ := f.Stat()
-		*oms.header = append(*oms.header,info.Size())
-		// Get total elements
-		totalElements = getInt64FromFile(f,0)
-
-		if totalElements == limitMusicFile {
-			oms.changeFolder = true
-			oms.Save()
-			return
-		}
-
-		f.Seek(0,2)	// Back to the end
-		// Position in header depend on number element
-		headerPos += totalElements*8
-	}else{
-		defer f.Close()
-		// Create header at begin
-		//f.Write(getInt64AsByte(int64(len(md.musics))))
-		f.Write(make([]byte,limitMusicFile*8))
-		//md.header = append(md.header,8*(1+limitMusicFile))
-	}
-	//md.currentRead = 0
-	// Use a reader over md. Write header at the end
-	//io.Copy(f,md)
-	// Write total elements
-	//f.WriteAt(getInt64AsByte(totalElements + int64(len(md.musics))),0)
-	// Write header
-	//f.WriteAt(getInts64AsByte(md.header[:len(md.header)-1]),headerPos)
-}  */
-
-// Read used in copy to save data in file
-/*func (oms * OldMusicSaver)Read(tab []byte)(int,error){
-	// Read md musics, evaluate if enough place in tab (int32 for length + len data
-	nbWrite := 0
-	for{
-		// Check if all data at been read
-		if md.currentRead >= len(md.musics){
-			return nbWrite,io.EOF
-		}
-		data := md.musics[md.currentRead].toJSON()
-		if size := 8 + len(data) ; nbWrite + size < len(tab) {
-			writeBytes(tab,getInt64AsByte(int64(len(data))),nbWrite)
-			writeBytes(tab,data,nbWrite+8)
-			nbWrite+=size
-			md.currentRead++
-			// Save position in temp header
-			// First case, init
-			md.header = append(md.header,md.header[len(md.header)-1]+int64(size))
-		}else{
-			break
-		}
-	}
-
-	return nbWrite,nil
-}  */
-
-// Find id file with biggest id
-/*func findLastFile(folder,pattern string)(int64,error){
-	r,_ := regexp.Compile(pattern)
-	max := int64(-1)
-	filesFolder,_ := os.Open(folder)
-	defer filesFolder.Close()
-	names,_ := filesFolder.Readdirnames(-1)
-	for _,name := range names {
-		if result := r.FindStringSubmatch(name) ; len(result) >1 {
-			if id,err := strconv.ParseInt(result[1],10,32) ; err == nil && id > max {
-				max = id
-			}
-		}
-	}
-	if max == -1 {
-		return 0,errors.New("No dictionnary yet")
-	}
-	return max,nil
-}  */
-
-// Download existing index to index new musics (key is music path)
+//FullReindex load all musics in index, browse and find new ones
 func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver) TextIndexer {
 	logger.GetLogger().Info("Launch FullReindex")
 
@@ -210,17 +118,11 @@ func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver
 	md.artistIndex = LoadArtistIndex(md.indexFolder)
 	md.artistMusicIndex = LoadArtistMusicIndex(md.indexFolder)
 
-	return md.Browse2(folderName, musics, musicSaver)
+	return md.Browse(folderName, musics, musicSaver)
 }
 
-// Browse a folder to get all data
-/*func (md * MusicDictionnary)Browse(folderName string, musicSaver MusicSaver)TextIndexer{
-	logger.GetLogger().Info("Begin index")
-	dictionnary := LoadDictionnary(md.indexFolder)
-	return dictionnary.Browse2(folderName,musicSaver)
-} */
-
-func (md *MusicDictionnary) Browse2(folderName string, musics map[string]map[string]string, musicSaver MusicSaver) TextIndexer {
+//Browse all musics in root folder, detect unindexed musics and add into library
+func (md *MusicDictionnary) Browse(folderName string, musics map[string]map[string]string, musicSaver MusicSaver) TextIndexer {
 	// Useless for full reindex (read everything and search in path)
 	md.loadIndexedInodes()
 
@@ -326,13 +228,9 @@ func (md *MusicDictionnary) browseFolder(folderName string, musics map[string]ma
 	}
 }
 
+//MusicDictionnary manage music search, index search and music browsing
 type MusicDictionnary struct {
-	//previousSize int
-	// Used to store header to write. List of position
-	//header []int64
-	// Nb of element when opening file
-	//currentRead int
-	// Next id for file
+	// Next id of music
 	nextId int64
 	// Directory where indexes are
 	indexFolder string
@@ -345,41 +243,6 @@ type MusicDictionnary struct {
 	dictionnary *OutputDictionnary
 }
 
-/*func (md MusicDictionnary)currentSize()int{
-	return md.previousSize + len(md.musics)
-} */
-
-// return err
-/*func (md MusicDictionnary)findLastFile()(int64,error){
-	return findLastFile(md.indexFolder,"music_([0-9]+).dico")
-} */
-
-func NewMusic(data id3.File, idMusic int64, path, cover string) Music {
-	return Music{file: data, id: idMusic, path: path, cover: cover}
-}
-
-// Algo to keep same music id when reinindex :
-// 1) Save id in structure when loading
-// 2) Detect useless id for creating sequence. After using all missing, use normal sequence starting at number of element
-// 2) When indexing, if id music belong to range, insert in good place
-
-// Add music in dictionnary. If file limit is reach, save the file
-/*func (md * MusicDictionnary)Add(musicInfo Music){
-	if md.currentSize() >= limitMusicFile {
-		//md.Save()
-		//md.changeFolder = true
-		// Save, use new file
-		md.musics = make([]Music,0,limitMusicFile)
-		md.previousSize = 0
-	}
-	md.musics = append(md.musics, musicInfo)
-	// split artist when & or / or , is present
-	for _,artist := range  splitArtists(musicInfo.file.Artist) {
-		idArtist := md.artistIndex.Add(artist)
-		md.artistMusicIndex.Add(idArtist,int(musicInfo.id))
-	}
-} */
-
 func splitArtists(artistsList string) []string {
 	reg, _ := regexp.Compile("&|,|/|;")
 	vals := reg.Split(artistsList, -1)
@@ -390,91 +253,9 @@ func splitArtists(artistsList string) []string {
 	return artists
 }
 
-// Get many musics by id
-//@Deprecated
-/*func (md MusicDictionnary)GetMusicsFromIds(ids []int)[]map[string]string{
-	musicResults := make([]map[string]string,0,len(ids))
-	// Group ids by file id
-	groupsIds := make(map[int][]int)
-	for _,id := range ids {
-		fileId := (id-1) / limitMusicFile
-		if group,ok := groupsIds[fileId] ; ok {
-			groupsIds[fileId] = append(group,id)
-		}else{
-			groupsIds[fileId] = []int{id}
-		}
-	}
-	for fileId,musicsId := range groupsIds {
-		path := filepath.Join(md.indexFolder,fmt.Sprintf("music_%d.dico",fileId))
-		if f,err := os.Open(path) ; err == nil {
-			defer f.Close()
-			// Load all musics
-			for _,id := range musicsId {
-				pos := int64(id - fileId*limitMusicFile)*8
-				posInFile := getInt64FromFile(f,pos)
-				lengthData := getInt64FromFile(f,posInFile)
-				data := make([]byte,lengthData)
-				f.ReadAt(data,posInFile+8)
-
-				var results map[string]string
-				json.Unmarshal(data,&results)
-				results["id"] = fmt.Sprintf("%d",id)
-				musicResults = append(musicResults,results)
-			}
-		}
-	}
-	return musicResults
-}  */
-
-// GetMusicFromId return the music to an id
-/*func (md MusicDictionnary)GetMusicFromId(id int)map[string]string{
-	// Id begin at 1
-	fileId := (id-1) / limitMusicFile
-
-	path := filepath.Join(md.indexFolder,fmt.Sprintf("music_%d.dico",fileId))
-	if f,err := os.Open(path) ; err == nil {
-		defer f.Close()
-		pos := int64(id - fileId*limitMusicFile)*8
-		posInFile := getInt64FromFile(f,pos)
-		lengthData := getInt64FromFile(f,posInFile)
-		data := make([]byte,lengthData)
-		f.ReadAt(data,posInFile+8)
-
-		var results map[string]string
-		json.Unmarshal(data,&results)
-		return results
-	}
-	return nil
-}  */
-
-/*func NewDictionnary(workingDirectory string)MusicDictionnary {
-	return MusicDictionnary{indexFolder:workingDirectory}
-} */
-
-/*func GetNbMusics(workingDirectory string)int64{
-	md := LoadDictionnary(workingDirectory)
-	return md.nextId-1
-} */
-
 // LoadDictionnary load the dictionnary which store music info by id
 func LoadDictionnary(workingDirectory string) MusicDictionnary {
 	md := MusicDictionnary{indexFolder: workingDirectory}
-
-	// Load music info
-	/*fileId,notExist := md.findLastFile()
-	if notExist == nil{
-		// Load the last file and get current element inside
-		path := filepath.Join(md.indexFolder,fmt.Sprintf("music_%d.dico",fileId))
-		f,_ := os.Open(path)
-		defer f.Close()
-		tabNb := make([]byte,8)
-		f.ReadAt(tabNb,0)
-		md.previousSize = int(getInt64FromFile(f,0))
-		md.nextId = fileId*limitMusicFile + int64(md.previousSize+1)
-	}else{
-		md.previousSize = 0
-		md.nextId = 1
-	} */
 
 	// Load artist index (list of artist, list of music by artist)
 	md.artistIndex = LoadArtistIndex(workingDirectory)
