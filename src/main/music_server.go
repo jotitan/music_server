@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"logger"
-	"math"
 	"math/rand"
 	"music"
 	"net"
@@ -29,24 +28,23 @@ type SSEWriter struct {
 	f http.Flusher
 }
 
+//MusicServer manage all request of music server. Delegate to many objects
 type MusicServer struct {
-	// Folder where musics are stored
-	folder    string
+	// Folder where indexes are stored
+	folder string
+	// Folder where webresources are stored
 	webfolder string
 	// main music folder to update
 	musicFolder string
 	addressMask [4]int
-	//dico music.MusicDictionnary
-	// Index by album
-	albumManager *music.AlbumManager
-	// Full text search
-	textIndexer music.TextIndexer
-	// Index by genre
-	genreReader *music.GenreReader
-	// Set true for an ip if a remote server to control volume exist (port 9098 by default)
-	remoteServers map[string]bool
 	// Used to read musics
 	library *music.MusicLibrary
+	// manage index access
+	indexManager *music.SearchIndex
+	// Used to manage device host
+	devices *music.Devices
+	// Manage favorites
+	favorites *music.FavoritesManager
 }
 
 func (sse SSEWriter) Write(message string) {
@@ -55,7 +53,7 @@ func (sse SSEWriter) Write(message string) {
 }
 
 func (ms *MusicServer) root(response http.ResponseWriter, request *http.Request) {
-	ms.remoteServers = make(map[string]bool)
+	ms.devices.Reset()
 	if url := request.RequestURI; url == "/" {
 		// Reinit at each reload page
 		http.ServeFile(response, request, filepath.Join(ms.webfolder, "music.html"))
@@ -95,22 +93,8 @@ func (ms *MusicServer) index(response http.ResponseWriter, request *http.Request
 		return
 	}
 	if ms.musicFolder != "" {
-		ms.textIndexer = music.IndexArtists(ms.folder)
-		// Recreate genre index reader
-		ms.genreReader = music.NewGenreReader(ms.folder)
-	}
-}
-
-// update local folder if exist
-// @Deprecated
-func (ms *MusicServer) update(response http.ResponseWriter, request *http.Request) {
-	// Always check addressMask. If no define, mask is 0.0.0.0 and nothing is accepted (except localhost)
-	if !ms.checkRequester(request) {
-		return
-	}
-	if ms.musicFolder != "" {
-		//dico := music.LoadDictionnary(ms.folder)
-		//ms.textIndexer = dico.Browse(ms.musicFolder)
+		textIndexer := music.IndexArtists(ms.folder)
+		ms.indexManager.UpdateIndexer(textIndexer)
 	}
 }
 
@@ -122,8 +106,8 @@ func (ms *MusicServer) fullReindex(response http.ResponseWriter, request *http.R
 	if ms.musicFolder != "" {
 		dico := music.LoadDictionnary(ms.folder)
 		output := music.NewOutputDictionnary(ms.folder)
-		ms.textIndexer = dico.FullReindex(ms.musicFolder, output)
-		ms.genreReader = music.NewGenreReader(ms.folder)
+		textIndexer := dico.FullReindex(ms.musicFolder, output)
+		ms.indexManager.UpdateIndexer(textIndexer)
 	}
 }
 
@@ -144,10 +128,8 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 	genre := request.FormValue("genre")
 	logger.GetLogger().Info("Get all artists", genre)
 	// if genre exist, filter artist list
-	filterArtist := map[int]struct{}{}
-	if genre != "" {
-		filterArtist = ms.genreReader.GetArtist(genre)
-	}
+	filterArtist := ms.indexManager.SearchArtistByGenre(genre)
+
 	// Response with name and url
 	artists := music.LoadArtistIndex(ms.folder).FindAll()
 	artistsData := make([]map[string]string, 0, len(artists))
@@ -162,19 +144,30 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 	response.Write(bdata)
 }
 
+func (ms MusicServer) setFavorite(response http.ResponseWriter, request *http.Request) {
+	if id, err := strconv.ParseInt(request.FormValue("id"), 10, 32); err == nil {
+		favorite := request.FormValue("value") == "true"
+		ms.favorites.Set(int(id), favorite)
+		logger.GetLogger().Info("Update favorite", id, request.FormValue("value"))
+		response.Write([]byte(fmt.Sprintf("{\"value\":%t}", favorite)))
+	} else {
+		response.Write([]byte("{\"error\":true}"))
+	}
+}
+
 func (ms MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool) {
 	// Get genre, if exist, filter music with
 	genre := strings.ToLower(request.FormValue("genre"))
 	musics := make([]map[string]interface{}, 0, len(musicsIds))
-	for _, musicId := range musicsIds {
-		m := ms.library.GetMusicInfo(int32(musicId))
-		//m := ms.dico.GetMusicFromId(musicId)
+	for _, musicID := range musicsIds {
+		m := ms.library.GetMusicInfo(int32(musicID))
 		if genre == "" || strings.ToLower(m["genre"]) == genre {
 			delete(m, "path") // Cause no need to return
 			infos := make(map[string]string)
+			infos["favorite"] = fmt.Sprintf("%t", ms.favorites.IsFavorite(musicID))
 			infos["track"] = "#" + m["track"]
 			infos["time"] = m["length"]
-			musics = append(musics, map[string]interface{}{"name": m["title"], "id": fmt.Sprintf("%d", musicId), "infos": infos})
+			musics = append(musics, map[string]interface{}{"name": m["title"], "id": fmt.Sprintf("%d", musicID), "infos": infos})
 		}
 	}
 	if sortByTrack {
@@ -189,8 +182,8 @@ func (ms *MusicServer) listByArtist(response http.ResponseWriter, request *http.
 		ms.getAllArtists(response, request)
 	} else {
 		logger.GetLogger().Info("Load music of artist", id)
-		artistId, _ := strconv.ParseInt(id, 10, 32)
-		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistId)]
+		artistID, _ := strconv.ParseInt(id, 10, 32)
+		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistID)]
 		ms.getMusics(response, request, musicsIds, false)
 	}
 }
@@ -199,27 +192,11 @@ func (ms *MusicServer) listByOnlyAlbums(response http.ResponseWriter, request *h
 	switch {
 	// return albums of artist
 	case request.FormValue("id") != "":
-		idAlbum, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
-		logger.GetLogger().Info("Get all musics of album", idAlbum)
-		musicsIds := ms.albumManager.GetMusicsAll(int(idAlbum))
+		albumID, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
+		musicsIds := ms.indexManager.ListFullAlbumById(int(albumID))
 		ms.getMusics(response, request, musicsIds, true)
 	default:
-		filterAlbums := map[int]struct{}{}
-		if request.FormValue("genre") != "" {
-			filterAlbums = ms.genreReader.GetAlbum(request.FormValue("genre"))
-		}
-		albums := ms.albumManager.LoadAllAlbums()
-		//logger.GetLogger().Info("ALBUMS",ms.genreReader.GetAlbum(request.FormValue("genre")))
-		//logger.GetLogger().Info("ARTISTS",ms.genreReader.GetArtist(request.FormValue("genre")))
-		logger.GetLogger().Info(albums, request.FormValue("genre"))
-		albumsData := make([]map[string]string, 0, len(albums))
-		for album, id := range albums {
-			// test if album id is in the filtered genre list
-			if _, exist := filterAlbums[id]; exist || len(filterAlbums) == 0 {
-				albumsData = append(albumsData, map[string]string{"name": album, "url": fmt.Sprintf("id=%d", id)})
-			}
-		}
-		sort.Sort(music.SortByArtist(albumsData))
+		albumsData := ms.indexManager.ListAllAlbums(request.FormValue("genre"))
 		data, _ := json.Marshal(albumsData)
 		response.Write(data)
 	}
@@ -229,20 +206,14 @@ func (ms MusicServer) listByAlbum(response http.ResponseWriter, request *http.Re
 	switch {
 	// return albums of artist
 	case request.FormValue("id") != "":
-		logger.GetLogger().Info("Get all albums")
-		idArtist, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
-		albums := music.NewAlbumByArtist().GetAlbums(ms.folder, int(idArtist))
-		albumsData := make([]map[string]string, 0, len(albums))
-		for _, album := range albums {
-			albumsData = append(albumsData, map[string]string{"name": album.Name, "url": fmt.Sprintf("idAlbum=%d", album.Id)})
-		}
-		sort.Sort(music.SortByArtist(albumsData))
+		artistID, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
+		albumsData := ms.indexManager.ListAlbumByArtist(int(artistID))
 		bdata, _ := json.Marshal(albumsData)
 		response.Write(bdata)
 	case request.FormValue("idAlbum") != "":
-		idAlbum, _ := strconv.ParseInt(request.FormValue("idAlbum"), 10, 32)
-		musics := ms.albumManager.GetMusics(int(idAlbum))
-		ms.getMusics(response, request, musics, true)
+		albumID, _ := strconv.ParseInt(request.FormValue("idAlbum"), 10, 32)
+		musicsIDs := ms.indexManager.ListAlbumById(int(albumID))
+		ms.getMusics(response, request, musicsIDs, true)
 
 	default:
 		ms.getAllArtists(response, request)
@@ -254,7 +225,7 @@ func writeCrossAccessHeader(response http.ResponseWriter) {
 }
 
 func (ms *MusicServer) listGenres(response http.ResponseWriter, request *http.Request) {
-	data, _ := json.Marshal(ms.genreReader.GetGenres())
+	data, _ := json.Marshal(ms.indexManager.ListGenres())
 	response.Write(data)
 }
 
@@ -271,14 +242,10 @@ func (ms MusicServer) get(response http.ResponseWriter, request *http.Request) {
 func (ms MusicServer) musicInfo(response http.ResponseWriter, request *http.Request) {
 	id, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
 	logger.GetLogger().Info("Load music info with id", id)
-	musicInfo := ms.library.GetMusicInfo(int32(id))
-	//musicInfo := ms.dico.GetMusicFromId(int(id))
-	delete(musicInfo, "path")
-	musicInfo["id"] = fmt.Sprintf("%d", id)
-	musicInfo["src"] = fmt.Sprintf("music?id=%d", id)
-	bdata, _ := json.Marshal(musicInfo)
+	isfavorite := ms.favorites.IsFavorite(int(id))
+	musicInfoData := ms.library.GetMusicInfoAsJSON(int32(id), isfavorite)
 	writeCrossAccessHeader(response)
-	response.Write(bdata)
+	response.Write(musicInfoData)
 }
 
 // Return info about many musics
@@ -292,7 +259,6 @@ func (ms MusicServer) musicsInfo(response http.ResponseWriter, request *http.Req
 
 // Get informations from ids of music
 func (ms MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) {
-	//musics := ms.dico.GetMusicsFromIds(ids)
 	musics := ms.library.GetMusicsInfo(ids)
 	for _, musicInfo := range musics {
 		delete(musicInfo, "path")
@@ -302,54 +268,20 @@ func (ms MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) 
 	response.Write(bdata)
 }
 
-func (ms MusicServer) browse(response http.ResponseWriter, request *http.Request) {
-	//folder := request.FormValue("folder")
-	//ms.dico.Browse(folder)
-}
-
 //search musics by free text
 func (ms *MusicServer) search(response http.ResponseWriter, request *http.Request) {
-	text := request.FormValue("term")
-	size := float64(10)
-	if s := request.FormValue("size"); s != "" {
-		if intSize, e := strconv.ParseInt(s, 10, 32); e == nil {
-			size = float64(intSize)
-		}
-	}
-	musics := ms.textIndexer.Search(text)
-	musics32 := make([]int32, len(musics))
-	for i, m := range musics {
-		musics32[i] = int32(m)
-	}
-	logger.GetLogger().Info("Search", text, len(musics))
-	ms.musicsResponse(musics32[:int(math.Min(size, float64(len(musics))))], response)
+	musics := ms.indexManager.SearchText(request.FormValue("term"), request.FormValue("size"))
+	ms.musicsResponse(musics, response)
 }
 
 func (ms MusicServer) nbMusics(response http.ResponseWriter, request *http.Request) {
 	response.Write([]byte(fmt.Sprintf("%d", ms.library.GetNbMusics())))
-	//response.Write([]byte(fmt.Sprintf("%d",music.GetNbMusics(ms.folder))))
 }
 
 // Modify volumn of music on different server by calling a distant service on 9098
 func (ms *MusicServer) volume(response http.ResponseWriter, request *http.Request) {
-	volume := "volumeUp"
-	if request.FormValue("volume") == "down" {
-		volume = "volumeDown"
-	}
-	// Get the host
 	host := request.Host[:strings.Index(request.Host, ":")]
-	// Check if service it's not already check or it's true
-	if serverRunning, exist := ms.remoteServers[host]; serverRunning || !exist {
-		if _, err := http.Get("http://" + host + ":9098/" + volume); err != nil {
-			// Close it
-			ms.remoteServers[host] = false
-			logger.GetLogger().Info("Impossible to contact server", host, "on port 9098 :", err)
-		} else {
-			if !exist {
-				ms.remoteServers[host] = true
-			}
-		}
-	}
+	ms.devices.SetVolume(request.FormValue("volume") == "down", host)
 }
 
 // Return music content
@@ -357,7 +289,6 @@ func (ms MusicServer) readmusic(response http.ResponseWriter, request *http.Requ
 	id, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
 	logger.GetLogger().Info("Get music id", id)
 	musicInfo := ms.library.GetMusicInfo(int32(id))
-	//musicInfo := ms.dico.GetMusicFromId(int(id))
 
 	m, _ := os.Open(musicInfo["path"])
 	info, _ := m.Stat()
@@ -460,11 +391,11 @@ func (ms MusicServer) findExposedURL() string {
 
 func (ms MusicServer) create(port string, indexFolder, musicFolder, addressMask, webfolder string) {
 	ms.folder = indexFolder
-	ms.textIndexer = music.LoadTextIndexer(ms.folder)
-	ms.albumManager = music.NewAlbumManager(ms.folder)
+	ms.indexManager = music.NewSearchIndex(ms.folder)
 	ms.library = music.NewMusicLibrary(ms.folder)
-	ms.remoteServers = make(map[string]bool)
+	ms.devices = music.NewDevices()
 	ms.webfolder = "resources/"
+	ms.favorites = music.NewFavoritesManager(ms.folder, 100)
 	if musicFolder != "" {
 		ms.musicFolder = musicFolder
 		if addressMask != "" {
@@ -478,8 +409,7 @@ func (ms MusicServer) create(port string, indexFolder, musicFolder, addressMask,
 	if webfolder != "" {
 		ms.webfolder = webfolder
 	}
-	//ms.dico = music.LoadDictionnary(ms.folder)
-	ms.genreReader = music.NewGenreReader(ms.folder)
+
 	if port == "" {
 		logger.GetLogger().Fatal("Impossible to run node, port is not defined")
 	}
@@ -500,26 +430,32 @@ func (ms *MusicServer) createRoutes() *http.ServeMux {
 
 	mux.HandleFunc("/music", ms.readmusic)
 	mux.HandleFunc("/nbMusics", ms.nbMusics)
+
+	// Manage search
 	mux.HandleFunc("/musicInfo", ms.musicInfo)
 	mux.HandleFunc("/get", ms.get)
 	mux.HandleFunc("/musicsInfo", ms.musicsInfo)
 	mux.HandleFunc("/listByArtist", ms.listByArtist)
 	mux.HandleFunc("/listByAlbum", ms.listByAlbum)
 	mux.HandleFunc("/listByOnlyAlbums", ms.listByOnlyAlbums)
-	mux.HandleFunc("/browse", ms.browse)
-	mux.HandleFunc("/genres", ms.listGenres)
 	mux.HandleFunc("/search", ms.search)
 
-	mux.HandleFunc("/update", ms.update)
+	// Manage musics
+	mux.HandleFunc("/genres", ms.listGenres)
 	mux.HandleFunc("/index", ms.index)
 	mux.HandleFunc("/fullReindex", ms.fullReindex)
 
+	// Manage favorites
+	mux.HandleFunc("/setFavorite", ms.setFavorite)
+
+	// Manage share device
 	mux.HandleFunc("/share", ms.share)
 	mux.HandleFunc("/killshare", ms.killShare)
 	mux.HandleFunc("/shares", ms.getShares)
 	mux.HandleFunc("/shareUpdate", ms.shareUpdate)
-
 	mux.HandleFunc("/volume", ms.volume)
+
+	// Serve files
 	mux.HandleFunc("/", ms.root)
 	return mux
 }

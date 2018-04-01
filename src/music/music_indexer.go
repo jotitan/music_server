@@ -10,7 +10,6 @@ func IndexArtists(folder string) TextIndexer {
 	library := NewMusicLibrary(folder)
 	// Recreate albums index at each time (very quick)
 	artists := LoadArtists(folder)
-	//dico := LoadDictionnary(folder)
 	musicsByArtist := LoadArtistMusicIndex(folder)
 	logger.GetLogger().Info("Launch index with", len(artists), "artists")
 	// Contains all album name and id
@@ -40,12 +39,13 @@ func IndexArtists(folder string) TextIndexer {
 			}
 
 			// If returned error, id is already indexed
-			if albumID, err := am.AddMusic(music["album"], int(musicID), music["title"]); err == nil {
-				if ids, ok := albums[music["album"]]; ok {
-					albums[music["album"]] = append(ids, int(musicID))
-				} else {
-					albums[music["album"]] = []int{int(musicID)}
-				}
+			albumID, err := am.AddMusic(music["album"], int(musicID), music["title"])
+			if ids, ok := albums[music["album"]]; ok {
+				albums[music["album"]] = append(ids, int(musicID))
+			} else {
+				albums[music["album"]] = []int{int(musicID)}
+			}
+			if err == nil {
 				am.IndexText(int(musicID), music["title"], music["artist"])
 				// Index genre by album
 				if genre != "" {

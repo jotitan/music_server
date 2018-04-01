@@ -100,6 +100,7 @@ func (aba AlbumByArtist) Save(folder string) {
 			max = id
 		}
 	}
+
 	// Prepare header (nb elements and size artist
 	aba.header = make([]int64, max)
 	aba.previousPosition = int64(4 + 8*max)
@@ -162,7 +163,6 @@ func (mba AlbumByArtist) GetAlbums(folder string, artistId int) []Album {
 	// Read artist position
 	// Check number of element
 	nbArtists := int(getInt32FromFile(f, 0))
-
 	if artistId > nbArtists {
 		return []Album{}
 	}
@@ -255,7 +255,7 @@ func (am *AlbumManager) getMusicsFrom(filename string, albumId int) []int {
 	posInHeader := int64((albumId-1)*8 + 4)
 	posInFile := getInt64FromFile(f, posInHeader)
 	nbMusics := int32(getInt16FromFile(f, posInFile))
-	logger.GetLogger().Info("Load musics of album", albumId, ", pos :", posInFile, ", musics :", nbMusics)
+	//logger.GetLogger().Info("Load musics of album", albumId, ", pos :", posInFile, ", musics :", nbMusics)
 	musicsTab := make([]byte, nbMusics*4)
 	f.ReadAt(musicsTab, posInFile+2)
 	return getBytesAsInts32Int(musicsTab)

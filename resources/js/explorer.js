@@ -25,9 +25,7 @@ var Explorer = {
         });
         this.panelFolder = $('.folders',this.div);
 
-        $('.switch',this.div).bind('click',function(){
-            Explorer.changeZoom();
-        })
+        $('.switch',this.div).bind('click',()=>Explorer.changeZoom());
 
         this.div.bind('open',function(){
            Explorer._open(arguments);
@@ -144,11 +142,18 @@ var Explorer = {
                 // List of data info
                 for(var field in data[file].infos){
                     var value = data[file].infos[field]
-                    if(field == "time"){
-                        info += '<span class="info">' + MusicPlayer._formatTime(value) + '</span>';
-                    }else{
-                        info += '<span class="info">' + value + '</span>';
+                    switch(field){
+                        case "time" : info += '<span class="info">' + MusicPlayer._formatTime(value) + '</span>';break;
+                        case "favorite" : 
+                            if (value == "true"){
+                                info += '<span class="info favorite"></span>';    
+                            }else{
+                                info += '<span class="info not-favorite"></span>';
+                            }
+                            break;
+                        default : info += '<span class="info">' + value + '</span>';
                     }
+                    
                 };
             }
             if(data[file].info!=null){
@@ -161,7 +166,7 @@ var Explorer = {
                 // Can add all data in playlist if drag and drop
                 var dragStart = false;
                 span.data("url_drag",this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + url);
-                span.draggable({delay:300,helper:'clone',start:function(){dragStart=true;},stop:function(){dragStart=false;}})
+                span.draggable({delay:300,helper:'clone',start:()=>dragStart=true,stop:()=>dragStart=false})
                 span.bind('mouseup',function(){
                     if(dragStart){return;}
                     Explorer.loadPath($(this).data('url'),$(this).text());
@@ -177,9 +182,25 @@ var Explorer = {
                     });
                 }
             }
+            // Add favorite behaviour
+            $('.favorite,.not-favorite',span).bind('click',e=>Explorer._changeFavorite($(e.target),span));
             this.panelFolder.append(span);
         }
         $('.info-folders > span.counter',this.div).html('' + this.panelFolder.find('>span').length + ' - ');
+    },
+    // Update favorite of music
+    _changeFavorite:function(span,line){
+        var id = line.data('id');
+        var favorite = !span.hasClass('favorite');
+        $.ajax({
+            url:'/setFavorite?id=' + id + "&value=" + favorite,
+            dataType:'json',
+            success:function(data){
+                if(data.error == null){
+                    span.removeClass('favorite not-favorite').addClass(data.value ? 'favorite':'not-favorite');
+                }
+            }
+        });
     },
     setInfoKey:function(key,span){
         span.attr('data-trigger','focus').attr('tabindex','0').popover({

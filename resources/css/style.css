@@ -334,6 +334,23 @@ label > [type="checkbox"] {
     padding-left:25px;
 }
 
+.favorite,.not-favorite {
+    width:16px;
+    height:16px;
+    display:inline-block;
+    vertical-align: baseline;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+}
+
+.favorite {
+    background-image: url('/images/star_full.png');
+}
+
+.not-favorite {
+    background-image: url('/images/star_empty.png');
+}
+
 .folders.line > span {
     display:inline-block;
     margin:5px 0px 0px 5px;

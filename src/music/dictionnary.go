@@ -12,6 +12,10 @@ import (
 	"sort"
 )
 
+const (
+	limitMusicsInFile = 1000
+)
+
 // Save original dictionnary in new structure : one file header with for all id, file id and position in file. Some files with informatiosn inside
 // For reading, load header file in memory and keep until next scan
 
@@ -54,6 +58,20 @@ func (ml MusicLibrary) GetPosition(id int32) int64 {
 
 func (ml MusicLibrary) GetNbMusics() int {
 	return len(ml.musicPositions)
+}
+
+//GetMusicInfoAsJSON
+func (ml MusicLibrary) GetMusicInfoAsJSON(id int32, isfavorite bool) []byte {
+	musicInfo := ml.GetMusicInfo(id)
+	delete(musicInfo, "path")
+	musicInfo["id"] = fmt.Sprintf("%d", id)
+	musicInfo["src"] = fmt.Sprintf("music?id=%d", id)
+	if isfavorite {
+		musicInfo["favorite"] = "true"
+	}
+	bdata, _ := json.Marshal(musicInfo)
+
+	return bdata
 }
 
 //GetMusicInfo return music info from id
@@ -154,10 +172,6 @@ func CreateNewDictionnary(fromFolderOldVersion, toFolderNewVersion string) {
 	ami := LoadArtistMusicIndex(fromFolderOldVersion)
 	ami.Save(toFolderNewVersion)
 }
-
-const (
-	limitMusicsInFile = 10
-)
 
 // Load all existing musics in memory. Used to avoid full reparsing
 func (od OutputDictionnary) LoadExistingMusicsInfo() map[string]map[string]string {

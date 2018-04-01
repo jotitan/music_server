@@ -299,7 +299,6 @@ func (md *MusicDictionnary) extractInfo(filename string, musics map[string]map[s
 
 func (md MusicDictionnary) getTimeMusic(filename string) string {
 	f, _ := os.Open(filename)
-	fmt.Sprintf("%v", f.Fd())
 
 	tmpName := fmt.Sprintf("%d", time.Now().Nanosecond())
 	tmpPath := filepath.Join(os.TempDir(), tmpName)

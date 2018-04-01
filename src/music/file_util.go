@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 )
 
-
-
 func getInts64AsByte(values []int64) []byte {
 	tab := make([]byte,len(values)*8)
 	for i,n := range values {

@@ -1,11 +1,9 @@
-
 function Music(id,src,title,time){
     this.id = id;
     this.src = src;
     this.title = title;
     this.time = (time !=null)?parseInt(time):0;
 }
-
 
 var MusicPlayer = {
     player:null,
@@ -21,9 +19,9 @@ var MusicPlayer = {
                 this.name = "Default";
             }
             this.input.val(this.name);
-             this.input.bind('click',function(){
+             this.input.bind('click',()=>{
                if($(this).hasClass('disabled')){
-                $(this).removeClass('disabled').bind('keydown',function(e){
+                $(this).removeClass('disabled').bind('keydown',(e)=>{
                    if(e.keyCode == 13){
                       MusicPlayer.device.save();
                    }
@@ -55,33 +53,19 @@ var MusicPlayer = {
             this.seeker.slider({
                 min:0,
                 value:0,
-                slide:function(e,ui){
-                    MusicPlayer.player.currentTime = ui.value;
-                }
+                slide:(e,ui)=>MusicPlayer.player.currentTime = ui.value
             });
             var _self = this;
-            $('.play',this.div).bind('click',function(){
-                _self.play();
-            });
-            $('.pause',this.div).bind('click',function(){
-                _self.pause();
-            });
-            $('.next',this.div).bind('click',function(){
-                _self.next();
-            });
-            $('.previous',this.div).bind('click',function(){
-                _self.previous();
-            });
+            $('.play',this.div).bind('click',()=>_self.play());
+            $('.pause',this.div).bind('click',()=>_self.pause());
+            $('.next',this.div).bind('click',()=>_self.next());
+            $('.previous',this.div).bind('click',()=>self.previous());
             MusicPlayer.player.volume = 0.5;
             // Volume Behaviour
-            $('.volume-plus',this.div).bind('click',function(){
-                MusicPlayer.volume.up();
-            });
-            $('.volume-minus',this.div).bind('click',function(){
-                MusicPlayer.volume.down();
-            });
-            $(document).bind('volume_up',function(){MusicPlayer.volume.up();})
-            $(document).bind('volume_down',function(){MusicPlayer.volume.down();})
+            $('.volume-plus',this.div).bind('click',()=>MusicPlayer.volume.up());
+            $('.volume-minus',this.div).bind('click',()=>MusicPlayer.volume.down());
+            $(document).bind('volume_up',()=>MusicPlayer.volume.up());
+            $(document).bind('volume_down',()=>MusicPlayer.volume.down());
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
@@ -149,18 +133,10 @@ var MusicPlayer = {
     init:function(){
         this.player = $('#idPlayer').get(0);
         this.controls.init('player')
-        this.player.addEventListener('canplay',function(e){
-            MusicPlayer.initMusic();
-        })
-        this.player.addEventListener('error',function(e){
-            console.log("Error when loading music")
-        });
-        this.player.addEventListener('timeupdate',function(e){
-            MusicPlayer.controls.update(MusicPlayer.player.currentTime);
-        });
-        this.player.addEventListener('ended',function(e){
-            MusicPlayer.controls.next();
-        });
+        this.player.addEventListener('canplay',()=>MusicPlayer.initMusic());
+        this.player.addEventListener('error',()=>console.log("Error when loading music"));
+        this.player.addEventListener('timeupdate',()=>MusicPlayer.controls.update(MusicPlayer.player.currentTime));
+        this.player.addEventListener('ended',()=>MusicPlayer.controls.next());
         // Detect key controls
         $(document).bind('keyup',function(e){
             var key = (e.keyCode != 0)?e.keyCode:e.charCode;
@@ -187,9 +163,7 @@ var MusicPlayer = {
         });
         this.device.init();
         // Get nb musics
-        $.ajax({url:'/nbMusics',success:function(data){
-            $('#nbMusics').html(data);
-        }});
+        $.ajax({url:'/nbMusics',success:data=>$('#nbMusics').html(data)});
     },
     load:function(music){
         if(music == null){return;}
