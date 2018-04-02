@@ -140,8 +140,8 @@ var Explorer = {
             var info = "";
             if(data[file].infos!=null){
                 // List of data info
-                for(var field in data[file].infos){
-                    var value = data[file].infos[field]
+               for(var field in data[file].infos){
+                    var value = data[file].infos[field];
                     switch(field){
                         case "time" : info += '<span class="info">' + MusicPlayer._formatTime(value) + '</span>';break;
                         case "favorite" : 
@@ -183,13 +183,14 @@ var Explorer = {
                 }
             }
             // Add favorite behaviour
-            $('.favorite,.not-favorite',span).bind('click',e=>Explorer._changeFavorite($(e.target),span));
+            $('.favorite,.not-favorite',span).bind('click',e=>Explorer._changeFavorite($(e.target)));
             this.panelFolder.append(span);
         }
         $('.info-folders > span.counter',this.div).html('' + this.panelFolder.find('>span').length + ' - ');
     },
     // Update favorite of music
-    _changeFavorite:function(span,line){
+    _changeFavorite:function(span){
+        var line = span.parent('.ui-draggable');
         var id = line.data('id');
         var favorite = !span.hasClass('favorite');
         $.ajax({
