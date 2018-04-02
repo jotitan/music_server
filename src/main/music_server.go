@@ -268,6 +268,19 @@ func (ms MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) 
 	response.Write(bdata)
 }
 
+func (ms MusicServer) musicsInfoInline(response http.ResponseWriter, request *http.Request) {
+	strIds := strings.Split(request.FormValue("ids"), ",")
+	ids := make([]int32, len(strIds))
+	for i, strID := range strIds {
+		if id, err := strconv.ParseInt(strID, 10, 32); err == nil {
+			ids[i] = int32(id)
+		} else {
+			ids[i] = 0
+		}
+	}
+	ms.musicsResponse(ids, response)
+}
+
 //search musics by free text
 func (ms *MusicServer) search(response http.ResponseWriter, request *http.Request) {
 	musics := ms.indexManager.SearchText(request.FormValue("term"), request.FormValue("size"))
@@ -435,6 +448,7 @@ func (ms *MusicServer) createRoutes() *http.ServeMux {
 	mux.HandleFunc("/musicInfo", ms.musicInfo)
 	mux.HandleFunc("/get", ms.get)
 	mux.HandleFunc("/musicsInfo", ms.musicsInfo)
+	mux.HandleFunc("/musicsInfoInline", ms.musicsInfoInline)
 	mux.HandleFunc("/listByArtist", ms.listByArtist)
 	mux.HandleFunc("/listByAlbum", ms.listByAlbum)
 	mux.HandleFunc("/listByOnlyAlbums", ms.listByOnlyAlbums)
