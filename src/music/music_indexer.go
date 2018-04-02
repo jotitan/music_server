@@ -26,7 +26,6 @@ func IndexArtists(folder string) TextIndexer {
 		// Load all tracks and group by album
 		albums := make(map[string][]int)
 		genres := make(map[string]struct{})
-		logger.GetLogger().Info("Index artist", artistID, "with musics", musicsIds)
 		for i, music := range library.GetMusicsInfo(musicsIds) {
 			musicID := musicsIds[i]
 			// Index genre by artist

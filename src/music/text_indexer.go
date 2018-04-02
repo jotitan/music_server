@@ -50,6 +50,7 @@ func LoadTextIndexer(folder string) TextIndexer {
 	return ti
 }
 
+//Filter split sentence into words
 func (ti TextIndexer) Filter(values ...string) []string {
 	results := make([]string, 0)
 	for _, value := range values {

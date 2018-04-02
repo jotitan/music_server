@@ -93,7 +93,14 @@ func (ml MusicLibrary) GetMusicInfo(id int32) map[string]string {
 }
 
 //GetMusicsInfo return musics information from ids
+// Requested musics must be returned in the same ordre
 func (ml MusicLibrary) GetMusicsInfo(ids []int32) []map[string]string {
+	// Compute an inverted index for music position
+	idPositions := make(map[string]int, len(ids))
+	for pos, id := range ids {
+		idPositions[fmt.Sprintf("%d", id)] = pos
+	}
+
 	// Find positions in header and group by fileId
 	positionsByFileId := make(map[int32][]int)
 	for _, id := range ids {
@@ -107,7 +114,7 @@ func (ml MusicLibrary) GetMusicsInfo(ids []int32) []map[string]string {
 			}
 		}
 	}
-	musicsInfo := make([]map[string]string, 0, len(ids))
+	musicsInfo := make([]map[string]string, len(ids))
 	// For each file, search every positions inside
 	for fileId, positions := range positionsByFileId {
 		filename := filepath.Join(ml.folder, fmt.Sprintf("dico_music_%d.dico", fileId))
@@ -116,7 +123,10 @@ func (ml MusicLibrary) GetMusicsInfo(ids []int32) []map[string]string {
 			// Sort to increase performance by sequential access
 			sort.Ints(positions)
 			for _, position := range positions {
-				musicsInfo = append(musicsInfo, readMusicFromFile(dataFile, int64(position)))
+				// Put info at good position in file
+				info := readMusicFromFile(dataFile, int64(position))
+				originalOrder := idPositions[info["id"]]
+				musicsInfo[originalOrder] = info
 			}
 		}
 	}
