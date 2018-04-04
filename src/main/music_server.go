@@ -108,6 +108,8 @@ func (ms *MusicServer) fullReindex(response http.ResponseWriter, request *http.R
 		output := music.NewOutputDictionnary(ms.folder)
 		textIndexer := dico.FullReindex(ms.musicFolder, output)
 		ms.indexManager.UpdateIndexer(textIndexer)
+		// Reload library
+		ms.library = music.NewMusicLibrary(ms.folder)
 	}
 }
 
@@ -142,6 +144,11 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 	sort.Sort(music.SortByArtist(artistsData))
 	bdata, _ := json.Marshal(artistsData)
 	response.Write(bdata)
+}
+
+//Return all favorites as musics
+func (ms MusicServer) getFavorites(response http.ResponseWriter, request *http.Request) {
+	ms.getMusics(response, request, ms.favorites.GetFavorites(), false)
 }
 
 func (ms MusicServer) setFavorite(response http.ResponseWriter, request *http.Request) {
@@ -260,11 +267,15 @@ func (ms MusicServer) musicsInfo(response http.ResponseWriter, request *http.Req
 // Get informations from ids of music
 func (ms MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) {
 	musics := ms.library.GetMusicsInfo(ids)
+	musicsExport := make([]map[string]string, 0, len(musics))
 	for _, musicInfo := range musics {
-		delete(musicInfo, "path")
-		musicInfo["src"] = fmt.Sprintf("music?id=%s", musicInfo["id"])
+		if musicInfo != nil && len(musicInfo) > 0 {
+			delete(musicInfo, "path")
+			musicInfo["src"] = fmt.Sprintf("music?id=%s", musicInfo["id"])
+			musicsExport = append(musicsExport, musicInfo)
+		}
 	}
-	bdata, _ := json.Marshal(musics)
+	bdata, _ := json.Marshal(musicsExport)
 	response.Write(bdata)
 }
 
@@ -461,6 +472,7 @@ func (ms *MusicServer) createRoutes() *http.ServeMux {
 
 	// Manage favorites
 	mux.HandleFunc("/setFavorite", ms.setFavorite)
+	mux.HandleFunc("/getFavorites", ms.getFavorites)
 
 	// Manage share device
 	mux.HandleFunc("/share", ms.share)

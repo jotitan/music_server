@@ -35,6 +35,17 @@ func TestFavorite(t *testing.T) {
 	testFavorite(fv, 145, true, t)
 	testFavorite(fv, 144, false, t)
 	testFavorite(fv, 146, false, t)
+
+	if size := len(fv.GetFavorites()); size != 6 {
+		t.Error(fmt.Sprintf("Must be %d but found %d", 6, size))
+	}
+
+	fv.Set(837, true)
+
+	if size := len(fv.GetFavorites()); size != 7 {
+		t.Error(fmt.Sprintf("Must be %d but found %d", 7, size))
+	}
+	t.Log(fv.GetFavorites())
 }
 
 func testFavorite(fv *music.FavoritesManager, value int, result bool, t *testing.T) {

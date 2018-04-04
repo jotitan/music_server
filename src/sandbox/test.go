@@ -46,6 +46,15 @@ func add(t ITest, value string) {
 }
 
 func main() {
+	toParse := "08 - E strano e strano! Ah, fors._  e lui.mp3"
+	re := regexp.MustCompile("[-!,_\\.]|(mp3)")
+	reSpace := regexp.MustCompile("[ ]{2,}")
+	r1 := re.ReplaceAll([]byte(toParse), []byte(" "))
+	fmt.Println(string(r1))
+	fmt.Println(string(reSpace.ReplaceAll(r1, []byte(" "))))
+
+	tii := music.NewTextIndexer()
+	fmt.Println(tii.Filter(toParse))
 
 	//music.CreateNewDictionnary("D:\\test\\audio\\idx2","D:\\test\\audio\\new_version_local")
 

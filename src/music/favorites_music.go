@@ -50,6 +50,19 @@ func (fm *FavoritesManager) save(folder string) {
 	fm.save(folder)
 }
 
+//GetFavorites return all favorites
+func (fm FavoritesManager) GetFavorites() []int {
+	favorites := make([]int, 0, fm.cap())
+	for pos, block := range fm.musics {
+		for i := 0; i < 8; i++ {
+			if block&(1<<uint(i)) != 0 {
+				favorites = append(favorites, pos*8+i)
+			}
+		}
+	}
+	return favorites
+}
+
 //IsFavorite check if a music is a favorite
 func (fm FavoritesManager) IsFavorite(musicID int) bool {
 	if musicID >= fm.cap() {

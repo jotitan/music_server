@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -50,19 +51,29 @@ func LoadTextIndexer(folder string) TextIndexer {
 	return ti
 }
 
-//Filter split sentence into words
+var cleanChars = regexp.MustCompile("[-!/,\\.]|(mp3)")
+var cleanSpaces = regexp.MustCompile("[ ]{2,}")
+
+//Filter split sentence into words. Remove duplicates
 func (ti TextIndexer) Filter(values ...string) []string {
 	results := make([]string, 0)
 	for _, value := range values {
-		value = strings.ToLower(value)
-		for _, e := range strings.Split(strings.Replace(value, "/", " ", -1), " ") {
+		value = string(cleanSpaces.ReplaceAll(cleanChars.ReplaceAll([]byte(strings.ToLower(value)), []byte(" ")), []byte(" ")))
+		splits := strings.Split(value, " ")
+		sort.Strings(splits)
+
+		for _, e := range splits {
 			if len(e) > 2 {
 				//t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 				//e, _, _ := transform.String(t, "e")
-				results = append(results, e)
+				// Check if equals previous to remove duplicates
+				if len(results) == 0 || results[len(results)-1] != e {
+					results = append(results, e)
+				}
 			}
 		}
 	}
+
 	return results
 }
 
@@ -152,7 +163,7 @@ func (ti TextIndexer) Search(text string) []int {
 }
 
 func (ti TextIndexer) IntSearch(text string) []int {
-	if pos := ti.subSearchInt(ti.Index, text, 0); pos != -1 {
+	if pos := ti.searchPositionToken(ti.Index, text, 0); pos != -1 {
 		// search other close value
 		results := ti.Index[pos].Musics
 		for i := pos - 1; i >= 0 && strings.HasPrefix(ti.Index[i].Value, text); i-- {
@@ -167,7 +178,8 @@ func (ti TextIndexer) IntSearch(text string) []int {
 	return []int{}
 }
 
-func (ti TextIndexer) subSearchInt(tokens Tokens, text string, pos int) int {
+//Use dicotomy
+func (ti TextIndexer) searchPositionToken(tokens Tokens, text string, pos int) int {
 	if len(tokens) == 0 {
 		return -1
 	}
@@ -180,9 +192,9 @@ func (ti TextIndexer) subSearchInt(tokens Tokens, text string, pos int) int {
 		return -1
 	}
 	if t.Value < text {
-		return ti.subSearchInt(tokens[center:], text, center+pos)
+		return ti.searchPositionToken(tokens[center:], text, center+pos)
 	}
-	return ti.subSearchInt(tokens[:center], text, pos)
+	return ti.searchPositionToken(tokens[:center], text, pos)
 }
 
 func (ti TextIndexer) subSearch(tokens Tokens, text string) []int {
