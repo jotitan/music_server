@@ -1,9 +1,4 @@
-/* Show tasks from server */
-
 if(Loader){Loader.toLoad("html/playlist.html","PlaylistPanel","css/playlist.css");}
-
-
-
 
 var PlaylistPanel = {
     listDiv:null,
@@ -55,6 +50,7 @@ var PlaylistPanel = {
                 if(idMusic == null){
                     // Get url if exist to load all, folder case
                     var url = ui.draggable.data('url_drag');
+                    console.log(url)
                      if(url != null){
                         _self.addMusicsFromUrl(url);
                      }

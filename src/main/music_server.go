@@ -148,7 +148,7 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 
 //Return all favorites as musics
 func (ms MusicServer) getFavorites(response http.ResponseWriter, request *http.Request) {
-	ms.getMusics(response, request, ms.favorites.GetFavorites(), false)
+	ms.getMusics(response, request, ms.favorites.GetFavorites(), false, []string{"artist"})
 }
 
 func (ms MusicServer) setFavorite(response http.ResponseWriter, request *http.Request) {
@@ -162,7 +162,7 @@ func (ms MusicServer) setFavorite(response http.ResponseWriter, request *http.Re
 	}
 }
 
-func (ms MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool) {
+func (ms MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool, fields []string) {
 	// Get genre, if exist, filter music with
 	genre := strings.ToLower(request.FormValue("genre"))
 	musics := make([]map[string]interface{}, 0, len(musicsIds))
@@ -174,6 +174,10 @@ func (ms MusicServer) getMusics(response http.ResponseWriter, request *http.Requ
 			infos["favorite"] = fmt.Sprintf("%t", ms.favorites.IsFavorite(musicID))
 			infos["track"] = "#" + m["track"]
 			infos["time"] = m["length"]
+			// Recopy wanted fields
+			for _, field := range fields {
+				infos[field] = m[field]
+			}
 			musics = append(musics, map[string]interface{}{"name": m["title"], "id": fmt.Sprintf("%d", musicID), "infos": infos})
 		}
 	}
@@ -191,7 +195,7 @@ func (ms *MusicServer) listByArtist(response http.ResponseWriter, request *http.
 		logger.GetLogger().Info("Load music of artist", id)
 		artistID, _ := strconv.ParseInt(id, 10, 32)
 		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistID)]
-		ms.getMusics(response, request, musicsIds, false)
+		ms.getMusics(response, request, musicsIds, false, []string{})
 	}
 }
 
@@ -201,7 +205,7 @@ func (ms *MusicServer) listByOnlyAlbums(response http.ResponseWriter, request *h
 	case request.FormValue("id") != "":
 		albumID, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
 		musicsIds := ms.indexManager.ListFullAlbumById(int(albumID))
-		ms.getMusics(response, request, musicsIds, true)
+		ms.getMusics(response, request, musicsIds, true, []string{})
 	default:
 		albumsData := ms.indexManager.ListAllAlbums(request.FormValue("genre"))
 		data, _ := json.Marshal(albumsData)
@@ -220,7 +224,7 @@ func (ms MusicServer) listByAlbum(response http.ResponseWriter, request *http.Re
 	case request.FormValue("idAlbum") != "":
 		albumID, _ := strconv.ParseInt(request.FormValue("idAlbum"), 10, 32)
 		musicsIDs := ms.indexManager.ListAlbumById(int(albumID))
-		ms.getMusics(response, request, musicsIDs, true)
+		ms.getMusics(response, request, musicsIDs, true, []string{})
 
 	default:
 		ms.getAllArtists(response, request)

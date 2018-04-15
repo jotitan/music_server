@@ -110,7 +110,7 @@ func NewGenreReader(folder string) *GenreReader {
 	nbGenre := getNextInt32FromFile(in)
 	lengthHeader := getNextInt32FromFile(in)
 	header := make([]byte, lengthHeader)
-	in.Read(header)
+	in.Read(header) 
 	genres := make(map[string]int64, nbGenre)
 	genreNames := make([]string, nbGenre)
 	pos := 0

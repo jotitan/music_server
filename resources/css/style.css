@@ -326,7 +326,7 @@ label > [type="checkbox"] {
     font-size:12px;
 }
 
-.folders.block > span > span.info {
+.folders.block > span > span.info , .folders.block > span > span.info-left {
     display:none;
 }
 
@@ -343,6 +343,20 @@ label > [type="checkbox"] {
     background-size: 16px 16px;
 }
 
+.favorites .remove {
+    margin-right:10px;
+    color:red;
+}
+
+.favorites .music .details {
+    width:calc(100% - 40px);
+    display:inline-block;
+}
+
+.favorites .music .details span.info {
+    float:right;
+}
+
 .favorite {
     background-image: url('/images/star_full.png');
 }
@@ -351,7 +365,7 @@ label > [type="checkbox"] {
     background-image: url('/images/star_empty.png');
 }
 
-.folders.line > span {
+.folders.line > span,.folders.line > div {
     display:inline-block;
     margin:5px 0px 0px 5px;
     border-bottom:solid 1px lightgray;

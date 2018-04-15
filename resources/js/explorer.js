@@ -145,28 +145,30 @@ var Explorer = {
                     switch(field){
                         case "time" : info += '<span class="info">' + MusicPlayer._formatTime(value) + '</span>';break;
                         case "favorite" : 
-                            if (value == "true"){
-                                info += '<span class="info favorite"></span>';    
-                            }else{
-                                info += '<span class="info not-favorite"></span>';
-                            }
+                            info += '<span class="info ' + (value != "true" ? 'not-':'') + 'favorite"></span>';    
                             break;
                         default : info += '<span class="info">' + value + '</span>';
                     }
-                    
                 };
             }
             if(data[file].info!=null){
                 info = '<span class="info">' + MusicPlayer._formatTime(data[file].info) + '</span>';
             }
+            var addOption = '<span style="margin-right:10px;" class="glyphicon glyphicon-plus add-music info-left"></span>';
             // Info json with name and either url (param after url) or id
-            var span = $('<span data-idx="' + name.toLowerCase() + '" data-url="' + url + '">' + name + info + '</span>');
+            var span = $('<span class="music" data-idx="' + name.toLowerCase() + '" data-url="' + url + '">' 
+                + addOption + '<span class="music-name">' + name + '</span>' +info + '</span>');
             // If url, sub folder exist. Otherwise, final element, can add to playlist
             if(url != null){
                 // Can add all data in playlist if drag and drop
                 var dragStart = false;
                 span.data("url_drag",this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + url);
-                span.draggable({delay:300,helper:'clone',start:()=>dragStart=true,stop:()=>dragStart=false})
+                span.draggable({cancel:'.add-music',delay:300,revert:true,helper:'clone',start:()=>{dragStart=true},stop:()=>{dragStart=false}});                
+                $('.add-music',span).bind('mouseup',e=>{                    
+                    var url = $(e.currentTarget).closest('.music').data('url_drag');
+                    PlaylistPanel.addMusicsFromUrl(url);
+                    e.stopPropagation();
+                });
                 span.bind('mouseup',function(){
                     if(dragStart){return;}
                     Explorer.loadPath($(this).data('url'),$(this).text());
@@ -177,9 +179,8 @@ var Explorer = {
                 span.draggable({revert:true,helper:'clone'})
                 // Dbl click to playlist
                 if(this.fctClick){
-                    span.bind('dblclick',function(){
-                        Explorer.fctClick($(this).data('id'));
-                    });
+                    $('.add-music',span).bind('click',e=>Explorer.fctClick($(e.currentTarget).closest('.music').data('id')));
+                    span.bind('dblclick',e=>Explorer.fctClick($(e.currentTarget).data('id')));
                 }
             }
             // Add favorite behaviour
@@ -199,6 +200,7 @@ var Explorer = {
             success:function(data){
                 if(data.error == null){
                     span.removeClass('favorite not-favorite').addClass(data.value ? 'favorite':'not-favorite');
+                    $(document).trigger('refresh-favorites');
                 }
             }
         });

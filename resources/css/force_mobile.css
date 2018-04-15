@@ -70,6 +70,38 @@
     font-weight:bold;
 }
 
+.folders.line .music {
+    height:38px;
+}
+
+.folders.line .music .info,.folders.line .music .music-name {
+    font-size: 16px;
+    font-weight: bold;
+    position:relative;
+}
+
+.folders.line .music .music-name {
+    top: -8px;
+}
+
+.folders.line .music .info {
+    top:5px;
+}
+
+.folders.line .music .info.favorite,.folders.line .music .info.not-favorite {
+    top:1px;
+}
+
+.favorite,.not-favorite {
+    width:25px;
+    height:25px;
+    background-size: 25px 25px;
+}
+
+.folders.line .music span.glyphicon {
+    font-size: 30px;
+}
+
 .playlist div > span:nth-child(1){
     width:35px;
 }
@@ -89,7 +121,7 @@
 .half-left-panel {
     width:calc(50% - 4px);
     height:calc(100% - 80px);
-    top:47px;
+    top:30px;
     left:0px;
  }
 
@@ -103,7 +135,7 @@
  .half-right-panel {
     width:calc(50% - 8px);
     height:calc(100% - 80px);
-    top:47px;
+    top:30px;
     left:50%;
  }
 
