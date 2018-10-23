@@ -50,7 +50,6 @@ var PlaylistPanel = {
                 if(idMusic == null){
                     // Get url if exist to load all, folder case
                     var url = ui.draggable.data('url_drag');
-                    console.log(url)
                      if(url != null){
                         _self.addMusicsFromUrl(url);
                      }
@@ -312,7 +311,7 @@ var PlaylistPanel = {
         $('.glyphicon-play',line).bind('click',function(){
             _self.setActualPlayed($(this).closest('div'));
             if(_self.shareManager!=null){
-                _self.shareManager.event('playMusic',_self.current);
+                _self.shareManager.event('playMusic',_self.list[_self.current].id);
             }
             if(!_self.noLoadMusic) {
                 MusicPlayer.load(music);
@@ -395,6 +394,12 @@ var RemotePlaylist = {
             _self.pause();
             _self.shareManager.event("pause");
         });
+        $('.controls>.glyphicon-plus',this.div).bind('click',function(){
+            _self.shareManager.event("volumeUp");
+        });
+        $('.controls>.glyphicon-minus',this.div).bind('click',function(){
+            _self.shareManager.event("volumeDown");
+        });
         this.listDiv.on("dblclick",'div',function(e){
             _self.play();
         });
@@ -406,9 +411,20 @@ var RemotePlaylist = {
             }
         });
     },
+    updateVolume:function(value){
+        $('.remoteVolume',this.div).css('background-image','linear-gradient(to right,white 0%,orange ' + value + '%,white 0%');
+    },
+    // Show music by id, have to find position
+    showMusicById:function(id){
+        var position = RemotePlaylist.list.findIndex(m=>m.id==id);
+        if(position != -1){
+            this.showMusicByPosition(position);
+        }
+    },
     showMusicByPosition:function(position){
         this.current = parseInt(position);
         this._selectLine();
+        this.play();
     },
     // show played music
     showMusic:function(id){

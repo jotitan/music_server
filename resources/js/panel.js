@@ -230,7 +230,9 @@ var WindowsNavManager = {
         $('button.task-button',this.div).removeClass('selected');
         $('.float-panel.active').removeClass('active')
         panel.div.addClass('active')
-        panel.div.data('button').removeClass('inactive').addClass('selected active');
+        if(panel.div.data('button').length > 0){
+            panel.div.data('button').removeClass('inactive').addClass('selected active');
+        }
     },
     doAction:function(panel){
         if(panel == null){

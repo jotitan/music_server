@@ -18,20 +18,20 @@ var MusicPlayer = {
             }else {
                 this.name = "Default";
             }
-            this.input.val(this.name);
-             this.input.bind('click',()=>{
-               if($(this).hasClass('disabled')){
-                $(this).removeClass('disabled').bind('keydown',(e)=>{
+            this.input.val(this.name);            
+             this.input.bind('click',(e)=>{
+               if(this.input.hasClass('disabled')){
+                $(this.input).removeClass('disabled').bind('keydown',(e)=>{
                    if(e.keyCode == 13){
                       MusicPlayer.device.save();
-                   }
-                });
+                   }    
+                }).bind('blur',(e)=>MusicPlayer.device.save());
                }
             });
         },
         save:function(){
            this.name = this.input.val();
-           this.input.addClass('disabled').unbind('keydown');
+           this.input.addClass('disabled').unbind('keydown,blur');
            if(localStorage){
             localStorage["deviceName"] = this.name;
            }
@@ -46,7 +46,8 @@ var MusicPlayer = {
     controls:{
         div:null,
         seeker:null,
-        shareManager:null,
+        // Default implementation to avoid test shareManager every time
+        shareManager:{event:function(){}},
         init:function(idDiv){
             this.div = $('#' + idDiv)
             this.seeker = $('.seeker',this.div);
@@ -59,7 +60,7 @@ var MusicPlayer = {
             $('.play',this.div).bind('click',()=>_self.play());
             $('.pause',this.div).bind('click',()=>_self.pause());
             $('.next',this.div).bind('click',()=>_self.next());
-            $('.previous',this.div).bind('click',()=>self.previous());
+            $('.previous',this.div).bind('click',()=>_self.previous());
             MusicPlayer.player.volume = 0.5;
             // Volume Behaviour
             $('.volume-plus',this.div).bind('click',()=>MusicPlayer.volume.up());
@@ -71,15 +72,11 @@ var MusicPlayer = {
         },
         play:function(){
             MusicPlayer.play();
-            if(this.shareManager!=null){
-                this.shareManager.event('play');
-            }
+            this.shareManager.event('play');
         },
         pause:function(){
             MusicPlayer.pause();
-            if(this.shareManager!=null){
-                this.shareManager.event('pause');
-            }
+            this.shareManager.event('pause');
         },
         next:function(){
             $(document).trigger('next_event');
@@ -93,10 +90,8 @@ var MusicPlayer = {
         setTitle:function(music){
             $('.title',this.div).text(music.title);
             $('title').html(music.artist + " - " + music.title);
-            if(this.shareManager!=null){
-                // Trigger that a music is loaded
-                this.shareManager.event('load',music.id)
-            }
+            // Trigger that a music is loaded
+            this.shareManager.event('load',music.id)
         },
         setMax:function(value){
             this.seeker.slider('option','max',value)
@@ -119,6 +114,8 @@ var MusicPlayer = {
              }
              VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
             $.ajax({url:'/volume?volume=up'});
+            // Share event
+            MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         },
         down:function(){
             if(MusicPlayer.player.volume <= 0.1){
@@ -128,6 +125,7 @@ var MusicPlayer = {
             }
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10));
             $.ajax({url:'/volume?volume=down'});
+            MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         }
     },
     init:function(){

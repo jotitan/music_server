@@ -163,7 +163,7 @@ var Explorer = {
                 // Can add all data in playlist if drag and drop
                 var dragStart = false;
                 span.data("url_drag",this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + url);
-                span.draggable({cancel:'.add-music',delay:300,revert:true,helper:'clone',start:()=>{dragStart=true},stop:()=>{dragStart=false}});                
+                span.draggable({axis:'x',cancel:'.add-music',delay:300,revert:true,helper:'clone',start:()=>{dragStart=true},stop:()=>{dragStart=false}});                
                 $('.add-music',span).bind('mouseup',e=>{                    
                     var url = $(e.currentTarget).closest('.music').data('url_drag');
                     PlaylistPanel.addMusicsFromUrl(url);
@@ -176,7 +176,7 @@ var Explorer = {
             }else{
                 // Last element, display server where data is
                 span.data("id",data[file].id)
-                span.draggable({revert:true,helper:'clone'})
+                //span.draggable({revert:true,helper:'clone'})
                 // Dbl click to playlist
                 if(this.fctClick){
                     $('.add-music',span).bind('click',e=>Explorer.fctClick($(e.currentTarget).closest('.music').data('id')));

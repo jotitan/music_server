@@ -39,7 +39,7 @@ var Share = {
     }
 }
 
-// Create a clone manager (for a specific share id)
+// Create a clone manager (for a specific share id). receive event from original
 function CreateClone(id,remotePlaylist){
      // Add behaviour on remotePlaylist, receive event for remoteplaylist
 
@@ -57,14 +57,16 @@ function CreateClone(id,remotePlaylist){
          var info = JSON.parse(data.data);
          remotePlaylist.cleanPlaylist();
          remotePlaylist.addMusicsFromIds(info,true);
-         info.playing ? remotePlaylist.play() : remotePlaylist.pause();
+         info.playing ? remotePlaylist.play() : remotePlaylist.pause();         
+         remotePlaylist.updateVolume(info.volume);
      });
      sse.addEventListener('remove',function(data){remotePlaylist.removeMusicId(data.data,true);});
-     sse.addEventListener('playMusic',function(data){remotePlaylist.showMusicByPosition(data.data);});
+     sse.addEventListener('playMusic',function(data){remotePlaylist.showMusicById(data.data);});
      sse.addEventListener('next',function(){remotePlaylist.next(true);});
      sse.addEventListener('previous',function(){remotePlaylist.previous(true);});
      sse.addEventListener('pause',function(){remotePlaylist.pause();});
      sse.addEventListener('play',function(){remotePlaylist.play();});
+     sse.addEventListener('volume',function(data){remotePlaylist.updateVolume(data.data)});
 
     manager.sse = sse;
     manager.event = function(event,data){
@@ -84,7 +86,7 @@ function CreateClone(id,remotePlaylist){
     remotePlaylist.setShareManager(manager);
 }
 
-// Create a original manager (for a specific share id)
+// Create a original manager (for a specific share id). Receive event and apply on player (read music)
 function CreateOriginal(playlist){
     var manager = {};
     var sse = new EventSource('/share?device=' + MusicPlayer.device.name);
@@ -101,7 +103,7 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('askPlaylist',function(data){
          var ids = playlist.list.map(function(m){return parseInt(m.id)});
-         var data = {ids:ids,current:playlist.current,playing:!MusicPlayer.isPause()};
+         var data = {ids:ids,current:playlist.current,playing:!MusicPlayer.isPause(),volume:Math.round(MusicPlayer.player.volume*100)};
          $.ajax({
              url:'/shareUpdate',
              data:{id:manager.id,event:'playlist',data:JSON.stringify(data)}
@@ -109,10 +111,12 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('remove',function(data){playlist.removeMusicId(data.data);});
      sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
-     sse.addEventListener('next',function(){playlist.next(true);});
-     sse.addEventListener('previous',function(){playlist.previous(true);});
+     sse.addEventListener('next',function(){playlist.next();});
+     sse.addEventListener('previous',function(){playlist.previous();});
      sse.addEventListener('pause',function(){MusicPlayer.pause();});
      sse.addEventListener('play',function(){MusicPlayer.play();});
+     sse.addEventListener('volumeUp',function(){MusicPlayer.volume.up();});
+     sse.addEventListener('volumeDown',function(){MusicPlayer.volume.down();});
     manager.sse = sse;
 
     manager.event = function(event,data){
@@ -133,7 +137,7 @@ function CreateOriginal(playlist){
     return manager;
 }
 
-// Create a simple and light remote control (only play, pause, next and previous)
+// Create a simple and light remote control (only play, pause, next and previous). No music read
 function CreateRemote(id,target){
     if(target == null){
         return null;
