@@ -65,11 +65,14 @@ var PlaylistPanel = {
         $('.shuffle-playlist',this.div).bind('click',function(){
             _self.shuffle();
         });
-        this.div.bind('close',function(){
+        this.div.on('close',function(){
            _self.cleanPlaylist();
            // If share, close it
            if(_self.shareManager!=null){
             _self.shareManager.disable();
+           }
+           if(getCurrentPlaylist() == this){
+               currentPlaylist = null;
            }
         });
         // Load saved playlist
@@ -77,7 +80,8 @@ var PlaylistPanel = {
             this.saveInLS = false;
         }
         this.load();
-        this.initSearch();
+        this.initSearch();        
+        $(document).bind('focus.' + this.div.attr('id'),()=>currentPlaylist = this);                
     },
     // return songs around current
     initSearch:function(){
@@ -253,6 +257,10 @@ var PlaylistPanel = {
     },
     // Add many musics from list of id
     addMusicsFromIds:function(datas,noShare){
+        var playlist = getCurrentPlaylist();
+        if(playlist != this){
+            return playlist.addMusicsFromIds(datas,noShare);
+        }        
         var ids = datas.ids;
         this.current = datas.current !=null ? datas.current : this.current;
         var _self = this;
@@ -273,19 +281,20 @@ var PlaylistPanel = {
         });
     },
     addMusicFromId:function(id,noShare){
+        var playlist = getCurrentPlaylist();
+        if(playlist != this){
+            return playlist.addMusicFromId(id,noShare);
+        }
         if(noShare == null || noShare == false){
             if(this.shareManager!=null){
                 this.shareManager.event('add',id);
             }
         }
-        var _self = this;
         $.ajax({
             url:'/musicInfo?id=' + id,
             dataType:'json',
-            success:function(data){
-                // No need to create a real Music, just a container with properties, no methods
-                _self.add(data);
-            }
+                            // No need to create a real Music, just a container with properties, no methods
+            success:data=>this.add(data)
         })
     },
     addMusicsFromUrl:function(url){
@@ -408,15 +417,18 @@ var RemotePlaylist = {
             _self.div.remove();
             if(_self.shareManager != null){
                 _self.shareManager.disable(true);
+            }            
+            if(getCurrentPlaylist() == _self){
+               currentPlaylist = null;
             }
-        });
+        });    
     },
     updateVolume:function(value){
         $('.remoteVolume',this.div).css('background-image','linear-gradient(to right,white 0%,orange ' + value + '%,white 0%');
     },
     // Show music by id, have to find position
     showMusicById:function(id){
-        var position = RemotePlaylist.list.findIndex(m=>m.id==id);
+        var position = this.list.findIndex(m=>m.id==id);
         if(position != -1){
             this.showMusicByPosition(position);
         }
@@ -447,28 +459,33 @@ var RemotePlaylist = {
     }
 }
 
+var currentPlaylist = null;
+function getCurrentPlaylist(){
+    return currentPlaylist == null ? PlaylistPanel : currentPlaylist;
+}
+
 function connectToShare(){
-    $.extend(RemotePlaylist,PlaylistPanel);
-    RemotePlaylist.noLoadMusic=true;
-    RemotePlaylist.list = [];
+    var sharePanel = $.extend({},RemotePlaylist,PlaylistPanel);
+    sharePanel.noLoadMusic=true;
+    sharePanel.list = [];
 
     var id = 'idRemotePlaylist_' + new Date().getTime();
     $('body').append($('#idRemotePlaylist').clone().attr('id',id));
 
-    RemotePlaylist.init('#' + id,'Remote playlist',true);
-    RemotePlaylist.init2();
+    sharePanel.init('#' + id,'Remote playlist',true);
+    sharePanel.init2();
 
     // Show shares
     Share.getShares(function(data){
         data.forEach(function(s){
             var share = $('<div> => ' + s.Name + ' : <button>Connect</button></div>');
             $('button',share).bind('click',function(){
-                RemotePlaylist.listDiv.empty();
-                $('.title > span:first',RemotePlaylist.div).html('Remote playlist for ' + s.Name);
-                CreateClone(s.Id,RemotePlaylist);
+                sharePanel.listDiv.empty();
+                $('.title > span:first',sharePanel.div).html('Remote playlist for ' + s.Name);
+                CreateClone(s.Id,sharePanel);
             });
-            RemotePlaylist.listDiv.append(share);
-            RemotePlaylist.open();
+            sharePanel.listDiv.append(share);
+            sharePanel.open();
         });
     });
 }
