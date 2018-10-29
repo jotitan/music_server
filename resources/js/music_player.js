@@ -61,7 +61,7 @@ var MusicPlayer = {
             $('.pause',this.div).bind('click',()=>_self.pause());
             $('.next',this.div).bind('click',()=>_self.next());
             $('.previous',this.div).bind('click',()=>_self.previous());
-            MusicPlayer.player.volume = 0.5;
+            MusicPlayer.player.volume = 0.6;
             // Volume Behaviour
             $('.volume-plus',this.div).bind('click',()=>MusicPlayer.volume.up());
             $('.volume-minus',this.div).bind('click',()=>MusicPlayer.volume.down());
@@ -106,11 +106,12 @@ var MusicPlayer = {
         }
     },
     volume:{
+        step:0.05,
         up:function(){
-            if(MusicPlayer.player.volume >= 0.9){
+            if(MusicPlayer.player.volume >= 1-this.step){
                  MusicPlayer.player.volume=1;
              }else{
-                 MusicPlayer.player.volume+=0.1;
+                 MusicPlayer.player.volume+=this.step;
              }
              VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
             $.ajax({url:'/volume?volume=up'});
@@ -118,10 +119,10 @@ var MusicPlayer = {
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         },
         down:function(){
-            if(MusicPlayer.player.volume <= 0.1){
+            if(MusicPlayer.player.volume <= this.step){
                 MusicPlayer.player.volume=0;
             }else{
-                MusicPlayer.player.volume-=0.1;
+                MusicPlayer.player.volume-=this.step;
             }
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10));
             $.ajax({url:'/volume?volume=down'});
