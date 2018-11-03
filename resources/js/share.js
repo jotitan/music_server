@@ -3,6 +3,7 @@
 // when share, create a connexion to server
 var Share = {
     original:null,
+    emptyManager:{event:function(){},disable:function(){}},
     enable:function(){
         if(MusicPlayer.device.name == "No name"){
             alert("Define a real name for device");
@@ -55,12 +56,13 @@ function CreateClone(id,remotePlaylist){
       });
      sse.addEventListener('playlist',function(data){
          var info = JSON.parse(data.data);
-         remotePlaylist.cleanPlaylist();
+         remotePlaylist.cleanPlaylist(true);
          remotePlaylist.addMusicsFromIds(info,true);
          info.playing ? remotePlaylist.play() : remotePlaylist.pause();         
          remotePlaylist.updateVolume(info.volume);
      });
-     sse.addEventListener('remove',function(data){remotePlaylist.removeMusicId(data.data,true);});
+     sse.addEventListener('remove',function(data){remotePlaylist._removeMusic(data.data,true);});
+     sse.addEventListener('cleanPlaylist',function(data){remotePlaylist._cleanPlaylist(true);});
      sse.addEventListener('playMusic',function(data){remotePlaylist.showMusicById(data.data);});
      sse.addEventListener('next',function(){remotePlaylist.next(true);});
      sse.addEventListener('previous',function(){remotePlaylist.previous(true);});
@@ -109,7 +111,8 @@ function CreateOriginal(playlist){
              data:{id:manager.id,event:'playlist',data:JSON.stringify(data)}
          });
      });
-     sse.addEventListener('remove',function(data){playlist.removeMusicId(data.data);});
+     sse.addEventListener('remove',function(data){playlist.removeMusic(data.data);});
+     sse.addEventListener('cleanPlaylist',function(data){playlist.cleanPlaylist();});
      sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
      sse.addEventListener('next',function(){playlist.next();});
      sse.addEventListener('previous',function(){playlist.previous();});
@@ -127,8 +130,8 @@ function CreateOriginal(playlist){
         });
     };
     manager.disable = function(){
-        MusicPlayer.controls.setShareManager(null);
-        playlist.setShareManager(null);
+        MusicPlayer.controls.setShareManager(Share.emptyManager);
+        playlist.setShareManager(Share.emptyManager);
         this.sse.close();
         this.event('close');
     };
@@ -225,6 +228,7 @@ var RemoteControlManager = {
         });
 
         this.divSelect.bind('change',function(){
+            // Todo verify
             _self.manager = CreateRemote($(this).val(),_self);
             _self.divSelect.hide();
             _self.div.show();

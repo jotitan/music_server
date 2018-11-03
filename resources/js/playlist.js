@@ -5,7 +5,7 @@ var PlaylistPanel = {
     list:[],
     current:-1,
     saveInLS:true,
-    shareManager:null,
+    shareManager:Share.emptyManager,
     // To avoid load music
     noLoadMusic:false,
     init:function(idDiv,title,noLoad){
@@ -27,9 +27,7 @@ var PlaylistPanel = {
                 MusicPlayer.load($(this).data("music"));
            }
            _self.setActualPlayed($(this));
-           if(_self.shareManager!=null){
-               _self.shareManager.event('playMusic',_self.current);
-            }
+           _self.shareManager.event('playMusic',_self.current);
            _self.saveCurrent();
         });
         $(document).unbind('delete_event').bind('delete_event',function(){
@@ -66,11 +64,9 @@ var PlaylistPanel = {
             _self.shuffle();
         });
         this.div.on('close',function(){
-           _self.cleanPlaylist();
+           _self.cleanPlaylist(true);
            // If share, close it
-           if(_self.shareManager!=null){
-            _self.shareManager.disable();
-           }
+           _self.shareManager.disable();
            if(getCurrentPlaylist() == this){
                currentPlaylist = null;
            }
@@ -142,7 +138,10 @@ var PlaylistPanel = {
         }
         return musics;
     },
-    cleanPlaylist:function(){
+    cleanPlaylist:function(noShare){
+        this._cleanPlaylist(noShare);
+    },
+    _cleanPlaylist:function(noShare){
         if(this.saveInLS && localStorage){
             delete(localStorage["playlist"]);
             delete(localStorage["current"]);
@@ -150,6 +149,9 @@ var PlaylistPanel = {
         this.listDiv.empty();
         this.list = [];
         this.updateTotal();
+        if(!noShare){
+            this.shareManager.event('cleanPlaylist');
+        }
     },
     // No need to propagate share
     playMusic:function(id){
@@ -162,7 +164,6 @@ var PlaylistPanel = {
                 return;
            }
         },this);
-
     },
     setActualPlayed:function(line){
         $('div',this.listDiv).removeClass('played selected focused');
@@ -247,12 +248,17 @@ var PlaylistPanel = {
         },this);
     },
     removeMusic:function(index,noShare){
+        this._removeMusic(index,noShare);
+    },
+    // Do the remove of music from list and div
+    _removeMusic:function(index,noShare){
         $('>div:nth-child(' + index + ')',this.listDiv).remove();
         var music = this.list.splice(index-1,1)[0];
         this.save();
         this.updateTotal();
-        if((noShare == null || noShare == false) && this.shareManager!=null){
-            this.shareManager.event("remove",music.id);
+        if((noShare == null || noShare == false)){
+            // Send index to remove, to be sure not to remove duplicates but only the good line
+            this.shareManager.event("remove",index);
         }
     },
     // Add many musics from list of id
@@ -268,8 +274,11 @@ var PlaylistPanel = {
             url:'/musicsInfo?ids=' + JSON.stringify(ids),
             dataType:'json',
             success:function(data){
-                data.forEach(function(music){
-                    if((noShare == null || noShare == false) && _self.shareManager!=null){
+                var musics = [];
+                data.forEach(m=>musics[m.id] = m);
+                ids.forEach(id=>{
+                    var music = musics[id];
+                    if((noShare == null || noShare == false)){
                         _self.shareManager.event('add',music.id);
                     }
                     _self.add(music,true,true);
@@ -286,9 +295,7 @@ var PlaylistPanel = {
             return playlist.addMusicFromId(id,noShare);
         }
         if(noShare == null || noShare == false){
-            if(this.shareManager!=null){
-                this.shareManager.event('add',id);
-            }
+            this.shareManager.event('add',id);
         }
         $.ajax({
             url:'/musicInfo?id=' + id,
@@ -319,9 +326,7 @@ var PlaylistPanel = {
         var _self = this;
         $('.glyphicon-play',line).bind('click',function(){
             _self.setActualPlayed($(this).closest('div'));
-            if(_self.shareManager!=null){
-                _self.shareManager.event('playMusic',_self.list[_self.current].id);
-            }
+            _self.shareManager.event('playMusic',_self.list[_self.current].id);
             if(!_self.noLoadMusic) {
                 MusicPlayer.load(music);
                 _self.saveCurrent();
@@ -356,7 +361,7 @@ var PlaylistPanel = {
         this.current++;
         this._selectLine();
         this.saveCurrent();
-        if(!noShare && this.shareManager!=null){
+        if(!noShare){
             this.shareManager.event('next');
         }
         if(!this.noLoadMusic){
@@ -370,7 +375,7 @@ var PlaylistPanel = {
         this.current--;
         this._selectLine();
         this.saveCurrent();
-        if(!noShare && this.shareManager!=null){
+        if(!noShare){
             this.shareManager.event('previous');
         }
         if(!this.noLoadMusic){
@@ -415,9 +420,7 @@ var RemotePlaylist = {
         this.div.unbind('close').bind('close',function(){
             // When closing, delete
             _self.div.remove();
-            if(_self.shareManager != null){
-                _self.shareManager.disable(true);
-            }            
+            _self.shareManager.disable(true);
             if(getCurrentPlaylist() == _self){
                currentPlaylist = null;
             }
@@ -456,6 +459,13 @@ var RemotePlaylist = {
     play:function(){
         $('.controls>.glyphicon-play',this.div).hide();
         $('.controls>.glyphicon-pause',this.div).show();
+    },
+    // Override method remove music to just send information to share
+    removeMusic:function(index,noShare){
+        this.shareManager.event("remove",index);
+    },
+    cleanPlaylist:function(){
+        this.shareManager.event("cleanPlaylist");
     }
 }
 
@@ -465,10 +475,9 @@ function getCurrentPlaylist(){
 }
 
 function connectToShare(){
-    var sharePanel = $.extend({},RemotePlaylist,PlaylistPanel);
+    var sharePanel = $.extend({},PlaylistPanel,RemotePlaylist);
     sharePanel.noLoadMusic=true;
     sharePanel.list = [];
-
     var id = 'idRemotePlaylist_' + new Date().getTime();
     $('body').append($('#idRemotePlaylist').clone().attr('id',id));
 

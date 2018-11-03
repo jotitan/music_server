@@ -47,7 +47,7 @@ var MusicPlayer = {
         div:null,
         seeker:null,
         // Default implementation to avoid test shareManager every time
-        shareManager:{event:function(){}},
+        shareManager:Share.emptyManager,
         init:function(idDiv){
             this.div = $('#' + idDiv)
             this.seeker = $('.seeker',this.div);
