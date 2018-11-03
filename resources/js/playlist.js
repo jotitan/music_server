@@ -270,24 +270,26 @@ var PlaylistPanel = {
         var ids = datas.ids;
         this.current = datas.current !=null ? datas.current : this.current;
         var _self = this;
-        $.ajax({
-            url:'/musicsInfo?ids=' + JSON.stringify(ids),
-            dataType:'json',
-            success:function(data){
-                var musics = [];
-                data.forEach(m=>musics[m.id] = m);
-                ids.forEach(id=>{
-                    var music = musics[id];
-                    if((noShare == null || noShare == false)){
-                        _self.shareManager.event('add',music.id);
-                    }
-                    _self.add(music,true,true);
-                });
-                _self.save();
-                _self.updateTotal();
-                _self._selectLine();
-            }
-        });
+        if(ids.length > 0){
+            $.ajax({
+                url:'/musicsInfo?ids=' + JSON.stringify(ids),
+                dataType:'json',
+                success:function(data){
+                    var musics = [];
+                    data.forEach(m=>musics[m.id] = m);
+                    ids.forEach(id=>{
+                        var music = musics[id];
+                        if((noShare == null || noShare == false)){
+                            _self.shareManager.event('add',music.id);
+                        }
+                        _self.add(music,true,true);
+                    });
+                    _self.save();
+                    _self.updateTotal();
+                    _self._selectLine();
+                }
+            });
+        }
     },
     addMusicFromId:function(id,noShare){
         var playlist = getCurrentPlaylist();
