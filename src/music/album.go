@@ -23,11 +23,11 @@ type ElementsIndex struct {
 // AlbumByArtist store all album for artist
 type ElementsByFather map[int][]int
 
-func (ebf *ElementsByFather) Add(fatherId, sonId int) {
-	if albums, ok := (*ebf)[fatherId]; ok {
-		(*ebf)[fatherId] = append(albums, sonId)
+func (ebf *ElementsByFather) Add(fatherID, sonId int) {
+	if albums, ok := (*ebf)[fatherID]; ok {
+		(*ebf)[fatherID] = append(albums, sonId)
 	} else {
-		(*ebf)[fatherId] = []int{sonId}
+		(*ebf)[fatherID] = []int{sonId}
 	}
 }
 

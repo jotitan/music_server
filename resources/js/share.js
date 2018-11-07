@@ -4,6 +4,7 @@
 var Share = {
     original:null,
     emptyManager:{event:function(){},disable:function(){}},
+    listShared:[],
     enable:function(){
         if(MusicPlayer.device.name == "No name"){
             alert("Define a real name for device");
@@ -27,6 +28,12 @@ var Share = {
                 callback(data);
            }
         });
+    },
+    addShare:function(id,remotePlaylist){
+        this.listShared[id] = remotePlaylist;
+    },
+    removeShare:function(id){
+        delete(this.listShared[id]);
     },
     init:function(){
         // Manage original share
@@ -66,8 +73,8 @@ function CreateClone(id,remotePlaylist){
      sse.addEventListener('playMusic',function(data){remotePlaylist.showMusicById(data.data);});
      sse.addEventListener('next',function(){remotePlaylist.next(true);});
      sse.addEventListener('previous',function(){remotePlaylist.previous(true);});
-     sse.addEventListener('pause',function(){remotePlaylist.pause();});
-     sse.addEventListener('play',function(){remotePlaylist.play();});
+     sse.addEventListener('pause',function(){remotePlaylist._pause();});
+     sse.addEventListener('play',function(){remotePlaylist._play();});
      sse.addEventListener('volume',function(data){remotePlaylist.updateVolume(data.data)});
 
     manager.sse = sse;
@@ -116,10 +123,10 @@ function CreateOriginal(playlist){
      sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
      sse.addEventListener('next',function(){playlist.next();});
      sse.addEventListener('previous',function(){playlist.previous();});
-     sse.addEventListener('pause',function(){MusicPlayer.pause();});
-     sse.addEventListener('play',function(){MusicPlayer.play();});
-     sse.addEventListener('volumeUp',function(){MusicPlayer.volume.up();});
-     sse.addEventListener('volumeDown',function(){MusicPlayer.volume.down();});
+     sse.addEventListener('pause',function(){playlist.pause();});
+     sse.addEventListener('play',function(){playlist.play();});
+     sse.addEventListener('volumeUp',function(){playlist.volumeUp();});
+     sse.addEventListener('volumeDown',function(){playlist.volumeDown();});
     manager.sse = sse;
 
     manager.event = function(event,data){

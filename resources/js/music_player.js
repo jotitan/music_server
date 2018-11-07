@@ -57,20 +57,34 @@ var MusicPlayer = {
                 slide:(e,ui)=>MusicPlayer.player.currentTime = ui.value
             });
             var _self = this;
-            $('.play',this.div).bind('click',()=>_self.play());
-            $('.pause',this.div).bind('click',()=>_self.pause());
-            $('.next',this.div).bind('click',()=>_self.next());
-            $('.previous',this.div).bind('click',()=>_self.previous());
             MusicPlayer.player.volume = 0.6;
+            this.initActions();
             // Volume Behaviour
-            $('.volume-plus',this.div).bind('click',()=>MusicPlayer.volume.up());
-            $('.volume-minus',this.div).bind('click',()=>MusicPlayer.volume.down());
-            $(document).bind('volume_up',()=>MusicPlayer.volume.up());
-            $(document).bind('volume_down',()=>MusicPlayer.volume.down());
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
-        play:function(){
+        // Init button actions to control local player
+        initActions:function(){
+            $('.play',this.div).bind('click',()=>getCurrentPlaylist().play());
+            $('.pause',this.div).bind('click',()=>getCurrentPlaylist().pause());
+            $('.next',this.div).bind('click',()=>getCurrentPlaylist().next());
+            $('.previous',this.div).bind('click',()=>getCurrentPlaylist().previous());
+            $('.volume-plus',this.div).bind('click',()=>getCurrentPlaylist().volumeUp());
+            $('.volume-minus',this.div).bind('click',()=>getCurrentPlaylist().volumeDown());
+            $(document).bind('volume_up',()=>getCurrentPlaylist().volumeUp());
+            $(document).bind('volume_down',()=>getCurrentPlaylist().volumeDown());
+            $(document).bind('focus-panel',(e,id)=>{
+                if(id.indexOf('idRemotePlaylist') == 0){
+                    
+                    $('.local','#player').hide();
+                    $('.remote','#player').show();
+                }else{
+                    $('.local','#player').show();
+                    $('.remote','#player').hide();
+                }
+            });
+        },
+        /*play:function(){
             MusicPlayer.play();
             this.shareManager.event('play');
         },
@@ -83,7 +97,7 @@ var MusicPlayer = {
         },
         previous:function(){
             $(document).trigger('previous_event');
-        },
+        },*/
         setShareManager:function(manager){
           this.shareManager = manager;
         },
@@ -151,13 +165,15 @@ var MusicPlayer = {
             }
         });
         $(document).unbind('pause_event.player').bind('pause_event.player',function(){
-            if(MusicPlayer.player.src == ""){
+            /*if(MusicPlayer.player.src == ""){
                 return;
-            }
-            if(MusicPlayer.player.paused){
-                MusicPlayer.controls.play();
+            }*/
+            // TODO replace with playlist link
+            
+            if(getCurrentPlaylist().pause){
+                getCurrentPlaylist().play();
             }else{
-                MusicPlayer.controls.pause();
+                getCurrentPlaylist().pause();
             }
         });
         this.device.init();

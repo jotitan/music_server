@@ -5,6 +5,7 @@ var PlaylistPanel = {
     list:[],
     current:-1,
     saveInLS:true,
+    isPaused:false,
     shareManager:Share.emptyManager,
     // To avoid load music
     noLoadMusic:false,
@@ -34,14 +35,14 @@ var PlaylistPanel = {
             // Delete music. Find position element in list
             _self.removeMusic(_self.getFocusedPosition());
         });
-        $(document).unbind('next_event').bind('next_event',function(){
+        /*$(document).unbind('next_event').bind('next_event',function(){
             _self.next();
             $(document).trigger('show_next_event');
         });
         $(document).unbind('previous_event').bind('previous_event',function(){
             _self.previous();
             $(document).trigger('show_previous_event');
-        });
+        });*/
         this.listDiv.droppable({
             drop:function(event,ui){
                 var idMusic = ui.draggable.data('id');
@@ -79,9 +80,25 @@ var PlaylistPanel = {
         this.initSearch();        
         $(document).bind('focus.' + this.div.attr('id'),()=>currentPlaylist = this);                
     },
+    play:function(){
+        MusicPlayer.play();
+        this.isPaused = false;
+        this.shareManager.event('play');
+    },
+    pause:function(){
+        MusicPlayer.pause();
+        this.isPaused = true;
+        this.shareManager.event('pause');
+    },
+    volumeUp:function(){
+        MusicPlayer.volume.up();
+    },
+    volumeDown:function(){
+        MusicPlayer.volume.down();
+    },
     // return songs around current
     initSearch:function(){
-         $('#idSearch').autocomplete({
+        $('#idSearch,.remoteSearch',this.div).autocomplete({
            source:'search?size=20&',
             minLength:2,
             position:{ my: "left bottom", at: "left top", collision: "none" },
@@ -90,8 +107,10 @@ var PlaylistPanel = {
                 return false;
             },
             select:function(event,ui){
-                PlaylistPanel.open();
-                PlaylistPanel.add(ui.item);
+                getCurrentPlaylist().shareManager.event('add',ui.item.id);
+                getCurrentPlaylist().add(ui.item);
+                //PlaylistPanel.open();
+                //PlaylistPanel.add(ui.item);
             }
         }).autocomplete( "instance" )._renderItem = function( ul, item ) {
               return $( "<li>" )
@@ -369,6 +388,7 @@ var PlaylistPanel = {
         if(!this.noLoadMusic){
             MusicPlayer.load(this.list[this.current]);
         }
+        $(document).trigger('show_next_event');
     },
     previous:function(noShare){
         if(this.current<=0){
@@ -383,6 +403,7 @@ var PlaylistPanel = {
         if(!this.noLoadMusic){
             MusicPlayer.load(this.list[this.current]);
         }
+        $(document).trigger('show_previous_event');
     },
     setShareManager:function(manager){
         this.shareManager = manager;
@@ -394,13 +415,11 @@ var RemotePlaylist = {
         // If remote player, shareManager exist for sure
         var _self = this;
         // Manage remote button
-        $('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
-            _self.previous();
-            _self.play();
+        /*$('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
+            _self.shareManager.event("previous");
         });
         $('.controls>.glyphicon-fast-forward',this.div).bind('click',function(){
-            _self.next();
-            _self.play();
+            _self.shareManager.event("next");
         });
         $('.controls>.glyphicon-play',this.div).bind('click',function(){
             _self.shareManager.event("play");
@@ -418,7 +437,7 @@ var RemotePlaylist = {
         });
         this.listDiv.on("dblclick",'div',function(e){
             _self.play();
-        });
+        });*/
         this.div.unbind('close').bind('close',function(){
             // When closing, delete
             _self.div.remove();
@@ -426,10 +445,11 @@ var RemotePlaylist = {
             if(getCurrentPlaylist() == _self){
                currentPlaylist = null;
             }
+            Share.removeShare(_self.id);
         });    
     },
     updateVolume:function(value){
-        $('.remoteVolume',this.div).css('background-image','linear-gradient(to right,white 0%,orange ' + value + '%,white 0%');
+        $('.remoteVolume').css('background-image','linear-gradient(to right,white 0%,orange ' + value + '%,white 0%');
     },
     // Show music by id, have to find position
     showMusicById:function(id){
@@ -437,6 +457,18 @@ var RemotePlaylist = {
         if(position != -1){
             this.showMusicByPosition(position);
         }
+    },
+    previous:function(){
+        this.shareManager.event("previous");
+    },
+    next:function(){
+        this.shareManager.event("next");
+    },
+    volumeUp:function(){
+        this.shareManager.event("volumeUp");
+    },
+    volumeDown:function(){
+        this.shareManager.event("volumeDown");
     },
     showMusicByPosition:function(position){
         this.current = parseInt(position);
@@ -455,12 +487,20 @@ var RemotePlaylist = {
         },this);
     },
     pause:function(){
-        $('.controls>.glyphicon-play',this.div).show();
-        $('.controls>.glyphicon-pause',this.div).hide();
+        this.pause = true;
+        this.shareManager.event("pause");
+        this._pause();
+    },
+    _pause:function(){
+        MusicPlayer.pause();
     },
     play:function(){
-        $('.controls>.glyphicon-play',this.div).hide();
-        $('.controls>.glyphicon-pause',this.div).show();
+        this.pause = false;
+        this.shareManager.event("play");
+        this._play();
+    },
+    _play:function(){
+        MusicPlayer.play();
     },
     // Override method remove music to just send information to share
     removeMusic:function(index,noShare){
@@ -481,6 +521,7 @@ function connectToShare(){
     sharePanel.noLoadMusic=true;
     sharePanel.list = [];
     var id = 'idRemotePlaylist_' + new Date().getTime();
+    Share.addShare(id,sharePanel);
     $('body').append($('#idRemotePlaylist').clone().attr('id',id));
 
     sharePanel.init('#' + id,'Remote playlist',true);

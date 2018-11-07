@@ -45,6 +45,7 @@ var Panel = {
         this.div.bind('mousedown',function(){
             WindowsNavManager.setActive(_self);
             $(document).trigger('focus.' + $(this).attr('id'));
+            $(document).trigger('focus-panel',$(this).attr('id'));
         });
 
         // Split screen

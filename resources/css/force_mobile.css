@@ -9,6 +9,11 @@
     font-size:2.5vw;
 }
 
+#player #remoteVolume {
+    height:2.5vw;
+    width:4vw
+}
+
 #idWindowsNav {
     display:none;
 }
@@ -65,7 +70,7 @@
 }
 
 .playlist div > span:nth-child(2),.playlist div > span:nth-child(3) {
-    top:-8px;
+   /* top:-8px;*/
     font-size:16px;
     font-weight:bold;
 }
