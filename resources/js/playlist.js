@@ -414,30 +414,6 @@ var RemotePlaylist = {
     init2:function(){
         // If remote player, shareManager exist for sure
         var _self = this;
-        // Manage remote button
-        /*$('.controls>.glyphicon-fast-backward',this.div).bind('click',function(){
-            _self.shareManager.event("previous");
-        });
-        $('.controls>.glyphicon-fast-forward',this.div).bind('click',function(){
-            _self.shareManager.event("next");
-        });
-        $('.controls>.glyphicon-play',this.div).bind('click',function(){
-            _self.shareManager.event("play");
-            _self.play();
-        });
-        $('.controls>.glyphicon-pause',this.div).bind('click',function(){
-            _self.pause();
-            _self.shareManager.event("pause");
-        });
-        $('.controls>.glyphicon-plus',this.div).bind('click',function(){
-            _self.shareManager.event("volumeUp");
-        });
-        $('.controls>.glyphicon-minus',this.div).bind('click',function(){
-            _self.shareManager.event("volumeDown");
-        });
-        this.listDiv.on("dblclick",'div',function(e){
-            _self.play();
-        });*/
         this.div.unbind('close').bind('close',function(){
             // When closing, delete
             _self.div.remove();

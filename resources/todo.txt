@@ -8,3 +8,6 @@ A faire :
 * Separer sauvegarde dans meta fichier avec header et fichier de data
 * Modifier la sauvegarde pour sauver le meta fichier a la fin, et append sur le reste
 * Prevoir le mecanisme de compactage
+
+* / ! \ Envoyer la fin d'un device aux autres, afin de le supprimer de la liste et arreter de lui envoyer des instructions
+* Double load de musique a supprimer

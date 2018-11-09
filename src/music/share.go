@@ -10,6 +10,7 @@ import (
 
 // SharedSession represent a relation between an interface (original) and copy (clones)
 type SharedSession struct {
+	// Id of the share, different from sessionID
 	id        int
 	original  *Device
 	clones    []*Device
@@ -31,7 +32,9 @@ func (ss SharedSession) isClone(sessionID string) (bool, *Device) {
 }
 
 //ForwardEvent from a remote control. Possible event : add music, remove music, play music, play, pause, next, previous
+// Detect the sender from his session ID
 func (ss SharedSession) ForwardEvent(sessionID string, event, data string) {
+	logger.GetLogger().Info("Receive event", event, "from", sessionID)
 	// Detect sender
 	if ss.isOriginal(sessionID) {
 		// Send to all clone
@@ -47,6 +50,7 @@ func (ss SharedSession) ForwardEvent(sessionID string, event, data string) {
 			if strings.EqualFold(event, "close") {
 				dev.connected = false
 				ss.removeClone(sessionID)
+
 			} else {
 				ss.original.send(event, data)
 			}
@@ -80,6 +84,7 @@ func (d Device) send(event string, data string) (success bool) {
 
 var sharedSessions = make(map[int]*SharedSession)
 
+// Create standard header for SSE
 func createSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
@@ -92,6 +97,7 @@ func removeSharedSession(id int) {
 	delete(sharedSessions, id)
 }
 
+//GetShareConnection return a shared connection from ID
 func GetShareConnection(id int) *SharedSession {
 	if ss, exist := sharedSessions[id]; exist {
 		return ss
@@ -103,6 +109,7 @@ func (ss *SharedSession) removeClone(sessionID string) {
 	for i, d := range ss.clones {
 		if strings.EqualFold(d.sessionID, sessionID) {
 			ss.clones = append(ss.clones[:i], ss.clones[i+1:]...)
+			logger.GetLogger().Info("Remove clone", sessionID, ", ", len(ss.clones), "left")
 			return
 		}
 	}
@@ -124,7 +131,7 @@ func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName
 	device.send("id", fmt.Sprintf("%d", ss.id))
 	ss.original.send("askPlaylist", "")
 	checkConnection(device)
-	// remove clone
+	// remove clone cause connection is lost
 	ss.removeClone(sessionID)
 }
 
@@ -146,8 +153,10 @@ func checkConnection(d *Device) {
 		time.Sleep(5 * time.Second)
 	}
 	logger.GetLogger().Info("End device", d.sessionID)
+	// Check disconnexion
 }
 
+//CreateShareConnection create an original connexion
 func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID string) {
 	createSSEHeader(response)
 	// Generate unique code to receive order

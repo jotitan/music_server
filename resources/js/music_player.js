@@ -149,7 +149,7 @@ var MusicPlayer = {
         this.player.addEventListener('canplay',()=>MusicPlayer.initMusic());
         this.player.addEventListener('error',()=>console.log("Error when loading music"));
         this.player.addEventListener('timeupdate',()=>MusicPlayer.controls.update(MusicPlayer.player.currentTime));
-        this.player.addEventListener('ended',()=>MusicPlayer.controls.next());
+        this.player.addEventListener('ended',()=>PlaylistPanel.next());
         // Detect key controls
         $(document).bind('keyup',function(e){
             var key = (e.keyCode != 0)?e.keyCode:e.charCode;
@@ -170,7 +170,7 @@ var MusicPlayer = {
             }*/
             // TODO replace with playlist link
             
-            if(getCurrentPlaylist().pause){
+            if(getCurrentPlaylist().isPaused){
                 getCurrentPlaylist().play();
             }else{
                 getCurrentPlaylist().pause();
