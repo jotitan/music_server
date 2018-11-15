@@ -84,15 +84,7 @@ var MusicPlayer = {
                 }
             });
         },
-        /*play:function(){
-            MusicPlayer.play();
-            this.shareManager.event('play');
-        },
-        pause:function(){
-            MusicPlayer.pause();
-            this.shareManager.event('pause');
-        },
-        next:function(){
+        /*next:function(){
             $(document).trigger('next_event');
         },
         previous:function(){
@@ -103,9 +95,7 @@ var MusicPlayer = {
         },
         setTitle:function(music){
             $('.title',this.div).text(music.title);
-            $('title').html(music.artist + " - " + music.title);
-            // Trigger that a music is loaded
-            this.shareManager.event('load',music.id)
+            $('title').html(music.artist + " - " + music.title);            
         },
         setMax:function(value){
             this.seeker.slider('option','max',value)
@@ -165,11 +155,6 @@ var MusicPlayer = {
             }
         });
         $(document).unbind('pause_event.player').bind('pause_event.player',function(){
-            /*if(MusicPlayer.player.src == ""){
-                return;
-            }*/
-            // TODO replace with playlist link
-            
             if(getCurrentPlaylist().isPaused){
                 getCurrentPlaylist().play();
             }else{
@@ -211,9 +196,9 @@ var MusicPlayer = {
         if(this.player.src == "" && this.playlist != null){
             // Try to load selected playlist music or first
             this.load(this.playlist.getOne());
-            return
+            return getCurrentPlaylist().shareCurrent();
         }
-        MusicPlayer.player.play();
+        this.player.play();
         this._showPlaying(true);
     },
     // launch after load

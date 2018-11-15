@@ -54,7 +54,7 @@ func (sse SSEWriter) Write(message string) {
 
 func (ms *MusicServer) root(response http.ResponseWriter, request *http.Request) {
 	ms.devices.Reset()
-	if url := request.RequestURI; url == "/" {
+	if url := request.RequestURI; url == "/" || strings.Index(url, "/?") == 0 {
 		// Reinit at each reload page
 		http.ServeFile(response, request, filepath.Join(ms.webfolder, "music.html"))
 	} else {

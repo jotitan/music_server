@@ -28,7 +28,7 @@ var PlaylistPanel = {
                 MusicPlayer.load($(this).data("music"));
            }
            _self.setActualPlayed($(this));
-           _self.shareManager.event('playMusic',_self.current);
+           _self.shareCurrent();           
            _self.saveCurrent();
         });
         $(document).unbind('delete_event').bind('delete_event',function(){
@@ -109,8 +109,6 @@ var PlaylistPanel = {
             select:function(event,ui){
                 getCurrentPlaylist().shareManager.event('add',ui.item.id);
                 getCurrentPlaylist().add(ui.item);
-                //PlaylistPanel.open();
-                //PlaylistPanel.add(ui.item);
             }
         }).autocomplete( "instance" )._renderItem = function( ul, item ) {
               return $( "<li>" )
@@ -167,6 +165,7 @@ var PlaylistPanel = {
         }
         this.listDiv.empty();
         this.list = [];
+        this.current = -1;
         this.updateTotal();
         if(!noShare){
             this.shareManager.event('cleanPlaylist');
@@ -217,17 +216,20 @@ var PlaylistPanel = {
         var focused = $('div.focused',this.listDiv);
         if(focused.length > 0){
             this.current = this.getFocusedPosition();
+            this.saveCurrent();
             this._selectLine();
             return focused.data('music');
         }
         focused = $('div.played',this.listDiv);
         if(focused.length > 0){
             this.current = this.getPlayedPosition();
+            this.saveCurrent();
             this._selectLine();
             return focused.data('music');
         }
         if(this.list.length > 0){
             this.current = 0;
+            this.saveCurrent();
             this._selectLine();
             return this.list[0];
         }
@@ -347,7 +349,7 @@ var PlaylistPanel = {
         var _self = this;
         $('.glyphicon-play',line).bind('click',function(){
             _self.setActualPlayed($(this).closest('div'));
-            _self.shareManager.event('playMusic',_self.list[_self.current].id);
+            _self.shareCurrent();            
             if(!_self.noLoadMusic) {
                 MusicPlayer.load(music);
                 _self.saveCurrent();
@@ -375,15 +377,19 @@ var PlaylistPanel = {
         var line = $('div:nth-child(' + (this.current+1) + ')',this.listDiv);
         this.setActualPlayed(line);
     },
+    // Share current music
+    shareCurrent:function(){
+        this.shareManager.event('playMusic',JSON.stringify({position:this.current,id:this.list[this.current].id}));
+    },
     next:function(noShare){
-        if(this.current+1>=this.list.length){
+        if(this.current>this.list.length){
             return;
         }
         this.current++;
         this._selectLine();
         this.saveCurrent();
         if(!noShare){
-            this.shareManager.event('next');
+            this.shareCurrent();
         }
         if(!this.noLoadMusic){
             MusicPlayer.load(this.list[this.current]);
@@ -398,7 +404,7 @@ var PlaylistPanel = {
         this._selectLine();
         this.saveCurrent();
         if(!noShare){
-            this.shareManager.event('previous');
+            this.shareCurrent();
         }
         if(!this.noLoadMusic){
             MusicPlayer.load(this.list[this.current]);
@@ -422,10 +428,24 @@ var RemotePlaylist = {
                currentPlaylist = null;
             }
             Share.removeShare(_self.id);
-        });    
+        });   
+        if(Radio){
+            Radio.radios.forEach(radio=>$('.list-radios',this.div).append('<option value="'+ radio + '">'+radio.toUpperCase()+'</option>'))
+            $('.list-radios',this.div).bind('change',r=>$(r.currentTarget).val() != "" ? _self.shareManager.event('radio',$(r.currentTarget).val()) : _self.shareManager.event('stopRadio'));
+        }
     },
     updateVolume:function(value){
         $('.remoteVolume').css('background-image','linear-gradient(to right,white 0%,orange ' + value + '%,white 0%');
+    },
+    // Show music by position. Check if id is same. If not, reload playlist
+    showMusicByPosAndId:function(pos,id){
+        if(pos >= this.list.length || this.list[pos].id != id){
+            //error
+            console.log("Error");
+            return;
+        }
+        this.showMusicByPosition(pos);
+
     },
     // Show music by id, have to find position
     showMusicById:function(id){
@@ -463,20 +483,20 @@ var RemotePlaylist = {
         },this);
     },
     pause:function(){
-        this.pause = true;
+        this.isPaused = true;
         this.shareManager.event("pause");
         this._pause();
     },
     _pause:function(){
-        MusicPlayer.pause();
+        MusicPlayer._showPlaying(false);
     },
     play:function(){
-        this.pause = false;
+        this.isPaused = false;
         this.shareManager.event("play");
         this._play();
     },
     _play:function(){
-        MusicPlayer.play();
+        MusicPlayer._showPlaying(true);
     },
     // Override method remove music to just send information to share
     removeMusic:function(index,noShare){

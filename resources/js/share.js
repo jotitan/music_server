@@ -44,6 +44,10 @@ var Share = {
                 Share.enable();
             }
         });
+        // Detect auto share
+        if(location.search.indexOf('autoshare=true')!=-1){
+            Share.enable();
+        }
     }
 }
 
@@ -65,14 +69,17 @@ function CreateClone(id,remotePlaylist){
          var info = JSON.parse(data.data);
          remotePlaylist._cleanPlaylist(true);
          remotePlaylist.addMusicsFromIds(info,true);
-         info.playing ? remotePlaylist.play() : remotePlaylist.pause();         
+         info.playing ? remotePlaylist._play() : remotePlaylist._pause();         
          remotePlaylist.updateVolume(info.volume);
      });
      sse.addEventListener('remove',function(data){remotePlaylist._removeMusic(data.data,true);});
      sse.addEventListener('cleanPlaylist',function(data){remotePlaylist._cleanPlaylist(true);});
-     sse.addEventListener('playMusic',function(data){remotePlaylist.showMusicById(data.data);});
-     sse.addEventListener('next',function(){remotePlaylist.next(true);});
-     sse.addEventListener('previous',function(){remotePlaylist.previous(true);});
+     // Send position and position to check
+     sse.addEventListener('playMusic',function(data){
+        var d = JSON.parse(data.data);
+        remotePlaylist.showMusicByPosAndId(d.position,d.id);
+     });
+     // No next or previous, receive only position to play
      sse.addEventListener('pause',function(){remotePlaylist._pause();});
      sse.addEventListener('play',function(){remotePlaylist._play();});
      sse.addEventListener('volume',function(data){remotePlaylist.updateVolume(data.data)});
@@ -104,6 +111,9 @@ function CreateOriginal(playlist){
      sse.addEventListener('id',function(data){
          manager.id = parseInt(data.data);
      });
+     sse.addEventListener('reload',function(){
+        location.href='/?autoshare=true';
+     });
      sse.addEventListener('add',function(data){
           playlist.addMusicFromId(data.data,true);
       });
@@ -119,6 +129,8 @@ function CreateOriginal(playlist){
          });
      });
      sse.addEventListener('remove',function(data){playlist.removeMusic(data.data);});
+     sse.addEventListener('radio',function(data){Radio.read(data.data);});
+     sse.addEventListener('stopRadio',function(data){Radio.stop();});
      sse.addEventListener('cleanPlaylist',function(data){playlist.cleanPlaylist();});
      sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
      sse.addEventListener('next',function(){playlist.next();});
@@ -158,8 +170,8 @@ function CreateRemote(id,target){
     sse.addEventListener('close',function(){
         manager.disable();
     });
-    sse.addEventListener('load',function(response){
-        manager.loadMusic(response.data);
+    sse.addEventListener('playMusic',function(response){
+        manager.loadMusic(JSON.parse(response.data).id);
         target.setIsPlaying(true);
     });
 
