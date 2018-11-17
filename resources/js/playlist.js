@@ -300,11 +300,14 @@ var PlaylistPanel = {
                     data.forEach(m=>musics[m.id] = m);
                     ids.forEach(id=>{
                         var music = musics[id];
-                        if((noShare == null || noShare == false)){
+                        /*if((noShare == null || noShare == false)){
                             _self.shareManager.event('add',music.id);
-                        }
+                        }*/
                         _self.add(music,true,true);
                     });
+                    if((noShare == null || noShare == false)){
+                        _self.shareManager.event('add',ids.join(','));
+                    }
                     _self.save();
                     _self.updateTotal();
                     _self._selectLine();
@@ -337,7 +340,7 @@ var PlaylistPanel = {
                 var ids = data.filter(function(m){return m.id != null;}).map(function(m){return parseInt(m.id);})
                 _self.addMusicsFromIds({ids:ids});
             }
-        })
+        });
     },
     // Add a new music in list
     add:function(music,noSave,noTotal){
@@ -504,6 +507,19 @@ var RemotePlaylist = {
     },
     cleanPlaylist:function(){
         this.shareManager.event("cleanPlaylist");
+    },
+    // Override add from url to avoid many add request to send only big one
+    addMusicsFromUrl:function(url){
+        var _self = this;
+        $.ajax({
+            url:url,
+            dataType:'json',
+            success:function(data){
+                //Send to share the list
+                var ids = data.filter(function(m){return m.id != null;}).map(function(m){return parseInt(m.id);})
+                _self.shareManager.event("add",ids.join(','));
+            }
+        });
     }
 }
 

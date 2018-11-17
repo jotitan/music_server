@@ -60,7 +60,7 @@ function CreateClone(id,remotePlaylist){
 
      // Set receive events behaviour
      sse.addEventListener('add',function(data){
-         remotePlaylist.addMusicFromId(data.data,true);
+         remotePlaylist.addMusicsFromIds({ids:data.data.split(',')},true);
      });
      sse.addEventListener('close',function(data){
           manager.disable();
@@ -115,7 +115,7 @@ function CreateOriginal(playlist){
         location.href='/?autoshare=true';
      });
      sse.addEventListener('add',function(data){
-          playlist.addMusicFromId(data.data,true);
+          playlist.addMusicsFromIds({ids:data.data.split(',').map(v=>parseInt(v))},true);
       });
      sse.addEventListener('playlist',function(data){
          playlist.addMusicsFromIds(JSON.parse(data.data),true);
