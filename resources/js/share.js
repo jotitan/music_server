@@ -130,9 +130,13 @@ function CreateOriginal(playlist){
      });
      sse.addEventListener('remove',function(data){playlist.removeMusic(data.data);});
      sse.addEventListener('radio',function(data){Radio.read(data.data);});
-     sse.addEventListener('stopRadio',function(data){Radio.stop();});
+     sse.addEventListener('stopRadio',function(data){MusicPlayer.stop();});
      sse.addEventListener('cleanPlaylist',function(data){playlist.cleanPlaylist();});
-     sse.addEventListener('playMusic',function(data){playlist.playMusic(data.data);});
+     sse.addEventListener('playMusic',function(data){
+        var d = JSON.parse(data.data);
+        playlist.showMusicByPosAndId(d.position,d.id);
+        //playlist.playMusic(data.data);
+    });
      sse.addEventListener('next',function(){playlist.next();});
      sse.addEventListener('previous',function(){playlist.previous();});
      sse.addEventListener('pause',function(){playlist.pause();});

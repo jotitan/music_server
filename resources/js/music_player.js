@@ -175,6 +175,16 @@ var MusicPlayer = {
         }
         this.play();
     },
+    // load a music by url
+    loadUrl:function(url,title){
+        this.player.src = url;
+        this.controls.setTitle(title);
+        this.play();
+    },
+    stop:function(){
+        this.player.src = "";
+        this.pause();
+    },
     _showPlaying:function(play){
         if(play){
             $('.play',this.controls.div).hide();

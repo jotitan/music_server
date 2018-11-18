@@ -171,6 +171,25 @@ var PlaylistPanel = {
             this.shareManager.event('cleanPlaylist');
         }
     },
+    hideRadio:function(){},
+    // Show music by position. Check if id is same. If not, reload playlist
+    showMusicByPosAndId:function(pos,id){
+        if(pos >= this.list.length || this.list[pos].id != id){
+            //error
+            console.log("Error");
+            return;
+        }
+        if(!this.noLoadMusic){
+            MusicPlayer.load(this.list[pos]);
+        }
+        this.showMusicByPosition(pos);
+        this.hideRadio();
+    },
+    showMusicByPosition:function(position){
+        this.current = parseInt(position);
+        this._selectLine();
+        this.play();
+    },
     // No need to propagate share
     playMusic:function(id){
         this.list.forEach(function(music,i){
@@ -383,6 +402,7 @@ var PlaylistPanel = {
     // Share current music
     shareCurrent:function(){
         this.shareManager.event('playMusic',JSON.stringify({position:this.current,id:this.list[this.current].id}));
+        this.hideRadio();
     },
     next:function(noShare){
         if(this.current>this.list.length){
@@ -433,23 +453,17 @@ var RemotePlaylist = {
             Share.removeShare(_self.id);
         });   
         if(Radio){
-            Radio.radios.forEach(radio=>$('.list-radios',this.div).append('<option value="'+ radio + '">'+radio.toUpperCase()+'</option>'))
-            $('.list-radios',this.div).bind('change',r=>$(r.currentTarget).val() != "" ? _self.shareManager.event('radio',$(r.currentTarget).val()) : _self.shareManager.event('stopRadio'));
+            Radio.getRadios().forEach(radio=>$('.list-radios',this.div).append('<option value="'+ radio + '">'+radio+'</option>'))
+            $('.list-radios',this.div).bind('change',r=>this.readRadio($(r.currentTarget).val()));
         }
+    },
+    readRadio:function(radio){
+        radio != "" ? this.shareManager.event('radio',radio) : this.shareManager.event('stopRadio');
     },
     updateVolume:function(value){
         $('.remoteVolume').css('background-image','linear-gradient(to right,white 0%,orange ' + value + '%,white 0%');
     },
-    // Show music by position. Check if id is same. If not, reload playlist
-    showMusicByPosAndId:function(pos,id){
-        if(pos >= this.list.length || this.list[pos].id != id){
-            //error
-            console.log("Error");
-            return;
-        }
-        this.showMusicByPosition(pos);
-
-    },
+    
     // Show music by id, have to find position
     showMusicById:function(id){
         var position = this.list.findIndex(m=>m.id==id);
@@ -468,12 +482,7 @@ var RemotePlaylist = {
     },
     volumeDown:function(){
         this.shareManager.event("volumeDown");
-    },
-    showMusicByPosition:function(position){
-        this.current = parseInt(position);
-        this._selectLine();
-        this.play();
-    },
+    },    
     // show played music
     showMusic:function(id){
         this.list.forEach(function(music,i){
@@ -493,7 +502,10 @@ var RemotePlaylist = {
     _pause:function(){
         MusicPlayer._showPlaying(false);
     },
-    play:function(){
+    hideRadio:function(){
+        $('.list-radios',this.div).val("");
+    },
+    play:function(){        
         this.isPaused = false;
         this.shareManager.event("play");
         this._play();
