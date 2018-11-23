@@ -505,6 +505,9 @@ var RemotePlaylist = {
     hideRadio:function(){
         $('.list-radios',this.div).val("");
     },
+    selectRadio:function(radio){
+        $('.list-radios',this.div).val(radio);
+    },
     play:function(){        
         this.isPaused = false;
         this.shareManager.event("play");

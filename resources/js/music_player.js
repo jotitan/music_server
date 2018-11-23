@@ -167,6 +167,7 @@ var MusicPlayer = {
     },
     load:function(music){
         if(music == null){return;}
+        Radio.stopRadio();
         this.player.src = music.src;
         this.controls.setTitle(music);
         this.controls.setMax(music.length);

@@ -163,8 +163,8 @@ func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID s
 	device := &Device{name: deviceName, response: response, sessionID: sessionID, connected: true}
 	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
 	sharedSessions[ss.id] = ss
-	ss.original.send("id", fmt.Sprintf("%d", ss.id))
 	logger.GetLogger().Info("Create share", ss.id)
+	ss.original.send("id", fmt.Sprintf("%d", ss.id))
 	checkConnection(device)
 	removeSharedSession(ss.id)
 }

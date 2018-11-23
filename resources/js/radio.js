@@ -11,6 +11,10 @@ var Radio = {
         "RMC":"https://rmcinfo.cdn.dvmr.fr/rmcinfo",
         "RTL2":"http://streaming.radio.rtl2.fr/rtl2-1-44-96",
         "TSF JAZZ":"http://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3"},
+    currentRadio:"",
+    stopRadio:function(){
+        this.currentRadio = "";
+    },
     getRadios:function(){
         var radios = [];
         for(var r in this.radios){
@@ -22,8 +26,9 @@ var Radio = {
         if(this.radios[radio] == null){
             return;
         }
+        this.currentRadio = radio;
         MusicPlayer.loadUrl(this.radios[radio],{artist:'Radio',title:radio});
-        MusicPlayer.controls.setTitle({artist:'Radio',title:radio.toUpperCase()});        
+        MusicPlayer.controls.setTitle({artist:'Radio',title:radio});        
     }    
 }
 

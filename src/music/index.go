@@ -44,7 +44,7 @@ func (si SearchIndex) ListAllAlbums(genre string) []map[string]string {
 	}
 	albums := si.albumManager.LoadAllAlbums()
 
-	logger.GetLogger().Info(albums, genre)
+	//logger.GetLogger().Info(albums, genre)
 	albumsData := make([]map[string]string, 0, len(albums))
 	for album, id := range albums {
 		// test if album id is in the filtered genre list
