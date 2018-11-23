@@ -203,6 +203,7 @@ var PlaylistPanel = {
         },this);
     },
     setActualPlayed:function(line){
+        if(line.length == 0){return;}
         $('div',this.listDiv).removeClass('played selected focused');
         line.addClass('played');
         this.current = this.getPlayedPosition();
