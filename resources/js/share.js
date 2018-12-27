@@ -97,7 +97,7 @@ function CreateClone(id,remotePlaylist){
     };
     manager.disable = function(noclose){
         this.sse.close();
-        this.event('close');
+        this.event('close'); ''
         if(noclose == null ||noclose == false){
             remotePlaylist.close();
         }

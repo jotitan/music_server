@@ -28,22 +28,29 @@ var RemoteControlManager = {
         });
 
         this.divSelect.bind('change',function(){
-            // Todo verify
-            _self.manager = CreateRemote($(this).val(),_self);
-            _self.divSelect.hide();
-            _self.div.show();
+            _self._connect($(this).val());
         });
         Share.getShares(function(data) {
             if(data == null || data.length == 0){
                 _self.divSelect.hide();
                 return;
             }
-            _self.divSelect.empty().append('<option>...</option>');
-            data.forEach(function (s) {
-                _self.divSelect.append('<option value="' + s.Id + '">' + s.Name + '</option>');
-            });
+            if(data.length == 1){
+                // Auto select the only available
+                _self._connect(data[0].Id);
+            }else{
+                _self.divSelect.empty().append('<option>...</option>');
+                data.forEach(function (s) {
+                    _self.divSelect.append('<option value="' + s.Id + '">' + s.Name + '</option>');
+                });
+            }
         });
         return this;
+    },
+    _connect:function(id){
+        this.manager = CreateRemote(id,this);
+        this.divSelect.hide();
+        this.div.show();
     },
     updateMusic:function(music) {
         $('.title',this.div).html(music.title + " - " + music.artist);
@@ -84,7 +91,7 @@ function CreateRemote(id,target){
 
     sse.addEventListener('playlist',function(response){
         var data = JSON.parse(response.data);
-        if(data.current!=null){
+        if(data.current!=-1){
             var idMusic = data.ids[data.current];
             manager.loadMusic(idMusic);
             target.setIsPlaying(data.playing);

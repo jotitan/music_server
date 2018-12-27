@@ -191,7 +191,7 @@ var Explorer = {
     },
     // Update favorite of music
     _changeFavorite:function(span){
-        var line = span.parent('.ui-draggable');
+        var line = span.closest('.music');
         var id = line.data('id');
         var favorite = !span.hasClass('favorite');
         $.ajax({
