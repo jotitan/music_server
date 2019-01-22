@@ -36,8 +36,7 @@ var RemoteControlManager = {
                 return;
             }
             if(data.length == 1){
-                // Auto select the only available
-                _self._connect(data[0].Id);
+                // Auto select the on_self._connect(data[0].Id);dxmàb
             }else{
                 _self.divSelect.empty().append('<option>...</option>');
                 data.forEach(function (s) {
@@ -66,7 +65,7 @@ var RemoteControlManager = {
     }
 }
 
-// Create a simple and light remote control (only play, pause, next and previous). No music read
+// Create a simple and light remote cntrol (only play, pause, next and previous). No music read
 function CreateRemote(id,target){
     if(target == null){
         return null;

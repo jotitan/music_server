@@ -54,7 +54,6 @@ var Share = {
 // Create a clone manager (for a specific share id). receive event from original
 function CreateClone(id,remotePlaylist){
      // Add behaviour on remotePlaylist, receive event for remoteplaylist
-
     var manager = {id:id};
     var sse = new EventSource('/share?id=' + id + '&device=' + MusicPlayer.device.name);
 
