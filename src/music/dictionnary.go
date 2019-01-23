@@ -46,7 +46,7 @@ func (ml *MusicLibrary) loadMusicIndex() {
 			position := int64(binary.LittleEndian.Uint64(data[i*12+4 : i*12+12]))
 			ml.musicPositions[musicID] = position
 		}
-		logger.GetLogger().Info("Load", nbMusics, "musics from dictionnary")
+		logger.GetLogger().Info("Load", ml.GetNbMusics(), "musics from dictionnary")
 	} else {
 		logger.GetLogger().Error("Impossible to load index data", err.Error())
 	}

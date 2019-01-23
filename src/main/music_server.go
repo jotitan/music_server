@@ -162,7 +162,7 @@ func (ms MusicServer) setFavorite(response http.ResponseWriter, request *http.Re
 	}
 }
 
-func (ms MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool, fields []string) {
+func (ms *MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool, fields []string) {
 	// Get genre, if exist, filter music with
 	genre := strings.ToLower(request.FormValue("genre"))
 	musics := make([]map[string]interface{}, 0, len(musicsIds))
@@ -213,7 +213,7 @@ func (ms *MusicServer) listByOnlyAlbums(response http.ResponseWriter, request *h
 	}
 }
 
-func (ms MusicServer) listByAlbum(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) listByAlbum(response http.ResponseWriter, request *http.Request) {
 	switch {
 	// return albums of artist
 	case request.FormValue("id") != "":
@@ -241,7 +241,7 @@ func (ms *MusicServer) listGenres(response http.ResponseWriter, request *http.Re
 }
 
 // Load a resource like a cover
-func (ms MusicServer) get(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) get(response http.ResponseWriter, request *http.Request) {
 	url := request.FormValue("src")
 	if f, e := os.Open(url); e == nil {
 		defer f.Close()
@@ -250,7 +250,7 @@ func (ms MusicServer) get(response http.ResponseWriter, request *http.Request) {
 }
 
 // Return info about music
-func (ms MusicServer) musicInfo(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) musicInfo(response http.ResponseWriter, request *http.Request) {
 	id, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
 	logger.GetLogger().Info("Load music info with id", id)
 	isfavorite := ms.favorites.IsFavorite(int(id))
@@ -260,7 +260,7 @@ func (ms MusicServer) musicInfo(response http.ResponseWriter, request *http.Requ
 }
 
 // Return info about many musics
-func (ms MusicServer) musicsInfo(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) musicsInfo(response http.ResponseWriter, request *http.Request) {
 	var ids []int32
 	json.Unmarshal([]byte(request.FormValue("ids")), &ids)
 	logger.GetLogger().Info("Load musics", len(ids))
@@ -269,7 +269,7 @@ func (ms MusicServer) musicsInfo(response http.ResponseWriter, request *http.Req
 }
 
 // Get informations from ids of music
-func (ms MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) {
+func (ms *MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) {
 	musics := ms.library.GetMusicsInfo(ids)
 	musicsExport := make([]map[string]string, 0, len(musics))
 	for _, musicInfo := range musics {
@@ -283,7 +283,7 @@ func (ms MusicServer) musicsResponse(ids []int32, response http.ResponseWriter) 
 	response.Write(bdata)
 }
 
-func (ms MusicServer) musicsInfoInline(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) musicsInfoInline(response http.ResponseWriter, request *http.Request) {
 	strIds := strings.Split(request.FormValue("ids"), ",")
 	ids := make([]int32, len(strIds))
 	for i, strID := range strIds {
@@ -302,7 +302,7 @@ func (ms *MusicServer) search(response http.ResponseWriter, request *http.Reques
 	ms.musicsResponse(musics, response)
 }
 
-func (ms MusicServer) nbMusics(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) nbMusics(response http.ResponseWriter, request *http.Request) {
 	response.Write([]byte(fmt.Sprintf("%d", ms.library.GetNbMusics())))
 }
 
@@ -313,7 +313,7 @@ func (ms *MusicServer) volume(response http.ResponseWriter, request *http.Reques
 }
 
 // Return music content
-func (ms MusicServer) readmusic(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) readmusic(response http.ResponseWriter, request *http.Request) {
 	id, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
 	logger.GetLogger().Info("Get music id", id)
 	musicInfo := ms.library.GetMusicInfo(int32(id))
@@ -493,12 +493,32 @@ func (ms *MusicServer) createRoutes() *http.ServeMux {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	args := arguments.ParseArgs()
-	port := args["port"]
+	if !checkArguments(args) {
+		return
+	}
+	port := args.GetString("port")
 
-	if logFolder, ok := args["log"]; ok {
-		logger.InitLogger(filepath.Join(logFolder, "music_"+port+".log"), true)
+	if args.Has("log") {
+		logger.InitLogger(filepath.Join(args.GetString("log"), "music_"+port+".log"), true)
 	}
 
 	ms := MusicServer{}
-	ms.create(port, args["folder"], args["musicFolder"], args["addressMask"], args["webfolder"])
+	ms.create(port, args.GetString("folder"), args.GetString("musicFolder"), args.GetString("addressMask"), args.GetString("webfolder"))
+}
+
+func checkArguments(args arguments.Arguments) bool {
+	nbErrors := 0
+	if !args.Has("folder") {
+		logger.GetLogger().Info("Specify -folder : contains index")
+		nbErrors++
+	}
+	if !args.Has("musicFolder") {
+		logger.GetLogger().Info("Specify -musicFolder : contains musics to read")
+		nbErrors++
+	}
+	if !args.Has("port") {
+		logger.GetLogger().Info("Specify -port : port on which server runs")
+		nbErrors++
+	}
+	return nbErrors == 0
 }
