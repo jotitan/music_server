@@ -1,8 +1,5 @@
-/* Explore the data of the cluster */
-
-if(Loader){Loader.toLoad("html/explorer.html","Explorer");}
-
-var Explorer = {
+/* Base of explorer panel, extended by explorer and my playlists */
+var BaseExplorer = {
     // Path of folders
     breadcrumb:null,
     // Div where folders are displayed
@@ -11,15 +8,12 @@ var Explorer = {
     currentPath :"",
     
     currentTypeLoad:"",
-    // URL of service to get data
-    urlServer:"",
-    baseServer:"",
     fctClick:null,
     // Store the position of scroll on home (to restore when returning to home). Reset on genre. Update when click on folder
     scrollPosition:0,
-    init:function(){
+    initBaseExplorer:function(idPanel, title){
         $.extend(true,this,Panel) ;
-        this.initPanel($('#idExplorePanel'),'<span class="glyphicon glyphicon-hdd"></span> Explore');
+        this.initPanel($(`#${id}`),`<span class="glyphicon glyphicon-hdd"></span> ${title}`);
         this.div.resizable({minWidth:250});
         this.breadcrumb = $('.breadcrumb',this.div)
         var _self = this;
@@ -30,44 +24,23 @@ var Explorer = {
         });
         this.panelFolder = $('.folders',this.div);
 
-        $('.switch',this.div).bind('click',()=>Explorer.changeZoom());
+        $('.switch',this.div).bind('click',()=>this.changeZoom());
 
-        this.div.bind('open',function(){
-           Explorer._open(arguments);
-        });
-        this._loadGenres();
-        $('.info-folders > span.filter > :text',this.div).bind('keyup',function(e){
+        this.div.bind('open',()=>this._openBase(arguments));
+        // Add filter on elements displayed
+        $('.info-folders > span.filter > :text',this.div).bind('keyup',e=>{
             var value = $(this).val().toLowerCase();
             if (value.length <=2){
-                $('>span',Explorer.panelFolder).show();
+                $('>span',this.panelFolder).show();
                 e.stopPropagation();
                 return;
             }
             if (value.length > 2){
                 // Fitler results
-                $('>span:not([data-idx*="' + value + '"])',Explorer.panelFolder).hide()
-                $('>span[class^="' + value + '"]',Explorer.panelFolder).show()
+                $('>span:not([data-idx*="' + value + '"])',this.panelFolder).hide()
+                $('>span[class^="' + value + '"]',this.panelFolder).show()
             }
             e.stopPropagation();
-        });
-    },
-    // Load genres and add behaviour to list
-    _loadGenres:function(){
-        var select = $('.info-folders > span.filter > select.genres',this.div);
-        $('option:not(:first)',select).remove();
-        $.ajax({
-            url:'/genres',
-            dataType:'json',
-            success:function(genres){
-                for(var i in genres){
-                   select.append('<option value="' + genres[i] + '">' + genres[i] + '</option>');
-                };
-            }
-        });
-        var _self = this;
-        select.bind('change',function(){
-            _self.urlServer = _self.baseUrl + "?genre=" + $(this).val();
-            _self.reloadPath();
         });
     },
     addClickBehave:function(fct){
@@ -76,6 +49,10 @@ var Explorer = {
     // Reload same data (maybe new data or different urlServer
     reloadPath:function(){
         this.loadPath(this.currentPath,"",true);
+    },
+    // Load data from source (must be override in implementation)
+    loadData:function(path, success){
+        alert("Must be override");
     },
     loadPath:function(path,display,noAddBC){
         $('.info-folders > span.filter > :text',this.div).val("");
@@ -88,18 +65,14 @@ var Explorer = {
         if(this.currentTypeLoad == ""){
             var url = "";
         }
-        $.ajax({
-            url:this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + path,
-            dataType:'json',
-            success:function(data){
-                Explorer.display(data);
-                if(path == ""){
-                    // Restore home scroll
-                    Explorer.panelFolder.scrollTop(Explorer.scrollPosition);
-                }
-                Explorer.scrollPosition = currentScrollPosition;
+        this.loadData(path,data=>{
+            this.display(data);
+            if(path == ""){
+                // Restore home scroll
+                this.panelFolder.scrollTop(this.scrollPosition);
             }
-        });
+            this.scrollPosition = currentScrollPosition;
+        });        
     },
     changeZoom:function(){
         if ($('.folders',this.div).hasClass('block')){
@@ -109,18 +82,10 @@ var Explorer = {
         }
     },
     // Call when first open
-    _open:function(){
-        if(arguments[0][1] == null){return;}
+    _openBase:function(){
         this.scrollPosition = 0;
         this.breadcrumb.empty();
-        this.urlServer = arguments[0][1];
-        this.baseUrl = arguments[0][1];
-        var title = arguments[0][2];
-        if(title!=null){
-            this.div.find('.title>span:first').html(title);
-        }
         this.loadPath("","Home");
-        $('.info-folders > span.filter > select.genres',this.div).val("");
     },
     addBreadcrumb:function(path,display){
         display = display || path;
@@ -142,6 +107,7 @@ var Explorer = {
                 name = file;
                 url = "path=" + Explorer.currentPath + file + "/"
             }
+            
             var info = "";
             if(data[file].infos!=null){
                 // List of data info

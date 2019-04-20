@@ -1,0 +1,2004 @@
+use 'godoc cmd/music' for documentation on the music command 
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script type='text/javascript'>
+	document.ANALYSIS_DATA = ;
+	document.CALLGRAPH = ;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "music"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+			</div>
+		</div>
+		
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="#CreateShareConnection">func CreateShareConnection(response http.ResponseWriter, deviceName, sessionId string)</a></dd>
+			
+				
+				<dd><a href="#GetCover">func GetCover(artist, album, title, filename string) string</a></dd>
+			
+				
+				<dd><a href="#GetMp3InfoPath">func GetMp3InfoPath(folder string) string</a></dd>
+			
+				
+				<dd><a href="#GetNbMusics">func GetNbMusics(workingDirectory string) int64</a></dd>
+			
+				
+				<dd><a href="#Intersect">func Intersect(a, b []int) []int</a></dd>
+			
+				
+				<dd><a href="#LoadArtists">func LoadArtists(folder string) map[string]int</a></dd>
+			
+				
+				<dd><a href="#NewMusicAlbumSaver">func NewMusicAlbumSaver(albums [][]int) musicByAlbumSaver</a></dd>
+			
+				
+				<dd><a href="#RemoveDuplicates">func RemoveDuplicates(list *[]int)</a></dd>
+			
+			
+				
+				<dd><a href="#Album">type Album</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewAlbum">func NewAlbum(id int, name string) Album</a></dd>
+				
+				
+			
+				
+				<dd><a href="#AlbumByArtist">type AlbumByArtist</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewAlbumByArtist">func NewAlbumByArtist() *AlbumByArtist</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumByArtist.AddAlbum">func (aba *AlbumByArtist) AddAlbum(idArtist int, album Album)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumByArtist.GetAlbums">func (mba AlbumByArtist) GetAlbums(folder string, artistId int) []Album</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumByArtist.Read">func (aba *AlbumByArtist) Read(p []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumByArtist.Save">func (aba AlbumByArtist) Save(folder string)</a></dd>
+				
+			
+				
+				<dd><a href="#AlbumManager">type AlbumManager</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewAlbumManager">func NewAlbumManager(folder string) *AlbumManager</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.AddAlbumsByArtist">func (am *AlbumManager) AddAlbumsByArtist(artistId int, albums map[string][]int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.AddMusic">func (am *AlbumManager) AddMusic(album string, idMusic int, title string) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.GetMusics">func (am *AlbumManager) GetMusics(albumId int) []int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.GetMusicsAll">func (am *AlbumManager) GetMusicsAll(albumId int) []int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.IndexText">func (am *AlbumManager) IndexText(idMusic int, keys ...string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.LoadAllAlbums">func (am *AlbumManager) LoadAllAlbums() map[string]int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumManager.Save">func (am *AlbumManager) Save()</a></dd>
+				
+			
+				
+				<dd><a href="#AlbumsIndex">type AlbumsIndex</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewAlbumsIndex">func NewAlbumsIndex() *AlbumsIndex</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#AlbumsIndex.Add">func (ai *AlbumsIndex) Add(album string, idMusic int, title string) (int, error)</a></dd>
+				
+			
+				
+				<dd><a href="#AlbumsList">type AlbumsList</a></dd>
+				
+				
+			
+				
+				<dd><a href="#ArtistIndex">type ArtistIndex</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#LoadArtistIndex">func LoadArtistIndex(folder string) ArtistIndex</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistIndex.Add">func (ai *ArtistIndex) Add(artist string) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistIndex.FindAll">func (ai ArtistIndex) FindAll() map[string]int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistIndex.Save">func (ai *ArtistIndex) Save(folder string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistIndex.Write">func (ai *ArtistIndex) Write(p []byte) (int, error)</a></dd>
+				
+			
+				
+				<dd><a href="#ArtistMusicIndex">type ArtistMusicIndex</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#LoadArtistMusicIndex">func LoadArtistMusicIndex(folder string) ArtistMusicIndex</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistMusicIndex.Add">func (ami *ArtistMusicIndex) Add(artist, music int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistMusicIndex.Adds">func (ami *ArtistMusicIndex) Adds(artist int, listMusics []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistMusicIndex.Get">func (ami *ArtistMusicIndex) Get(artistId int) []int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ArtistMusicIndex.Save">func (ami ArtistMusicIndex) Save(folder string)</a></dd>
+				
+			
+				
+				<dd><a href="#Device">type Device</a></dd>
+				
+				
+			
+				
+				<dd><a href="#ElementsByFather">type ElementsByFather</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#LoadElementsByFather">func LoadElementsByFather(folder, filename string) ElementsByFather</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ElementsByFather.Add">func (ebf *ElementsByFather) Add(fatherId, sonId int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ElementsByFather.Adds">func (ebf *ElementsByFather) Adds(fatherId int, sonsId []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#ElementsByFather.Save">func (ebf ElementsByFather) Save(folder string)</a></dd>
+				
+			
+				
+				<dd><a href="#ElementsIndex">type ElementsIndex</a></dd>
+				
+				
+			
+				
+				<dd><a href="#GenreData">type GenreData</a></dd>
+				
+				
+			
+				
+				<dd><a href="#GenreIndexer">type GenreIndexer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewGenreIndexer">func NewGenreIndexer() GenreIndexer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreIndexer.AddAlbum">func (gi *GenreIndexer) AddAlbum(genre string, albumId int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreIndexer.AddArtist">func (gi *GenreIndexer) AddArtist(genre string, artistId int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreIndexer.AddManyGenresForArtist">func (gi *GenreIndexer) AddManyGenresForArtist(genres map[string]struct{}, artistId int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreIndexer.Save">func (gi GenreIndexer) Save(folder string)</a></dd>
+				
+			
+				
+				<dd><a href="#GenreReader">type GenreReader</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewGenreReader">func NewGenreReader(folder string) *GenreReader</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreReader.GetAlbum">func (gr GenreReader) GetAlbum(genre string) map[int]struct{}</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreReader.GetArtist">func (gr GenreReader) GetArtist(genre string) map[int]struct{}</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GenreReader.GetGenres">func (gr GenreReader) GetGenres() []string</a></dd>
+				
+			
+				
+				<dd><a href="#IndexReader">type IndexReader</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#IndexReader.Load">func (ir IndexReader) Load(path string) map[string]int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#IndexReader.Write">func (ir *IndexReader) Write(p []byte) (int, error)</a></dd>
+				
+			
+				
+				<dd><a href="#IndexSaver">type IndexSaver</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#IndexSaver.Read">func (is *IndexSaver) Read(p []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#IndexSaver.Save">func (is *IndexSaver) Save(pathfile string, trunc bool)</a></dd>
+				
+			
+				
+				<dd><a href="#InfoRelease">type InfoRelease</a></dd>
+				
+				
+			
+				
+				<dd><a href="#Music">type Music</a></dd>
+				
+				
+			
+				
+				<dd><a href="#MusicDictionnary">type MusicDictionnary</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#LoadDictionnary">func LoadDictionnary(workingDirectory string) MusicDictionnary</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewDictionnary">func NewDictionnary(workingDirectory string) MusicDictionnary</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.Add">func (md *MusicDictionnary) Add(path string, music id3.File, cover string) Music</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.Browse">func (md *MusicDictionnary) Browse(folderName string) TextIndexer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.Browse2">func (md *MusicDictionnary) Browse2(folderName string) TextIndexer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.FullReindex">func (md *MusicDictionnary) FullReindex(folderName string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.GetMusicFromId">func (md MusicDictionnary) GetMusicFromId(id int) map[string]string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.GetMusicsFromIds">func (md MusicDictionnary) GetMusicsFromIds(ids []int) []map[string]string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.Read">func (md *MusicDictionnary) Read(tab []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#MusicDictionnary.Save">func (md *MusicDictionnary) Save()</a></dd>
+				
+			
+				
+				<dd><a href="#Release">type Release</a></dd>
+				
+				
+			
+				
+				<dd><a href="#ReleaseGroup">type ReleaseGroup</a></dd>
+				
+				
+			
+				
+				<dd><a href="#RootResponse">type RootResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RootResponse.GetCount">func (rl RootResponse) GetCount() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#RootResponse.GetUrl">func (rl RootResponse) GetUrl() (string, error)</a></dd>
+				
+			
+				
+				<dd><a href="#ShareInfo">type ShareInfo</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GetSharesInfo">func GetSharesInfo() []ShareInfo</a></dd>
+				
+				
+			
+				
+				<dd><a href="#SharedSession">type SharedSession</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#GetShareConnection">func GetShareConnection(id int) *SharedSession</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#SharedSession.ConnectToShare">func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName, sessionId string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#SharedSession.ForwardEvent">func (ss SharedSession) ForwardEvent(sessionId string, event, data string)</a></dd>
+				
+			
+				
+				<dd><a href="#TextIndexer">type TextIndexer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#IndexArtists">func IndexArtists(folder string) TextIndexer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#LoadTextIndexer">func LoadTextIndexer(folder string) TextIndexer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#NewTextIndexer">func NewTextIndexer() TextIndexer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#TextIndexer.Add">func (ti *TextIndexer) Add(value string, idMusic int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#TextIndexer.Build">func (ti *TextIndexer) Build()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#TextIndexer.Filter">func (ti TextIndexer) Filter(values ...string) []string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#TextIndexer.IntSearch">func (ti TextIndexer) IntSearch(text string) []int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#TextIndexer.Save">func (ti TextIndexer) Save(folder string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#TextIndexer.Search">func (ti TextIndexer) Search(text string) []int</a></dd>
+				
+			
+				
+				<dd><a href="#Token">type Token</a></dd>
+				
+				
+			
+				
+				<dd><a href="#Tokens">type Tokens</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#Tokens.Len">func (t Tokens) Len() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#Tokens.Less">func (t Tokens) Less(i, j int) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="#Tokens.Swap">func (t Tokens) Swap(i, j int)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="/src/music/album.go">album.go</a>
+			
+				<a href="/src/music/artist.go">artist.go</a>
+			
+				<a href="/src/music/browse_music.go">browse_music.go</a>
+			
+				<a href="/src/music/cover.go">cover.go</a>
+			
+				<a href="/src/music/file_util.go">file_util.go</a>
+			
+				<a href="/src/music/genre_indexer.go">genre_indexer.go</a>
+			
+				<a href="/src/music/mp3info_windows.go">mp3info_windows.go</a>
+			
+				<a href="/src/music/music_indexer.go">music_indexer.go</a>
+			
+				<a href="/src/music/share.go">share.go</a>
+			
+				<a href="/src/music/text_indexer.go">text_indexer.go</a>
+			
+				<a href="/src/music/util.go">util.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		<div id="pkg-callgraph" class="toggle" style="display: none">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Internal Call Graph section">Internal call graph ▹</h2>
+		</div> <!-- .expanded -->
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Internal Call Graph section">Internal call graph ▾</h2>
+			<p>
+			  In the call graph viewer below, each node
+			  is a function belonging to this package
+			  and its children are the functions it
+			  calls&mdash;perhaps dynamically.
+			</p>
+			<p>
+			  The root nodes are the entry points of the
+			  package: functions that may be called from
+			  outside the package.
+			  There may be non-exported or anonymous
+			  functions among them if they are called
+			  dynamically from another package.
+			</p>
+			<p>
+			  Click a node to visit that function's source code.
+			  From there you can visit its callers by
+			  clicking its declaring <code>func</code>
+			  token.
+			</p>
+			<p>
+			  Functions may be omitted if they were
+			  determined to be unreachable in the
+			  particular programs or tests that were
+			  analyzed.
+			</p>
+			<!-- Zero means show all package entry points. -->
+			<ul style="margin-left: 0.5in" id="callgraph-0" class="treeview"></ul>
+		</div>
+		</div> <!-- #pkg-callgraph -->
+
+		
+		
+		
+			
+			
+			<h2 id="CreateShareConnection">func <a href="/src/target/share.go?s=4120:4204#L139">CreateShareConnection</a>
+				<a class="permalink" href="#CreateShareConnection">&#xb6;</a>
+			</h2>
+			<pre>func CreateShareConnection(response <a href="/pkg/net/http/">http</a>.<a href="/pkg/net/http/#ResponseWriter">ResponseWriter</a>, deviceName, sessionId <a href="/pkg/builtin/#string">string</a>)</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="GetCover">func <a href="/src/target/cover.go?s=4129:4184#L134">GetCover</a>
+				<a class="permalink" href="#GetCover">&#xb6;</a>
+			</h2>
+			<pre>func GetCover(artist, album, title, filename <a href="/pkg/builtin/#string">string</a>) <a href="/pkg/builtin/#string">string</a></pre>
+			<p>
+Get cover musicbrainz id and check if resource exist
+Rules : check :
+0 : check if cover.jpg exist in music folder
+1 : artist + album
+2 : artist + song title (as release) for single case
+3 : artist and half album
+4 : only album with threashold
+3 : artist only
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="GetMp3InfoPath">func <a href="/src/target/mp3info_windows.go?s=118:158#L1">GetMp3InfoPath</a>
+				<a class="permalink" href="#GetMp3InfoPath">&#xb6;</a>
+			</h2>
+			<pre>func GetMp3InfoPath(folder <a href="/pkg/builtin/#string">string</a>) <a href="/pkg/builtin/#string">string</a></pre>
+			<p>
+GetMp3InfoPath : return path of mp3info. mp3info.exe must be in folder
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="GetNbMusics">func <a href="/src/target/browse_music.go?s=12879:12925#L422">GetNbMusics</a>
+				<a class="permalink" href="#GetNbMusics">&#xb6;</a>
+			</h2>
+			<pre>func GetNbMusics(workingDirectory <a href="/pkg/builtin/#string">string</a>) <a href="/pkg/builtin/#int64">int64</a></pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="Intersect">func <a href="/src/target/text_indexer.go?s=2447:2477#L89">Intersect</a>
+				<a class="permalink" href="#Intersect">&#xb6;</a>
+			</h2>
+			<pre>func Intersect(a, b []<a href="/pkg/builtin/#int">int</a>) []<a href="/pkg/builtin/#int">int</a></pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="LoadArtists">func <a href="/src/target/artist.go?s=2807:2852#L117">LoadArtists</a>
+				<a class="permalink" href="#LoadArtists">&#xb6;</a>
+			</h2>
+			<pre>func LoadArtists(folder <a href="/pkg/builtin/#string">string</a>) map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#int">int</a></pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="NewMusicAlbumSaver">func <a href="/src/target/album.go?s=8361:8417#L277">NewMusicAlbumSaver</a>
+				<a class="permalink" href="#NewMusicAlbumSaver">&#xb6;</a>
+			</h2>
+			<pre>func NewMusicAlbumSaver(albums [][]<a href="/pkg/builtin/#int">int</a>) musicByAlbumSaver</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="RemoveDuplicates">func <a href="/src/target/text_indexer.go?s=2159:2193#L77">RemoveDuplicates</a>
+				<a class="permalink" href="#RemoveDuplicates">&#xb6;</a>
+			</h2>
+			<pre>func RemoveDuplicates(list *[]<a href="/pkg/builtin/#int">int</a>)</pre>
+			<p>
+list is sorted
+</p>
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Album">type <a href="/src/target/album.go?s=1485:1535#L54">Album</a>
+				<a class="permalink" href="#Album">&#xb6;</a>
+			</h2>
+			
+			<pre>type Album struct {
+<span id="Album.Id"></span>    Id   <a href="/pkg/builtin/#int">int</a>
+<span id="Album.Name"></span>    Name <a href="/pkg/builtin/#string">string</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewAlbum">func <a href="/src/target/album.go?s=1539:1578#L59">NewAlbum</a>
+					<a class="permalink" href="#NewAlbum">&#xb6;</a>
+				</h3>
+				<pre>func NewAlbum(id <a href="/pkg/builtin/#int">int</a>, name <a href="/pkg/builtin/#string">string</a>) <a href="#Album">Album</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="AlbumByArtist">type <a href="/src/target/album.go?s=1613:1789#L63">AlbumByArtist</a>
+				<a class="permalink" href="#AlbumByArtist">&#xb6;</a>
+			</h2>
+			
+			<pre>type AlbumByArtist struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewAlbumByArtist">func <a href="/src/target/album.go?s=1793:1830#L72">NewAlbumByArtist</a>
+					<a class="permalink" href="#NewAlbumByArtist">&#xb6;</a>
+				</h3>
+				<pre>func NewAlbumByArtist() *<a href="#AlbumByArtist">AlbumByArtist</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="AlbumByArtist.AddAlbum">func (*AlbumByArtist) <a href="/src/target/album.go?s=1900:1960#L76">AddAlbum</a>
+					<a class="permalink" href="#AlbumByArtist.AddAlbum">&#xb6;</a>
+				</h3>
+				<pre>func (aba *<a href="#AlbumByArtist">AlbumByArtist</a>) AddAlbum(idArtist <a href="/pkg/builtin/#int">int</a>, album <a href="#Album">Album</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AlbumByArtist.GetAlbums">func (AlbumByArtist) <a href="/src/target/album.go?s=4232:4300#L148">GetAlbums</a>
+					<a class="permalink" href="#AlbumByArtist.GetAlbums">&#xb6;</a>
+				</h3>
+				<pre>func (mba <a href="#AlbumByArtist">AlbumByArtist</a>) GetAlbums(folder <a href="/pkg/builtin/#string">string</a>, artistId <a href="/pkg/builtin/#int">int</a>) []<a href="#Album">Album</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AlbumByArtist.Read">func (*AlbumByArtist) <a href="/src/target/album.go?s=2919:2970#L110">Read</a>
+					<a class="permalink" href="#AlbumByArtist.Read">&#xb6;</a>
+				</h3>
+				<pre>func (aba *<a href="#AlbumByArtist">AlbumByArtist</a>) Read(p []<a href="/pkg/builtin/#byte">byte</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Save position of data in header. header | len album (2) | id (4) | len name album (1) | album name
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="AlbumByArtist.Save">func (AlbumByArtist) <a href="/src/target/album.go?s=2157:2200#L84">Save</a>
+					<a class="permalink" href="#AlbumByArtist.Save">&#xb6;</a>
+				</h3>
+				<pre>func (aba <a href="#AlbumByArtist">AlbumByArtist</a>) Save(folder <a href="/pkg/builtin/#string">string</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="AlbumManager">type <a href="/src/target/album.go?s=5196:5570#L180">AlbumManager</a>
+				<a class="permalink" href="#AlbumManager">&#xb6;</a>
+			</h2>
+			
+			<pre>type AlbumManager struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewAlbumManager">func <a href="/src/target/album.go?s=5574:5622#L193">NewAlbumManager</a>
+					<a class="permalink" href="#NewAlbumManager">&#xb6;</a>
+				</h3>
+				<pre>func NewAlbumManager(folder <a href="/pkg/builtin/#string">string</a>) *<a href="#AlbumManager">AlbumManager</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="AlbumManager.AddAlbumsByArtist">func (*AlbumManager) <a href="/src/target/album.go?s=5840:5919#L203">AddAlbumsByArtist</a>
+					<a class="permalink" href="#AlbumManager.AddAlbumsByArtist">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) AddAlbumsByArtist(artistId <a href="/pkg/builtin/#int">int</a>, albums map[<a href="/pkg/builtin/#string">string</a>][]<a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AlbumManager.AddMusic">func (*AlbumManager) <a href="/src/target/album.go?s=6430:6512#L219">AddMusic</a>
+					<a class="permalink" href="#AlbumManager.AddMusic">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) AddMusic(album <a href="/pkg/builtin/#string">string</a>, idMusic <a href="/pkg/builtin/#int">int</a>, title <a href="/pkg/builtin/#string">string</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+return id of the album
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="AlbumManager.GetMusics">func (*AlbumManager) <a href="/src/target/album.go?s=7746:7797#L255">GetMusics</a>
+					<a class="permalink" href="#AlbumManager.GetMusics">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) GetMusics(albumId <a href="/pkg/builtin/#int">int</a>) []<a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AlbumManager.GetMusicsAll">func (*AlbumManager) <a href="/src/target/album.go?s=7861:7915#L259">GetMusicsAll</a>
+					<a class="permalink" href="#AlbumManager.GetMusicsAll">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) GetMusicsAll(albumId <a href="/pkg/builtin/#int">int</a>) []<a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AlbumManager.IndexText">func (*AlbumManager) <a href="/src/target/album.go?s=6226:6287#L212">IndexText</a>
+					<a class="permalink" href="#AlbumManager.IndexText">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) IndexText(idMusic <a href="/pkg/builtin/#int">int</a>, keys ...<a href="/pkg/builtin/#string">string</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AlbumManager.LoadAllAlbums">func (*AlbumManager) <a href="/src/target/album.go?s=8034:8087#L264">LoadAllAlbums</a>
+					<a class="permalink" href="#AlbumManager.LoadAllAlbums">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) LoadAllAlbums() map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#int">int</a></pre>
+				<p>
+LoadArtistIndex Get artist index to search...
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="AlbumManager.Save">func (*AlbumManager) <a href="/src/target/album.go?s=6582:6613#L223">Save</a>
+					<a class="permalink" href="#AlbumManager.Save">&#xb6;</a>
+				</h3>
+				<pre>func (am *<a href="#AlbumManager">AlbumManager</a>) Save()</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="AlbumsIndex">type <a href="/src/target/album.go?s=11105:11290#L347">AlbumsIndex</a>
+				<a class="permalink" href="#AlbumsIndex">&#xb6;</a>
+			</h2>
+			<p>
+AlbumsIndex store all albums, no matter artist, only based on name
+</p>
+
+			<pre>type AlbumsIndex struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewAlbumsIndex">func <a href="/src/target/album.go?s=11294:11327#L356">NewAlbumsIndex</a>
+					<a class="permalink" href="#NewAlbumsIndex">&#xb6;</a>
+				</h3>
+				<pre>func NewAlbumsIndex() *<a href="#AlbumsIndex">AlbumsIndex</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="AlbumsIndex.Add">func (*AlbumsIndex) <a href="/src/target/album.go?s=11541:11618#L362">Add</a>
+					<a class="permalink" href="#AlbumsIndex.Add">&#xb6;</a>
+				</h3>
+				<pre>func (ai *<a href="#AlbumsIndex">AlbumsIndex</a>) Add(album <a href="/pkg/builtin/#string">string</a>, idMusic <a href="/pkg/builtin/#int">int</a>, title <a href="/pkg/builtin/#string">string</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+If album no already exist, create it
+@return : the id of the album
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="AlbumsList">type <a href="/src/target/album.go?s=171:218#L5">AlbumsList</a>
+				<a class="permalink" href="#AlbumsList">&#xb6;</a>
+			</h2>
+			
+			<pre>type AlbumsList struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ArtistIndex">type <a href="/src/target/artist.go?s=1302:1523#L52">ArtistIndex</a>
+				<a class="permalink" href="#ArtistIndex">&#xb6;</a>
+			</h2>
+			<p>
+ArtistIndex store all artists (avoid double)
+</p>
+
+			<pre>type ArtistIndex struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="LoadArtistIndex">func <a href="/src/target/artist.go?s=2976:3022#L122">LoadArtistIndex</a>
+					<a class="permalink" href="#LoadArtistIndex">&#xb6;</a>
+				</h3>
+				<pre>func LoadArtistIndex(folder <a href="/pkg/builtin/#string">string</a>) <a href="#ArtistIndex">ArtistIndex</a></pre>
+				<p>
+LoadArtistIndex Get artist index to search...
+</p>
+
+				
+				
+			
+
+			
+				
+				<h3 id="ArtistIndex.Add">func (*ArtistIndex) <a href="/src/target/artist.go?s=3294:3338#L131">Add</a>
+					<a class="permalink" href="#ArtistIndex.Add">&#xb6;</a>
+				</h3>
+				<pre>func (ai *<a href="#ArtistIndex">ArtistIndex</a>) Add(artist <a href="/pkg/builtin/#string">string</a>) <a href="/pkg/builtin/#int">int</a></pre>
+				<p>
+Add the artist in index. Return id
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="ArtistIndex.FindAll">func (ArtistIndex) <a href="/src/target/artist.go?s=3662:3706#L145">FindAll</a>
+					<a class="permalink" href="#ArtistIndex.FindAll">&#xb6;</a>
+				</h3>
+				<pre>func (ai <a href="#ArtistIndex">ArtistIndex</a>) FindAll() map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#int">int</a></pre>
+				<p>
+FindAll return all artists with id
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="ArtistIndex.Save">func (*ArtistIndex) <a href="/src/target/artist.go?s=3761:3803#L150">Save</a>
+					<a class="permalink" href="#ArtistIndex.Save">&#xb6;</a>
+				</h3>
+				<pre>func (ai *<a href="#ArtistIndex">ArtistIndex</a>) Save(folder <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Save only new artists
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="ArtistIndex.Write">func (*ArtistIndex) <a href="/src/target/artist.go?s=4062:4111#L158">Write</a>
+					<a class="permalink" href="#ArtistIndex.Write">&#xb6;</a>
+				</h3>
+				<pre>func (ai *<a href="#ArtistIndex">ArtistIndex</a>) Write(p []<a href="/pkg/builtin/#byte">byte</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Write get data in p and write in object
+nb artist (4) | lenght name (2) | data name...
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ArtistMusicIndex">type <a href="/src/target/artist.go?s=5022:5134#L192">ArtistMusicIndex</a>
+				<a class="permalink" href="#ArtistMusicIndex">&#xb6;</a>
+			</h2>
+			<p>
+ArtistMusicIndex is an index music by artist. Use id artist and id music.
+Save with temporary method with gob decode / encode
+TODO change with ElementsByFather
+</p>
+
+			<pre>type ArtistMusicIndex struct {
+    <span class="comment">// map with id artist of key and list of music</span>
+<span id="ArtistMusicIndex.MusicsByArtist"></span>    MusicsByArtist map[<a href="/pkg/builtin/#int">int</a>][]<a href="/pkg/builtin/#int">int</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="LoadArtistMusicIndex">func <a href="/src/target/artist.go?s=5957:6013#L225">LoadArtistMusicIndex</a>
+					<a class="permalink" href="#LoadArtistMusicIndex">&#xb6;</a>
+				</h3>
+				<pre>func LoadArtistMusicIndex(folder <a href="/pkg/builtin/#string">string</a>) <a href="#ArtistMusicIndex">ArtistMusicIndex</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="ArtistMusicIndex.Add">func (*ArtistMusicIndex) <a href="/src/target/artist.go?s=5235:5285#L201">Add</a>
+					<a class="permalink" href="#ArtistMusicIndex.Add">&#xb6;</a>
+				</h3>
+				<pre>func (ami *<a href="#ArtistMusicIndex">ArtistMusicIndex</a>) Add(artist, music <a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ArtistMusicIndex.Adds">func (*ArtistMusicIndex) <a href="/src/target/artist.go?s=5466:5528#L209">Adds</a>
+					<a class="permalink" href="#ArtistMusicIndex.Adds">&#xb6;</a>
+				</h3>
+				<pre>func (ami *<a href="#ArtistMusicIndex">ArtistMusicIndex</a>) Adds(artist <a href="/pkg/builtin/#int">int</a>, listMusics []<a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ArtistMusicIndex.Get">func (*ArtistMusicIndex) <a href="/src/target/artist.go?s=5138:5189#L197">Get</a>
+					<a class="permalink" href="#ArtistMusicIndex.Get">&#xb6;</a>
+				</h3>
+				<pre>func (ami *<a href="#ArtistMusicIndex">ArtistMusicIndex</a>) Get(artistId <a href="/pkg/builtin/#int">int</a>) []<a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ArtistMusicIndex.Save">func (ArtistMusicIndex) <a href="/src/target/artist.go?s=5715:5761#L217">Save</a>
+					<a class="permalink" href="#ArtistMusicIndex.Save">&#xb6;</a>
+				</h3>
+				<pre>func (ami <a href="#ArtistMusicIndex">ArtistMusicIndex</a>) Save(folder <a href="/pkg/builtin/#string">string</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Device">type <a href="/src/target/share.go?s=1494:1610#L46">Device</a>
+				<a class="permalink" href="#Device">&#xb6;</a>
+			</h2>
+			
+			<pre>type Device struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ElementsByFather">type <a href="/src/target/album.go?s=378:413#L15">ElementsByFather</a>
+				<a class="permalink" href="#ElementsByFather">&#xb6;</a>
+			</h2>
+			<p>
+AlbumByArtist store all album for artist
+</p>
+
+			<pre>type ElementsByFather map[<a href="/pkg/builtin/#int">int</a>][]<a href="/pkg/builtin/#int">int</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="LoadElementsByFather">func <a href="/src/target/album.go?s=1114:1180#L41">LoadElementsByFather</a>
+					<a class="permalink" href="#LoadElementsByFather">&#xb6;</a>
+				</h3>
+				<pre>func LoadElementsByFather(folder, filename <a href="/pkg/builtin/#string">string</a>) <a href="#ElementsByFather">ElementsByFather</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="ElementsByFather.Add">func (*ElementsByFather) <a href="/src/target/album.go?s=417:469#L17">Add</a>
+					<a class="permalink" href="#ElementsByFather.Add">&#xb6;</a>
+				</h3>
+				<pre>func (ebf *<a href="#ElementsByFather">ElementsByFather</a>) Add(fatherId, sonId <a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ElementsByFather.Adds">func (*ElementsByFather) <a href="/src/target/album.go?s=631:691#L25">Adds</a>
+					<a class="permalink" href="#ElementsByFather.Adds">&#xb6;</a>
+				</h3>
+				<pre>func (ebf *<a href="#ElementsByFather">ElementsByFather</a>) Adds(fatherId <a href="/pkg/builtin/#int">int</a>, sonsId []<a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ElementsByFather.Save">func (ElementsByFather) <a href="/src/target/album.go?s=857:903#L33">Save</a>
+					<a class="permalink" href="#ElementsByFather.Save">&#xb6;</a>
+				</h3>
+				<pre>func (ebf <a href="#ElementsByFather">ElementsByFather</a>) Save(folder <a href="/pkg/builtin/#string">string</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ElementsIndex">type <a href="/src/target/album.go?s=298:329#L10">ElementsIndex</a>
+				<a class="permalink" href="#ElementsIndex">&#xb6;</a>
+			</h2>
+			<p>
+One file with link between a father element id and son element id (map)
+</p>
+
+			<pre>type ElementsIndex struct {
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GenreData">type <a href="/src/target/genre_indexer.go?s=218:274#L5">GenreData</a>
+				<a class="permalink" href="#GenreData">&#xb6;</a>
+			</h2>
+			
+			<pre>type GenreData struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GenreIndexer">type <a href="/src/target/genre_indexer.go?s=463:562#L18">GenreIndexer</a>
+				<a class="permalink" href="#GenreIndexer">&#xb6;</a>
+			</h2>
+			
+			<pre>type GenreIndexer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewGenreIndexer">func <a href="/src/target/genre_indexer.go?s=566:600#L24">NewGenreIndexer</a>
+					<a class="permalink" href="#NewGenreIndexer">&#xb6;</a>
+				</h3>
+				<pre>func NewGenreIndexer() <a href="#GenreIndexer">GenreIndexer</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="GenreIndexer.AddAlbum">func (*GenreIndexer) <a href="/src/target/genre_indexer.go?s=1053:1111#L41">AddAlbum</a>
+					<a class="permalink" href="#GenreIndexer.AddAlbum">&#xb6;</a>
+				</h3>
+				<pre>func (gi *<a href="#GenreIndexer">GenreIndexer</a>) AddAlbum(genre <a href="/pkg/builtin/#string">string</a>, albumId <a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GenreIndexer.AddArtist">func (*GenreIndexer) <a href="/src/target/genre_indexer.go?s=678:738#L28">AddArtist</a>
+					<a class="permalink" href="#GenreIndexer.AddArtist">&#xb6;</a>
+				</h3>
+				<pre>func (gi *<a href="#GenreIndexer">GenreIndexer</a>) AddArtist(genre <a href="/pkg/builtin/#string">string</a>, artistId <a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GenreIndexer.AddManyGenresForArtist">func (*GenreIndexer) <a href="/src/target/genre_indexer.go?s=852:939#L34">AddManyGenresForArtist</a>
+					<a class="permalink" href="#GenreIndexer.AddManyGenresForArtist">&#xb6;</a>
+				</h3>
+				<pre>func (gi *<a href="#GenreIndexer">GenreIndexer</a>) AddManyGenresForArtist(genres map[<a href="/pkg/builtin/#string">string</a>]struct{}, artistId <a href="/pkg/builtin/#int">int</a>)</pre>
+				<p>
+Index many genres for an artist
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="GenreIndexer.Save">func (GenreIndexer) <a href="/src/target/genre_indexer.go?s=1513:1554#L58">Save</a>
+					<a class="permalink" href="#GenreIndexer.Save">&#xb6;</a>
+				</h3>
+				<pre>func (gi <a href="#GenreIndexer">GenreIndexer</a>) Save(folder <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Save data into a file
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="GenreReader">type <a href="/src/target/genre_indexer.go?s=2953:3092#L93">GenreReader</a>
+				<a class="permalink" href="#GenreReader">&#xb6;</a>
+			</h2>
+			
+			<pre>type GenreReader struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewGenreReader">func <a href="/src/target/genre_indexer.go?s=3096:3142#L100">NewGenreReader</a>
+					<a class="permalink" href="#NewGenreReader">&#xb6;</a>
+				</h3>
+				<pre>func NewGenreReader(folder <a href="/pkg/builtin/#string">string</a>) *<a href="#GenreReader">GenreReader</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="GenreReader.GetAlbum">func (GenreReader) <a href="/src/target/genre_indexer.go?s=3890:3949#L128">GetAlbum</a>
+					<a class="permalink" href="#GenreReader.GetAlbum">&#xb6;</a>
+				</h3>
+				<pre>func (gr <a href="#GenreReader">GenreReader</a>) GetAlbum(genre <a href="/pkg/builtin/#string">string</a>) map[<a href="/pkg/builtin/#int">int</a>]struct{}</pre>
+				<p>
+album first in block
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="GenreReader.GetArtist">func (GenreReader) <a href="/src/target/genre_indexer.go?s=4428:4488#L145">GetArtist</a>
+					<a class="permalink" href="#GenreReader.GetArtist">&#xb6;</a>
+				</h3>
+				<pre>func (gr <a href="#GenreReader">GenreReader</a>) GetArtist(genre <a href="/pkg/builtin/#string">string</a>) map[<a href="/pkg/builtin/#int">int</a>]struct{}</pre>
+				<p>
+artist in second position
+Return a map, easier to filter
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="GenreReader.GetGenres">func (GenreReader) <a href="/src/target/genre_indexer.go?s=3794:3834#L123">GetGenres</a>
+					<a class="permalink" href="#GenreReader.GetGenres">&#xb6;</a>
+				</h3>
+				<pre>func (gr <a href="#GenreReader">GenreReader</a>) GetGenres() []<a href="/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IndexReader">type <a href="/src/target/artist.go?s=1527:1614#L63">IndexReader</a>
+				<a class="permalink" href="#IndexReader">&#xb6;</a>
+			</h2>
+			
+			<pre>type IndexReader struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IndexReader.Load">func (IndexReader) <a href="/src/target/artist.go?s=1694:1746#L73">Load</a>
+					<a class="permalink" href="#IndexReader.Load">&#xb6;</a>
+				</h3>
+				<pre>func (ir <a href="#IndexReader">IndexReader</a>) Load(path <a href="/pkg/builtin/#string">string</a>) map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#int">int</a></pre>
+				<p>
+LoadArtistIndex Get artist index to search...
+first id start at 1
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="IndexReader.Write">func (*IndexReader) <a href="/src/target/artist.go?s=2031:2080#L86">Write</a>
+					<a class="permalink" href="#IndexReader.Write">&#xb6;</a>
+				</h3>
+				<pre>func (ir *<a href="#IndexReader">IndexReader</a>) Write(p []<a href="/pkg/builtin/#byte">byte</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Write get data in p and write in object
+nb artist (4) | lenght name (2) | data name...
+The id of element is position when reading (start at 1)
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IndexSaver">type <a href="/src/target/artist.go?s=114:172#L3">IndexSaver</a>
+				<a class="permalink" href="#IndexSaver">&#xb6;</a>
+			</h2>
+			
+			<pre>type IndexSaver struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IndexSaver.Read">func (*IndexSaver) <a href="/src/target/artist.go?s=888:935#L34">Read</a>
+					<a class="permalink" href="#IndexSaver.Read">&#xb6;</a>
+				</h3>
+				<pre>func (is *<a href="#IndexSaver">IndexSaver</a>) Read(p []<a href="/pkg/builtin/#byte">byte</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Read data from artist index
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="IndexSaver.Save">func (*IndexSaver) <a href="/src/target/artist.go?s=202:256#L9">Save</a>
+					<a class="permalink" href="#IndexSaver.Save">&#xb6;</a>
+				</h3>
+				<pre>func (is *<a href="#IndexSaver">IndexSaver</a>) Save(pathfile <a href="/pkg/builtin/#string">string</a>, trunc <a href="/pkg/builtin/#bool">bool</a>)</pre>
+				<p>
+Save only new artists
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="InfoRelease">type <a href="/src/target/cover.go?s=383:488#L13">InfoRelease</a>
+				<a class="permalink" href="#InfoRelease">&#xb6;</a>
+			</h2>
+			
+			<pre>type InfoRelease struct {
+<span id="InfoRelease.Count"></span>    Count    <a href="/pkg/builtin/#string">string</a>    `xml:&#34;count,attr&#34;`
+<span id="InfoRelease.Releases"></span>    Releases []<a href="#Release">Release</a> `xml:&#34;release&#34;`
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Music">type <a href="/src/target/browse_music.go?s=5875:5958#L195">Music</a>
+				<a class="permalink" href="#Music">&#xb6;</a>
+			</h2>
+			
+			<pre>type Music struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="MusicDictionnary">type <a href="/src/target/browse_music.go?s=5127:5776#L168">MusicDictionnary</a>
+				<a class="permalink" href="#MusicDictionnary">&#xb6;</a>
+			</h2>
+			
+			<pre>type MusicDictionnary struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="LoadDictionnary">func <a href="/src/target/browse_music.go?s=13066:13127#L428">LoadDictionnary</a>
+					<a class="permalink" href="#LoadDictionnary">&#xb6;</a>
+				</h3>
+				<pre>func LoadDictionnary(workingDirectory <a href="/pkg/builtin/#string">string</a>) <a href="#MusicDictionnary">MusicDictionnary</a></pre>
+				<p>
+LoadDictionnary load the dictionnary which store music info by id
+</p>
+
+				
+				
+			
+				
+				<h3 id="NewDictionnary">func <a href="/src/target/browse_music.go?s=12731:12791#L418">NewDictionnary</a>
+					<a class="permalink" href="#NewDictionnary">&#xb6;</a>
+				</h3>
+				<pre>func NewDictionnary(workingDirectory <a href="/pkg/builtin/#string">string</a>) <a href="#MusicDictionnary">MusicDictionnary</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="MusicDictionnary.Add">func (*MusicDictionnary) <a href="/src/target/browse_music.go?s=10141:10219#L332">Add</a>
+					<a class="permalink" href="#MusicDictionnary.Add">&#xb6;</a>
+				</h3>
+				<pre>func (md *<a href="#MusicDictionnary">MusicDictionnary</a>) Add(path <a href="/pkg/builtin/#string">string</a>, music <a href="/pkg/github.com/mjibson/id3/">id3</a>.<a href="/pkg/github.com/mjibson/id3/#File">File</a>, cover <a href="/pkg/builtin/#string">string</a>) <a href="#Music">Music</a></pre>
+				<p>
+Add music in dictionnary. If file limit is reach, save the file
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.Browse">func (*MusicDictionnary) <a href="/src/target/browse_music.go?s=2003:2067#L67">Browse</a>
+					<a class="permalink" href="#MusicDictionnary.Browse">&#xb6;</a>
+				</h3>
+				<pre>func (md *<a href="#MusicDictionnary">MusicDictionnary</a>) Browse(folderName <a href="/pkg/builtin/#string">string</a>) <a href="#TextIndexer">TextIndexer</a></pre>
+				<p>
+Browse a folder to get all data
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.Browse2">func (*MusicDictionnary) <a href="/src/target/browse_music.go?s=2206:2271#L73">Browse2</a>
+					<a class="permalink" href="#MusicDictionnary.Browse2">&#xb6;</a>
+				</h3>
+				<pre>func (md *<a href="#MusicDictionnary">MusicDictionnary</a>) Browse2(folderName <a href="/pkg/builtin/#string">string</a>) <a href="#TextIndexer">TextIndexer</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.FullReindex">func (*MusicDictionnary) <a href="/src/target/browse_music.go?s=434:492#L20">FullReindex</a>
+					<a class="permalink" href="#MusicDictionnary.FullReindex">&#xb6;</a>
+				</h3>
+				<pre>func (md *<a href="#MusicDictionnary">MusicDictionnary</a>) FullReindex(folderName <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Download all index to increase indexation (key is music path)
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.GetMusicFromId">func (MusicDictionnary) <a href="/src/target/browse_music.go?s=12159:12224#L398">GetMusicFromId</a>
+					<a class="permalink" href="#MusicDictionnary.GetMusicFromId">&#xb6;</a>
+				</h3>
+				<pre>func (md <a href="#MusicDictionnary">MusicDictionnary</a>) GetMusicFromId(id <a href="/pkg/builtin/#int">int</a>) map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a></pre>
+				<p>
+GetMusicFromId return the music to an id
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.GetMusicsFromIds">func (MusicDictionnary) <a href="/src/target/browse_music.go?s=11070:11142#L363">GetMusicsFromIds</a>
+					<a class="permalink" href="#MusicDictionnary.GetMusicsFromIds">&#xb6;</a>
+				</h3>
+				<pre>func (md <a href="#MusicDictionnary">MusicDictionnary</a>) GetMusicsFromIds(ids []<a href="/pkg/builtin/#int">int</a>) []map[<a href="/pkg/builtin/#string">string</a>]<a href="/pkg/builtin/#string">string</a></pre>
+				<p>
+Get many musics by id
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.Read">func (*MusicDictionnary) <a href="/src/target/browse_music.go?s=9235:9290#L306">Read</a>
+					<a class="permalink" href="#MusicDictionnary.Read">&#xb6;</a>
+				</h3>
+				<pre>func (md *<a href="#MusicDictionnary">MusicDictionnary</a>) Read(tab []<a href="/pkg/builtin/#byte">byte</a>) (<a href="/pkg/builtin/#int">int</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Read used in copy to save data in file
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="MusicDictionnary.Save">func (*MusicDictionnary) <a href="/src/target/browse_music.go?s=7629:7663#L257">Save</a>
+					<a class="permalink" href="#MusicDictionnary.Save">&#xb6;</a>
+				</h3>
+				<pre>func (md *<a href="#MusicDictionnary">MusicDictionnary</a>) Save()</pre>
+				<p>
+Save the file. Header with fix size (fixe number of element, 10000 for example). Header link position of element.
+nb element (8) | pos 1 (8) | pos 2 (8) | ... | dataLength 1 (4) | data 1 (n) | ...
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Release">type <a href="/src/target/cover.go?s=492:667#L18">Release</a>
+				<a class="permalink" href="#Release">&#xb6;</a>
+			</h2>
+			
+			<pre>type Release struct {
+    <span class="comment">//XMLName xml.Name `xml:&#34;release&#34;`</span>
+    <span class="comment">//Field string `xml:&#34;field&#34;`</span>
+<span id="Release.Id"></span>    Id    <a href="/pkg/builtin/#string">string</a>       `xml:&#34;id,attr&#34;`
+<span id="Release.Group"></span>    Group <a href="#ReleaseGroup">ReleaseGroup</a> `xml:&#34;release-group&#34;`
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ReleaseGroup">type <a href="/src/target/cover.go?s=671:731#L25">ReleaseGroup</a>
+				<a class="permalink" href="#ReleaseGroup">&#xb6;</a>
+			</h2>
+			
+			<pre>type ReleaseGroup struct {
+<span id="ReleaseGroup.Id"></span>    Id <a href="/pkg/builtin/#string">string</a> `xml:&#34;id,attr&#34;`
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="RootResponse">type <a href="/src/target/cover.go?s=213:379#L7">RootResponse</a>
+				<a class="permalink" href="#RootResponse">&#xb6;</a>
+			</h2>
+			
+			<pre>type RootResponse struct {
+<span id="RootResponse.XMLName"></span>    XMLName <a href="/pkg/encoding/xml/">xml</a>.<a href="/pkg/encoding/xml/#Name">Name</a>    `xml:&#34;metadata&#34;`
+<span id="RootResponse.Info"></span>    Info    <a href="#InfoRelease">InfoRelease</a> `xml:&#34;release-list&#34;`
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="RootResponse.GetCount">func (RootResponse) <a href="/src/target/cover.go?s=735:770#L29">GetCount</a>
+					<a class="permalink" href="#RootResponse.GetCount">&#xb6;</a>
+				</h3>
+				<pre>func (rl <a href="#RootResponse">RootResponse</a>) GetCount() <a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="RootResponse.GetUrl">func (RootResponse) <a href="/src/target/cover.go?s=941:985#L37">GetUrl</a>
+					<a class="permalink" href="#RootResponse.GetUrl">&#xb6;</a>
+				</h3>
+				<pre>func (rl <a href="#RootResponse">RootResponse</a>) GetUrl() (<a href="/pkg/builtin/#string">string</a>, <a href="/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ShareInfo">type <a href="/src/target/share.go?s=4659:4714#L151">ShareInfo</a>
+				<a class="permalink" href="#ShareInfo">&#xb6;</a>
+			</h2>
+			
+			<pre>type ShareInfo struct {
+<span id="ShareInfo.Name"></span>    Name <a href="/pkg/builtin/#string">string</a>
+<span id="ShareInfo.Id"></span>    Id   <a href="/pkg/builtin/#int">int</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="GetSharesInfo">func <a href="/src/target/share.go?s=4718:4749#L156">GetSharesInfo</a>
+					<a class="permalink" href="#GetSharesInfo">&#xb6;</a>
+				</h3>
+				<pre>func GetSharesInfo() []<a href="#ShareInfo">ShareInfo</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="SharedSession">type <a href="/src/target/share.go?s=187:327#L1">SharedSession</a>
+				<a class="permalink" href="#SharedSession">&#xb6;</a>
+			</h2>
+			<p>
+SharedSession represent a relation between an interface (original) and copy (clones)
+</p>
+
+			<pre>type SharedSession struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="GetShareConnection">func <a href="/src/target/share.go?s=2533:2578#L83">GetShareConnection</a>
+					<a class="permalink" href="#GetShareConnection">&#xb6;</a>
+				</h3>
+				<pre>func GetShareConnection(id <a href="/pkg/builtin/#int">int</a>) *<a href="#SharedSession">SharedSession</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="SharedSession.ConnectToShare">func (*SharedSession) <a href="/src/target/share.go?s=2930:3026#L99">ConnectToShare</a>
+					<a class="permalink" href="#SharedSession.ConnectToShare">&#xb6;</a>
+				</h3>
+				<pre>func (ss *<a href="#SharedSession">SharedSession</a>) ConnectToShare(response <a href="/pkg/net/http/">http</a>.<a href="/pkg/net/http/#ResponseWriter">ResponseWriter</a>, deviceName, sessionId <a href="/pkg/builtin/#string">string</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="SharedSession.ForwardEvent">func (SharedSession) <a href="/src/target/share.go?s=819:890#L23">ForwardEvent</a>
+					<a class="permalink" href="#SharedSession.ForwardEvent">&#xb6;</a>
+				</h3>
+				<pre>func (ss <a href="#SharedSession">SharedSession</a>) ForwardEvent(sessionId <a href="/pkg/builtin/#string">string</a>, event, data <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Forward event from a remote control. Possible event : add music, remove music, play music, play, pause, next, previous
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="TextIndexer">type <a href="/src/target/text_indexer.go?s=617:756#L21">TextIndexer</a>
+				<a class="permalink" href="#TextIndexer">&#xb6;</a>
+			</h2>
+			
+			<pre>type TextIndexer struct {
+    <span class="comment">// List must be sorted</span>
+<span id="TextIndexer.Index"></span>    Index <a href="#Tokens">Tokens</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="IndexArtists">func <a href="/src/target/music_indexer.go?s=61:104#L1">IndexArtists</a>
+					<a class="permalink" href="#IndexArtists">&#xb6;</a>
+				</h3>
+				<pre>func IndexArtists(folder <a href="/pkg/builtin/#string">string</a>) <a href="#TextIndexer">TextIndexer</a></pre>
+				
+				
+				
+			
+				
+				<h3 id="LoadTextIndexer">func <a href="/src/target/text_indexer.go?s=853:899#L32">LoadTextIndexer</a>
+					<a class="permalink" href="#LoadTextIndexer">&#xb6;</a>
+				</h3>
+				<pre>func LoadTextIndexer(folder <a href="/pkg/builtin/#string">string</a>) <a href="#TextIndexer">TextIndexer</a></pre>
+				
+				
+				
+			
+				
+				<h3 id="NewTextIndexer">func <a href="/src/target/text_indexer.go?s=760:792#L28">NewTextIndexer</a>
+					<a class="permalink" href="#NewTextIndexer">&#xb6;</a>
+				</h3>
+				<pre>func NewTextIndexer() <a href="#TextIndexer">TextIndexer</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="TextIndexer.Add">func (*TextIndexer) <a href="/src/target/text_indexer.go?s=1639:1691#L57">Add</a>
+					<a class="permalink" href="#TextIndexer.Add">&#xb6;</a>
+				</h3>
+				<pre>func (ti *<a href="#TextIndexer">TextIndexer</a>) Add(value <a href="/pkg/builtin/#string">string</a>, idMusic <a href="/pkg/builtin/#int">int</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="TextIndexer.Build">func (*TextIndexer) <a href="/src/target/text_indexer.go?s=1877:1907#L66">Build</a>
+					<a class="permalink" href="#TextIndexer.Build">&#xb6;</a>
+				</h3>
+				<pre>func (ti *<a href="#TextIndexer">TextIndexer</a>) Build()</pre>
+				<p>
+Parse map and create list
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="TextIndexer.Filter">func (TextIndexer) <a href="/src/target/text_indexer.go?s=1138:1191#L42">Filter</a>
+					<a class="permalink" href="#TextIndexer.Filter">&#xb6;</a>
+				</h3>
+				<pre>func (ti <a href="#TextIndexer">TextIndexer</a>) Filter(values ...<a href="/pkg/builtin/#string">string</a>) []<a href="/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="TextIndexer.IntSearch">func (TextIndexer) <a href="/src/target/text_indexer.go?s=3780:3828#L140">IntSearch</a>
+					<a class="permalink" href="#TextIndexer.IntSearch">&#xb6;</a>
+				</h3>
+				<pre>func (ti <a href="#TextIndexer">TextIndexer</a>) IntSearch(text <a href="/pkg/builtin/#string">string</a>) []<a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="TextIndexer.Save">func (TextIndexer) <a href="/src/target/text_indexer.go?s=5337:5377#L193">Save</a>
+					<a class="permalink" href="#TextIndexer.Save">&#xb6;</a>
+				</h3>
+				<pre>func (ti <a href="#TextIndexer">TextIndexer</a>) Save(folder <a href="/pkg/builtin/#string">string</a>)</pre>
+				<p>
+Save with naive method, gob encoder
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="TextIndexer.Search">func (TextIndexer) <a href="/src/target/text_indexer.go?s=3151:3196#L117">Search</a>
+					<a class="permalink" href="#TextIndexer.Search">&#xb6;</a>
+				</h3>
+				<pre>func (ti <a href="#TextIndexer">TextIndexer</a>) Search(text <a href="/pkg/builtin/#string">string</a>) []<a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Token">type <a href="/src/target/text_indexer.go?s=272:372#L7">Token</a>
+				<a class="permalink" href="#Token">&#xb6;</a>
+			</h2>
+			
+			<pre>type Token struct {
+<span id="Token.Value"></span>    Value <a href="/pkg/builtin/#string">string</a>
+    <span class="comment">// id of musics containing this token</span>
+<span id="Token.Musics"></span>    Musics []<a href="/pkg/builtin/#int">int</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Tokens">type <a href="/src/target/text_indexer.go?s=376:395#L13">Tokens</a>
+				<a class="permalink" href="#Tokens">&#xb6;</a>
+			</h2>
+			
+			<pre>type Tokens []<a href="#Token">Token</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Tokens.Len">func (Tokens) <a href="/src/target/text_indexer.go?s=399:423#L15">Len</a>
+					<a class="permalink" href="#Tokens.Len">&#xb6;</a>
+				</h3>
+				<pre>func (t <a href="#Tokens">Tokens</a>) Len() <a href="/pkg/builtin/#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Tokens.Less">func (Tokens) <a href="/src/target/text_indexer.go?s=440:474#L16">Less</a>
+					<a class="permalink" href="#Tokens.Less">&#xb6;</a>
+				</h3>
+				<pre>func (t <a href="#Tokens">Tokens</a>) Less(i, j <a href="/pkg/builtin/#int">int</a>) <a href="/pkg/builtin/#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Tokens.Swap">func (Tokens) <a href="/src/target/text_indexer.go?s=559:588#L18">Swap</a>
+					<a class="permalink" href="#Tokens.Swap">&#xb6;</a>
+				</h3>
+				<pre>func (t <a href="#Tokens">Tokens</a>) Swap(i, j <a href="/pkg/builtin/#int">int</a>)</pre>
+				<p>
+Swap swaps the elements with indexes i and j.
+</p>
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
