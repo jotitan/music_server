@@ -121,8 +121,6 @@ var Explorer = {
     },
     // Call when first open
     _open:function(){
-        //if(arguments[0][1] == null){return;}
-        console.log(arguments)
         this.scrollPosition = 0;
         this.breadcrumb.empty();
         if(this.title!=null){
@@ -132,6 +130,10 @@ var Explorer = {
         $('.info-folders > span.filter > select.genres',this.div).val("");
     },
     addBreadcrumb:function(params,display){
+        if(JSON.stringify(params) === "{}"){
+            // Reset breadcrumb
+            this.breadcrumb.empty();
+        }
         display = display || 'Empty';
         var li= $('<li><a href="#">' + display + '</a></li>');
         li.data('params',params);
@@ -178,6 +180,7 @@ var Explorer = {
                         case "hidden":
                             var split = value.split("=");
                             hidden[split[0]] = split[1];
+                            break;
                         default : info += '<span class="info">' + value + '</span>';
                     }
                 };

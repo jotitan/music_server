@@ -313,6 +313,10 @@ label > [type="checkbox"] {
     height:calc(100% - 50px);
 }
 
+.favorites.folders {
+    height:100%;
+}
+
 .folders.block > span {
     display:inline-block;
     padding:20px 10px 20px 10px;

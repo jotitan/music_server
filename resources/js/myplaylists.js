@@ -4,7 +4,6 @@ function createMyPlaylistsPanel(){
         myPlaylists.lastOrder=order;
     }));
 
-
     $('.filter',myPlaylists.div).remove();
     $('.title > span.glyphicon-list-alt',myPlaylists.div).after('<span class="glyphicon glyphicon-plus close"></span>');
     $('.glyphicon-plus',myPlaylists.div).on('click',()=>myPlaylists.newPlaylist());
@@ -27,8 +26,9 @@ function createMyPlaylistsPanel(){
         }
         // Add in database first
         var musics = params.ids.map(id=>{return {musicId:parseInt(id),playlistId:this.currentPlaylist,order:++this.lastOrder}});
+        var orders = musics.map(m=>m.order);
         DatabaseAccess.addMusicsToPlaylist(musics,results=>{
-            this.addMusicsInPlaylist(results);
+            this.addMusicsInPlaylist(results,orders);
         });
 
     };
@@ -40,12 +40,11 @@ function createMyPlaylistsPanel(){
         // Add in database first
         var music = {musicId:parseInt(id),playlistId:this.currentPlaylist,order:++this.lastOrder};
         DatabaseAccess.addMusicToPlaylist(music,()=>{
-            this.addMusicsInPlaylist([music]);
+            this.addMusicsInPlaylist([music],[music.order]);
         });
     };
 
-
-    myPlaylists.addMusicsInPlaylist = function(rawMusics){
+    myPlaylists.addMusicsInPlaylist = function(rawMusics,orders){
         var ids = rawMusics.map(m=>m.musicId);
         $.ajax({
             url: '/musicsInfo?short=true&ids=' + JSON.stringify(ids),
@@ -53,9 +52,11 @@ function createMyPlaylistsPanel(){
             success: data => {
                 var musics = [];
                 data.forEach(m => musics[m.id] = m);
+                var counter = 0;
                 this.display(
                     ids.map(id=>{
                         musics[id].name = musics[id].infos.artist + " - " + musics[id].name;
+                        musics[id].infos.hidden = "order=" + orders[counter++];
                         delete musics[id].infos.artist;
                         return musics[id];
                     }),true);
@@ -88,7 +89,7 @@ function createMyPlaylistsPanel(){
     myPlaylists.newPlaylist = ()=>{
         var playlistName = prompt("New playlist name");
         DatabaseAccess.newPlaylist(playlistName,()=>{
-            myPlaylists.loadPath("","Home");
+            myPlaylists.loadPath({},"Home");
         });
     }
 }
@@ -132,7 +133,7 @@ var DatabaseAccess = {
     },
     createDatabase() {
         var openRequest = window.indexedDB.open("MyPlaylists", 1);
-        openRequest.onerror = () => alert("Impossible to open dabase")
+        openRequest.onerror = () => alert("Impossible to open dabase");
         openRequest.onupgradeneeded = (e) => {
             this.db = e.target.result;
             var playlist = this.db.createObjectStore("playlist", {keyPath: "id", autoIncrement: true});
@@ -152,7 +153,7 @@ var DatabaseAccess = {
         request.onsuccess=e=>success(e.target.result.sort((a,b)=>a.order - b.order),this.computeLastOrder(e.target.result))
     },
     computeLastOrder(musics){
-        return musics.length == 0 ? 0 : Math.max(...musics.map(m=>m.order));
+        return musics.length === 0 ? 0 : Math.max(...musics.map(m=>m.order));
     },
     loadPlaylists(success){
         var transaction = this.db.transaction(["playlist"]);
@@ -172,7 +173,7 @@ var DatabaseAccess = {
         // Load playlist and remove all music after
         this.loadMusicOfPlaylist(id,musics=>{
             var transaction = this.db.transaction(["musicPlaylist","playlist"],"readwrite");
-            if(musics.length == 0){
+            if(musics.length === 0){
                 var delRequest = transaction.objectStore("playlist").delete(parseInt(id));
                 delRequest.onsuccess = success;
                 delRequest.onerror = ()=>alert("Impossible to delete this playlist")
@@ -205,15 +206,12 @@ var DatabaseAccess = {
                 }
             });
         });
-
-
     },
     deleteMusicFromPlaylist(idPlaylist,order,success){
         var store = this.db.transaction("musicPlaylist","readwrite").objectStore("musicPlaylist");
-        store.delete([idPlaylist,parseInt(order)]).onsuccess = ()=>{
-            success();
-        };
-
+        var req = store.delete([idPlaylist,parseInt(order)]);
+        req.onsuccess = success;
+        req.onerror = ()=>alert("Impossible to delete music");
     },
     moveMusicInPlaylist(idPlaylist,idMusic){
 
