@@ -27,9 +27,9 @@
     <script src="js/share.js"></script>
     <script src="js/music_player.js"></script>
     <script src="js/playlist.js"></script>
+    <script src="js/myplaylists.js"></script>
     <script src="js/favorites.js"></script>
     <script src="js/big_player.js"></script>
-    <script src="js/base_explorer.js"></script>
     <script src="js/explorer.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/canvas_progress_bar.js"></script>
@@ -38,74 +38,78 @@
 <body style="overflow:hidden">
 
 <div class="pcBloc">
-<div class="navbar navbar-inverse navbar-fixed-top navbar-md" role="navigation">
-    <div class="container" style="margin-left:0px;">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <span class="navbar-brand glyphicon glyphicon-music" style="cursor:pointer" onclick="toggleFullScreen();">
+    <div class="navbar navbar-inverse navbar-fixed-top navbar-md" role="navigation">
+        <div class="container" style="margin-left:0px;">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <span class="navbar-brand glyphicon glyphicon-music" style="cursor:pointer" onclick="toggleFullScreen();">
                 Music
             </span>
 
-            <!--p class="progress navbar-text" style="width:200px;display:inline-block;margin-bottom:0px">
-                <span id="idTotalBar" class="progress-bar  progress-bar-success" style="display:inline-block"
-                     title="musics" role="progressbar" aria-valuenow="1">
-                    <span id="idNbTaskers"></span>
-                </span>
-            </-->
-            <p style="display:inline-block;width:120px" class="navbar-text">
-                <span id="nbMusics"></span> Musics
-            </p>
-        </div>
+                <!--p class="progress navbar-text" style="width:200px;display:inline-block;margin-bottom:0px">
+                    <span id="idTotalBar" class="progress-bar  progress-bar-success" style="display:inline-block"
+                         title="musics" role="progressbar" aria-valuenow="1">
+                        <span id="idNbTaskers"></span>
+                    </span>
+                </-->
+                <p style="display:inline-block;width:120px" class="navbar-text">
+                    <span id="nbMusics"></span> Musics
+                </p>
+            </div>
 
-        <div class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search<span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="#" onclick="PlaylistPanel.open()">
-                            <span class="glyphicon glyphicon-music"></span>
-                            Playlist...</a>
-                        </li>
-                        <li><a href="#" onclick="FavoritesPanel.open()">
-                            <span class="glyphicon glyphicon-star-empty"></span>
-                            Favorites...</a>
-                        </li>
-                        <li><a href="#" onclick="RadioPanel.open()">
-                            <span class="glyphicon glyphicon-globe"></span>
-                            Radio...</a>
-                        </li>
-                        <li><a href="#" onclick="Explorer.byArtist()">
-                            <span class="glyphicon glyphicon-user"></span>
-                            List by artist...</a>
-                        </li>
-                        <li><a href="#" onclick="Explorer.byAlbum()">
-                            <span class="glyphicon glyphicon-record"></span>
-                            List by artist and album...</a>
-                        </li>
-                        <li><a href="#" onclick="Explorer.byOnlyAlbums()">
-                            <span class="glyphicon glyphicon-tags"></span>
-                            List by albums...</a>
-                        </li>
-                        <li><a href="#" onclick="connectToShare()">
-                            <span class="glyphicon glyphicon-flash"></span>
-                            Connect to share...</a>
-                        </li>
-                        <li><a href="#" onclick='$("head").append("<link rel=\"stylesheet\" href=\"css/force_mobile.css\"/>")'>
-                            <span class="glyphicon glyphicon-phone"></span>
-                            Mobile !!!</a>
-                        </li>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search<span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#" onclick="PlaylistPanel.open()">
+                                <span class="glyphicon glyphicon-music"></span>
+                                Playlist...</a>
+                            </li>
+                            <li><a href="#" onclick="FavoritesPanel.open()">
+                                <span class="glyphicon glyphicon-star-empty"></span>
+                                Favorites...</a>
+                            </li>
+                            <li><a href="#" onclick="RadioPanel.open()">
+                                <span class="glyphicon glyphicon-globe"></span>
+                                Radio...</a>
+                            </li>
+                            <li><a href="#" onclick="ExplorerManager.open('byArtist')">
+                                <span class="glyphicon glyphicon-user"></span>
+                                List by artist...</a>
+                            </li>
+                            <li><a href="#" onclick="ExplorerManager.open('byAlbum')">
+                                <span class="glyphicon glyphicon-record"></span>
+                                List by artist and album...</a>
+                            </li>
+                            <li><a href="#" onclick="ExplorerManager.open('byOnlyAlbums')">
+                                <span class="glyphicon glyphicon-tags"></span>
+                                List by albums...</a>
+                            </li>
+                            <li><a href="#" onclick="ExplorerManager.open('myPlaylists')">
+                                <span class="glyphicon glyphicon-pushpin"></span>
+                                My playlists...</a>
+                            </li>
+                            <li><a href="#" onclick="connectToShare()">
+                                <span class="glyphicon glyphicon-flash"></span>
+                                Connect to share...</a>
+                            </li>
+                            <li><a href="#" onclick='$("head").append("<link rel=\"stylesheet\" href=\"css/force_mobile.css\"/>")'>
+                                <span class="glyphicon glyphicon-phone"></span>
+                                Mobile !!!</a>
+                            </li>
 
-                    </ul>
-                </li>
-            </ul>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="navbar navbar-default navbar-fixed-bottom navbar-inverse little-navbar" >
@@ -139,14 +143,14 @@
 
 <div style="display:inline-block;float:right;margin-right:20px;">
     <input id="idDeviceName" type="text" value="Default" class="disabled name" size="14"
-            style="text-align:right;font-variant:small-caps;color:#777;font-weight:bold;text-shadow:2px 2px lightgray"/>
+           style="text-align:right;font-variant:small-caps;color:#777;font-weight:bold;text-shadow:2px 2px lightgray"/>
 </div>
 
 <div class="mobileBloc">
     <span class="glyphicon glyphicon-music" title="Playlist" onclick="PlaylistPanel.open();WindowsNavManager.setActive(PlaylistPanel);"></span>
-    <span class="glyphicon glyphicon-user" title="List by artist" onclick="setSelected(this,function(show){Explorer.byArtist(show)});"></span>
-    <span class="glyphicon glyphicon-record" title="List by album" onclick="setSelected(this,function(show){Explorer.byAlbum(show)});"></span>
-    <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="setSelected(this,function(show){Explorer.byOnlyAlbums(show)});"></span>
+    <span class="glyphicon glyphicon-user" title="List by artist" onclick="setSelected(this,show=>ExplorerManager.open('byArtist',show));"></span>
+    <span class="glyphicon glyphicon-record" title="List by album" onclick="setSelected(this,show=>ExplorerManager.open('byAlbum',show));"></span>
+    <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="setSelected(this,show=>ExplorerManager.open('byOnlyAlbums',show))"></span>
     <span class="glyphicon glyphicon-flash" title="Connect to share" onclick="connectToShare();"></span>
 </div>
 
@@ -159,9 +163,9 @@
 <audio id="idPlayer"></audio>
 
 <script>
-    var selCase = null;
+    let selCase = null;
     function setSelected(span,fct){
-        var show = selCase == span;
+        var show = selCase === span;
         if(selCase!=null){
             $(selCase).removeClass('selected');
         }
@@ -171,24 +175,37 @@
     }
     moveOptions.can = !$('.mobileBloc').is(':visible');
     $(function(){
-       WindowsNavManager.init('idWindowsNav');
+        WindowsNavManager.init('idWindowsNav');
         Loader.launch(function(){
-            Explorer.addClickBehave(function(id){PlaylistPanel.addMusicFromId(id);});
             // Show just display the block, no reload block
-            Explorer.byArtist = function(show){
-                this.open(show ? null : "/listByArtist","Explore by artist");
-            };
-            Explorer.byAlbum = function(show){
-                this.open(show ? null : "/listByAlbum","Explore by artist/album");
-            };
-            Explorer.byOnlyAlbums = function(show){
-                this.open(show ? null : "/listByOnlyAlbums","Explore all albums");
-            };
+            ExplorerManager.register("byArtist","Explorer by artist",getRestDataProviderFunction('/listByArtist'));
+            ExplorerManager.register("byAlbum","Explore by artist/album",getRestDataProviderFunction('/listByAlbum'));
+            ExplorerManager.register("byOnlyAlbums","Explore all albums",getRestDataProviderFunction('/listByOnlyAlbums'));
+            createMyPlaylistsPanel();
+
             MusicPlayer.init();
             Share.init();
             MusicPlayer.setPlaylist(PlaylistPanel);
         });
-    })
+    });
+
+
+    function getRestDataProviderFunction(url){
+        return (params,success)=>{
+            var attrs = [];
+            for(var i in params){
+                attrs.push(i + "=" + params[i]);
+            }
+            $.ajax({
+                url: url + "?" + attrs.join('&'),
+                dataType: 'json',
+                success: success
+            });
+        }
+    }
+
+
+
 </script>
 
 <script>

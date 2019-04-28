@@ -65,14 +65,14 @@ var MusicPlayer = {
         },
         // Init button actions to control local player
         initActions:function(){
-            $('.play',this.div).bind('click',()=>getCurrentPlaylist().play());
-            $('.pause',this.div).bind('click',()=>getCurrentPlaylist().pause());
-            $('.next',this.div).bind('click',()=>getCurrentPlaylist().next());
-            $('.previous',this.div).bind('click',()=>getCurrentPlaylist().previous());
-            $('.volume-plus',this.div).bind('click',()=>getCurrentPlaylist().volumeUp());
-            $('.volume-minus',this.div).bind('click',()=>getCurrentPlaylist().volumeDown());
-            $(document).bind('volume_up',()=>getCurrentPlaylist().volumeUp());
-            $(document).bind('volume_down',()=>getCurrentPlaylist().volumeDown());
+            $('.play',this.div).bind('click',()=>ActivePlaylist.getReal().play());
+            $('.pause',this.div).bind('click',()=>ActivePlaylist.getReal().pause());
+            $('.next',this.div).bind('click',()=>ActivePlaylist.getReal().next());
+            $('.previous',this.div).bind('click',()=>ActivePlaylist.getReal().previous());
+            $('.volume-plus',this.div).bind('click',()=>ActivePlaylist.getReal().volumeUp());
+            $('.volume-minus',this.div).bind('click',()=>ActivePlaylist.getReal().volumeDown());
+            $(document).bind('volume_up',()=>ActivePlaylist.getReal().volumeUp());
+            $(document).bind('volume_down',()=>ActivePlaylist.getReal().volumeDown());
             $(document).bind('focus-panel',(e,id)=>{
                 if(id.indexOf('idRemotePlaylist') == 0){
                     
@@ -155,10 +155,10 @@ var MusicPlayer = {
             }
         });
         $(document).unbind('pause_event.player').bind('pause_event.player',function(){
-            if(getCurrentPlaylist().isPaused){
-                getCurrentPlaylist().play();
+            if(ActivePlaylist.get().isPaused){
+                ActivePlaylist.get().play();
             }else{
-                getCurrentPlaylist().pause();
+                ActivePlaylist.get().pause();
             }
         });
         this.device.init();
@@ -207,7 +207,7 @@ var MusicPlayer = {
         if(this.player.src == "" && this.playlist != null){
             // Try to load selected playlist music or first
             this.load(this.playlist.getOne());
-            return getCurrentPlaylist().shareCurrent();
+            return ActivePlaylist.get().shareCurrent();
         }
         this.player.play();
         this._showPlaying(true);

@@ -48,9 +48,9 @@ var PlaylistPanel = {
                 var idMusic = ui.draggable.data('id');
                 if (idMusic == null) {
                     // Get url if exist to load all, folder case
-                    var url = ui.draggable.data('url_drag');
-                    if (url != null) {
-                        _self.addMusicsFromUrl(url);
+                    var dataProvider = ui.draggable.data("dataProvider");
+                    if(dataProvider != null) {
+                        dataProvider(ui.draggable.data("params"), data => _self.addMusicsFromIds({ids: data.filter(m => m.id != null).map(m => parseInt(m.id))}));
                     }
                 } else {
                     // Get info from id music
@@ -65,11 +65,12 @@ var PlaylistPanel = {
             _self.shuffle();
         });
         this.div.on('close', function () {
+            ActivePlaylist.set(null);
             _self.cleanPlaylist(true);
             // If share, close it
             _self.shareManager.disable();
-            if (getCurrentPlaylist() == this) {
-                currentPlaylist = null;
+            if (ActivePlaylist.get() == this) {
+                ActivePlaylist.set(null);
             }
         });
         // Load saved playlist
@@ -78,7 +79,7 @@ var PlaylistPanel = {
         }
         this.load();
         this.initSearch();
-        $(document).bind('focus.' + this.div.attr('id'), () => currentPlaylist = this);
+        $(document).bind('focus.' + this.div.attr('id'), () => ActivePlaylist.set(this));
     },
     play: function () {
         MusicPlayer.play();
@@ -107,8 +108,8 @@ var PlaylistPanel = {
                 return false;
             },
             select: function (event, ui) {
-                getCurrentPlaylist().shareManager.event('add', ui.item.id);
-                getCurrentPlaylist().add(ui.item);
+                ActivePlaylist.getReal().shareManager.event('add', ui.item.id);
+                ActivePlaylist.getReal().add(ui.item);
             }
         }).autocomplete("instance")._renderItem = function (ul, item) {
             return $("<li>")
@@ -304,10 +305,10 @@ var PlaylistPanel = {
     },
     // Add many musics from list of id
     addMusicsFromIds: function (datas, noShare) {
-        var playlist = getCurrentPlaylist();
+        /*var playlist = ActivePlaylist.getReal(this);
         if (playlist != this) {
             return playlist.addMusicsFromIds(datas, noShare);
-        }
+        }*/
         var ids = datas.ids;
         this.current = datas.current != null ? datas.current : this.current;
         var _self = this;
@@ -315,8 +316,7 @@ var PlaylistPanel = {
             $.ajax({
                 url: '/musicsInfo?ids=' + JSON.stringify(ids),
                 dataType: 'json',
-                success: function (data) {
-                    console.log(_self)
+                success: data => {
                     var musics = [];
                     data.forEach(m => musics[m.id] = m);
                     ids.forEach(id => {
@@ -337,10 +337,10 @@ var PlaylistPanel = {
         }
     },
     addMusicFromId: function (id, noShare) {
-        var playlist = getCurrentPlaylist();
+        /*var playlist = ActivePlaylist.getReal(this);
         if (playlist != this) {
             return playlist.addMusicFromId(id, noShare);
-        }
+        }*/
         if (noShare == null || noShare == false) {
             this.shareManager.event('add', id);
         }
@@ -358,7 +358,7 @@ var PlaylistPanel = {
             dataType: 'json',
             success: function (data) {
                 // If list receive with id in each element, add music
-                var ids = data.filter(function (m) { return m.id != null; }).map(function (m) { return parseInt(m.id); })
+                var ids = data.filter(m =>m.id != null).map(m=>parseInt(m.id));
                 _self.addMusicsFromIds({ ids: ids });
             }
         });
@@ -449,8 +449,8 @@ var RemotePlaylist = {
             // When closing, delete
             _self.div.remove();
             _self.shareManager.disable(true);
-            if (getCurrentPlaylist() == _self) {
-                currentPlaylist = null;
+            if (ActivePlaylist.get() == _self) {
+                ActivePlaylist.set(null);
             }
             Share.removeShare(_self.id);
         });
@@ -525,6 +525,10 @@ var RemotePlaylist = {
     cleanPlaylist: function () {
         this.shareManager.event("cleanPlaylist");
     },
+
+    addMusicsFromList:function(ids){
+        this.shareManager.event("add", ids);
+    },
     // Override add from url to avoid many add request to send only big one
     addMusicsFromUrl: function (url) {
         var _self = this;
@@ -533,16 +537,36 @@ var RemotePlaylist = {
             dataType: 'json',
             success: function (data) {
                 //Send to share the list
-                var ids = data.filter(function (m) { return m.id != null; }).map(function (m) { return parseInt(m.id); })
-                _self.shareManager.event("add", ids.join(','));
+                var ids = data.filter(m=>m.id != null).map(m=>parseInt(m.id)).join(',');
+                _self.addMusicsFromList(ids);
             }
         });
     }
 }
 
-var currentPlaylist = null;
-function getCurrentPlaylist() {
-    return currentPlaylist == null ? PlaylistPanel : currentPlaylist;
+var ActivePlaylist = {
+    previous:null,
+    current:null,
+    set(playlist){
+        if(this.current === playlist){return;}
+        this.previous = this.current;
+        this.current = playlist;
+    },
+    get(){
+        return this.current ==null ? this.getDefault() : this.current;
+    },
+    // Return the current playlist but not the same as caller
+    getReal:function(caller){
+        if(this.current !=null && caller === this.current){
+            // return previous
+            return this.previous == null ? this.getDefault() : this.previous;
+        }
+        return this.get();
+    },
+    getDefault:function(){
+        PlaylistPanel.open();
+        return PlaylistPanel;
+    }
 }
 
 function connectToShare() {
@@ -561,7 +585,7 @@ function connectToShare() {
         if (data.length == 1) {
             // only one share, direct connect
             sharePanel.open();
-            currentPlaylist = sharePanel;
+            //currentPlaylist = sharePanel;
             CreateClone(data[0].Id, sharePanel);
             $('.title > span:first', sharePanel.div).html('Remote playlist for ' + data[0].Name);
         } else {

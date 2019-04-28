@@ -1,6 +1,23 @@
 /* Explore the data of the cluster */
 
-if(Loader){Loader.toLoad("html/explorer.html","Explorer");}
+if(Loader){Loader.toLoad("html/explorer.html");}
+
+var ExplorerManager  = {
+    // Store explorers by name
+    explorers:[],
+    // Save a new explorer
+    register:function(name,title,dataProvider){
+        var panel = $.extend({},Explorer);
+        panel.title = title;
+        panel.init(name);
+        panel.dataProvider = dataProvider;
+        this.explorers[name] = panel;
+        return panel;
+    },
+    open:function(name,params){
+        return this.explorers[name].open(params);
+    }
+}
 
 var Explorer = {
     // Path of folders
@@ -9,44 +26,45 @@ var Explorer = {
     panelFolder:null,
     // Current path displayed
     currentPath :"",
-    
+
     currentTypeLoad:"",
-    // URL of service to get data
-    urlServer:"",
-    baseServer:"",
-    fctClick:null,
+    fctClick(id){ActivePlaylist.getReal(this).addMusicFromId(id)},
     // Store the position of scroll on home (to restore when returning to home). Reset on genre. Update when click on folder
     scrollPosition:0,
-    init:function(){
+    title:"",
+    // dataProvider load data, params is a json object
+    dataProvider:function(params){console.log("Not implemented")},
+    init:function(id){
         $.extend(true,this,Panel) ;
-        this.initPanel($('#idExplorePanel'),'<span class="glyphicon glyphicon-hdd"></span> Explore');
+        var clone = $('#idExplorePanel').clone();
+        $('body').append(clone);
+        clone.attr('id',id);
+        this.initPanel($('#' + id),'<span class="glyphicon glyphicon-hdd"></span> ' + this.title);
         this.div.resizable({minWidth:250});
         this.breadcrumb = $('.breadcrumb',this.div)
         var _self = this;
         this.breadcrumb.on('click','li',function(){
             // delete nexts
             $(this).find('~').remove();
-            _self.loadPath($('a',$(this)).data('path'),"",true);
+            _self.loadPath($(this).data('params'),"",true);
         });
         this.panelFolder = $('.folders',this.div);
 
-        $('.switch',this.div).bind('click',()=>Explorer.changeZoom());
+        $('.switch',this.div).bind('click',()=>this.changeZoom());
 
-        this.div.bind('open',function(){
-           Explorer._open(arguments);
-        });
+        this.div.bind('open',()=>this._open(arguments));
         this._loadGenres();
-        $('.info-folders > span.filter > :text',this.div).bind('keyup',function(e){
-            var value = $(this).val().toLowerCase();
+        $('.info-folders > span.filter > :text',this.div).bind('keyup',e=>{
+            var value = $(e.target).val();
             if (value.length <=2){
-                $('>span',Explorer.panelFolder).show();
+                $('>span',this.panelFolder).show();
                 e.stopPropagation();
                 return;
             }
             if (value.length > 2){
                 // Fitler results
-                $('>span:not([data-idx*="' + value + '"])',Explorer.panelFolder).hide()
-                $('>span[class^="' + value + '"]',Explorer.panelFolder).show()
+                $('>span:not([data-idx*="' + value + '"])',this.panelFolder).hide()
+                $('>span[class^="' + value + '"]',this.panelFolder).show()
             }
             e.stopPropagation();
         });
@@ -60,45 +78,38 @@ var Explorer = {
             dataType:'json',
             success:function(genres){
                 for(var i in genres){
-                   select.append('<option value="' + genres[i] + '">' + genres[i] + '</option>');
+                    select.append('<option value="' + genres[i] + '">' + genres[i] + '</option>');
                 };
             }
         });
         var _self = this;
         select.bind('change',function(){
-            _self.urlServer = _self.baseUrl + "?genre=" + $(this).val();
-            _self.reloadPath();
+            _self.reloadPath({genre:$(this).val()});
         });
     },
-    addClickBehave:function(fct){
-       this.fctClick = fct;
-    },
     // Reload same data (maybe new data or different urlServer
-    reloadPath:function(){
-        this.loadPath(this.currentPath,"",true);
+    reloadPath:function(params){
+        //params.path = this.currentPath;
+        this.loadPath(params,"",true);
     },
-    loadPath:function(path,display,noAddBC){
+    loadPath:function(params,display,noAddBC){
         $('.info-folders > span.filter > :text',this.div).val("");
-        this.currentPath = path;
+        //this.currentPath = params.path;
         // Add element in breadcrumb
         var currentScrollPosition = this.panelFolder.scrollTop();
         if(!noAddBC){
-            this.addBreadcrumb(path,display);
+            this.addBreadcrumb(params,display);
         }
         if(this.currentTypeLoad == ""){
             var url = "";
         }
-        $.ajax({
-            url:this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + path,
-            dataType:'json',
-            success:function(data){
-                Explorer.display(data);
-                if(path == ""){
-                    // Restore home scroll
-                    Explorer.panelFolder.scrollTop(Explorer.scrollPosition);
-                }
-                Explorer.scrollPosition = currentScrollPosition;
+        this.dataProvider(params,data=>{
+            this.display(data);
+            if(JSON.stringify(params) == "{}"){
+                // Restore home scroll
+                this.panelFolder.scrollTop(this.scrollPosition);
             }
+            this.scrollPosition = currentScrollPosition;
         });
     },
     changeZoom:function(){
@@ -110,48 +121,63 @@ var Explorer = {
     },
     // Call when first open
     _open:function(){
-        if(arguments[0][1] == null){return;}
+        //if(arguments[0][1] == null){return;}
+        console.log(arguments)
         this.scrollPosition = 0;
         this.breadcrumb.empty();
-        this.urlServer = arguments[0][1];
-        this.baseUrl = arguments[0][1];
-        var title = arguments[0][2];
-        if(title!=null){
-            this.div.find('.title>span:first').html(title);
+        if(this.title!=null){
+            this.div.find('.title>span:first').html(this.title);
         }
-        this.loadPath("","Home");
+        this.loadPath({},"Home");
         $('.info-folders > span.filter > select.genres',this.div).val("");
     },
-    addBreadcrumb:function(path,display){
-        display = display || path;
-        this.breadcrumb.append('<li><a href="#" data-path="' + path + '">' + display + '</a></li>');
+    addBreadcrumb:function(params,display){
+        display = display || 'Empty';
+        var li= $('<li><a href="#">' + display + '</a></li>');
+        li.data('params',params);
+        this.breadcrumb.append(li);
     },
-    display:function(data){
-        this.panelFolder.empty();
-        var _self = this;
-        var nb = 0;
+    cleanPanel(){
+        // Javascript native, fastest
+        var parent = this.panelFolder.parent();
+        parent.get(0).removeChild(this.panelFolder.get(0))
+        this.panelFolder = $('<div class="folders line"></div>');
+        parent.append(this.panelFolder);
+    },
+    display:function(data,noEmpty){
+        if(!noEmpty) {
+            this.cleanPanel();
+        }
         for(var file in data){
             var name = "";
             var url = "";
-            if(Number(file) == file){
+            var params = {};
+            if(Number(file) == file) {
                 // Case when {}
                 name = data[file].name;
                 url = data[file].url;
-            }else{
-                // Normal case of map
-                name = file;
-                url = "path=" + Explorer.currentPath + file + "/"
+                if (url != null) {
+                    var rawParams = url.split("=");
+                    params[rawParams[0]] = rawParams[1];
+                }else{
+                    params["id"] = data[file].id;
+                }
             }
             var info = "";
+            // Hidden fields
+            var hidden = {}
             if(data[file].infos!=null){
                 // List of data info
-               for(var field in data[file].infos){
+                for(var field in data[file].infos){
                     var value = data[file].infos[field];
                     switch(field){
                         case "time" : info += '<span class="info">' + MusicPlayer._formatTime(value) + '</span>';break;
-                        case "favorite" : 
-                            info += '<span class="info ' + (value != "true" ? 'not-':'') + 'favorite"></span>';    
+                        case "favorite" :
+                            info += '<span class="info ' + (value != "true" ? 'not-':'') + 'favorite"></span>';
                             break;
+                        case "hidden":
+                            var split = value.split("=");
+                            hidden[split[0]] = split[1];
                         default : info += '<span class="info">' + value + '</span>';
                     }
                 };
@@ -161,40 +187,52 @@ var Explorer = {
             }
             var addOption = '<span style="margin-right:10px;" class="glyphicon glyphicon-plus add-music info-left"></span>';
             // Info json with name and either url (param after url) or id
-            var span = $('<span class="music" data-idx="' + name.toLowerCase() + '" data-url="' + url + '">' 
+            var span = $('<span class="music" data-idx="' + name.toLowerCase() + '" data-url="' + url + '">'
                 + addOption + '<span class="music-name">' + name + '</span>' +info + '</span>');
+            span.data('hidden',hidden);
+            this.improveSpanActions(span);
+
             // If url, sub folder exist. Otherwise, final element, can add to playlist
             if(url != null){
                 // Can add all data in playlist if drag and drop
                 var dragStart = false;
-                span.data("url_drag",this.urlServer + (this.urlServer.indexOf("?") == -1 ? '?':'&') + url);
-                span.draggable({axis:'x',cancel:'.add-music',delay:300,revert:true,helper:'clone',start:()=>{dragStart=true},stop:()=>{dragStart=false}});                
-                $('.add-music',span).bind('mouseup',e=>{                    
-                    var url = $(e.currentTarget).closest('.music').data('url_drag');
-                    PlaylistPanel.addMusicsFromUrl(url);
+                span.data('params',params);
+                span.data("dataProvider",this.dataProvider);
+                span.draggable({axis:'x',cancel:'.add-music',delay:300,revert:true,helper:'clone',start:()=>{dragStart=true},stop:()=>{dragStart=false}});
+                $('.add-music',span).bind('mouseup',e=>{
+                    var params = $(e.currentTarget).closest('.music').data('params');
+                    this.dataProvider(params,data=>
+                        ActivePlaylist.getReal(this).addMusicsFromIds({ids:data.filter(m =>m.id != null).map(m=>parseInt(m.id))})
+                    );
                     e.stopPropagation();
                 });
-                span.bind('mouseup',function(){
+                span.bind('mouseup',e=>{
                     if(dragStart){return;}
-                    Explorer.loadPath($(this).data('url'),$(this).text());
+                    var line = $(e.currentTarget);
+                    // extract parameters from url
+                    this.loadPath(line.data('params'),line.text());
                 });
             }else{
                 // Last element, display server where data is
                 span.data("id",data[file].id)
-                //span.draggable({revert:true,helper:'clone'})
                 // Dbl click to playlist
                 if(this.fctClick){
-                    $('.add-music',span).bind('click',e=>Explorer.fctClick($(e.currentTarget).closest('.music').data('id')));
-                    span.bind('dblclick',e=>Explorer.fctClick($(e.currentTarget).data('id')));
+                    $('.add-music',span).bind('click',e=>this.fctClick($(e.currentTarget).closest('.music').data('id')));
+                    span.bind('dblclick',e=>this.fctClick($(e.currentTarget).data('id')));
                 }
             }
             // Add favorite behaviour
-            $('.favorite,.not-favorite',span).bind('click',e=>Explorer._changeFavorite($(e.target)));
+            $('.favorite,.not-favorite',span).bind('click',e=>this._changeFavorite($(e.target)));
             this.panelFolder.append(span);
         }
         $('.info-folders > span.counter',this.div).html('' + this.panelFolder.find('>span').length + ' - ');
     },
-    // Update favorite of music
+    // Implement to add content
+    improveSpanActions(){},
+    size:function(){
+        return parseInt($('.info-folders > span.counter',this.div).html());
+    },
+// Update favorite of music
     _changeFavorite:function(span){
         var line = span.closest('.music');
         var id = line.data('id');

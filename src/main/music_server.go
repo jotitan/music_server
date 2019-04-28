@@ -127,6 +127,7 @@ func (ms MusicServer) statsAsSSE(response http.ResponseWriter, request *http.Req
 }
 
 func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http.Request) {
+	begin := time.Now()
 	genre := request.FormValue("genre")
 	logger.GetLogger().Info("Get all artists", genre)
 	// if genre exist, filter artist list
@@ -144,6 +145,7 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 	sort.Sort(music.SortByArtist(artistsData))
 	bdata, _ := json.Marshal(artistsData)
 	response.Write(bdata)
+	logger.GetLogger().Info("Get all artists", genre,"in",time.Now().Sub(begin))
 }
 
 //Return all favorites as musics
@@ -189,14 +191,16 @@ func (ms *MusicServer) getMusics(response http.ResponseWriter, request *http.Req
 }
 
 func (ms *MusicServer) listByArtist(response http.ResponseWriter, request *http.Request) {
+	begin := time.Now()
 	if id := request.FormValue("id"); id == "" {
 		ms.getAllArtists(response, request)
 	} else {
-		logger.GetLogger().Info("Load music of artist", id)
 		artistID, _ := strconv.ParseInt(id, 10, 32)
 		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistID)]
 		ms.getMusics(response, request, musicsIds, false, []string{})
+		logger.GetLogger().Info("Load music of artist", id,"in",time.Now().Sub(begin))
 	}
+
 }
 
 func (ms *MusicServer) listByOnlyAlbums(response http.ResponseWriter, request *http.Request) {
@@ -264,8 +268,19 @@ func (ms *MusicServer) musicsInfo(response http.ResponseWriter, request *http.Re
 	var ids []int32
 	json.Unmarshal([]byte(request.FormValue("ids")), &ids)
 	logger.GetLogger().Info("Load musics", len(ids))
+	if request.FormValue("short") != "" {
+		ms.getMusics(response, request, int32asInt(ids), false, []string{"artist"})
+	}else {
+		ms.musicsResponse(ids, response)
+	}
+}
 
-	ms.musicsResponse(ids, response)
+func int32asInt(ids []int32)[]int{
+	idsInt := make([]int,len(ids))
+	for i,id := range ids {
+		idsInt[i] = int(id)
+	}
+	return idsInt
 }
 
 // Get informations from ids of music
@@ -453,41 +468,55 @@ func (ms MusicServer) create(port string, indexFolder, musicFolder, addressMask,
 func (ms *MusicServer) createRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/status", ms.status)
-	mux.HandleFunc("/statsAsSSE", ms.statsAsSSE)
+	registerRoute(mux,"/status", "",ms.status)
+	registerRoute(mux,"/statsAsSSE", "", ms.statsAsSSE)
 
-	mux.HandleFunc("/music", ms.readmusic)
-	mux.HandleFunc("/nbMusics", ms.nbMusics)
+	registerRoute(mux,"/music", "", ms.readmusic)
+	registerRoute(mux,"/nbMusics", "", ms.nbMusics)
 
 	// Manage search
-	mux.HandleFunc("/musicInfo", ms.musicInfo)
-	mux.HandleFunc("/get", ms.get)
-	mux.HandleFunc("/musicsInfo", ms.musicsInfo)
-	mux.HandleFunc("/musicsInfoInline", ms.musicsInfoInline)
-	mux.HandleFunc("/listByArtist", ms.listByArtist)
-	mux.HandleFunc("/listByAlbum", ms.listByAlbum)
-	mux.HandleFunc("/listByOnlyAlbums", ms.listByOnlyAlbums)
-	mux.HandleFunc("/search", ms.search)
+	registerRoute(mux,"/musicInfo", "", ms.musicInfo)
+	registerRoute(mux,"/get", "", ms.get)
+	registerRoute(mux,"/musicsInfo", "", ms.musicsInfo)
+	registerRoute(mux,"/musicsInfoInline", "", ms.musicsInfoInline)
+	registerRoute(mux,"/listByArtist", "", ms.listByArtist)
+	registerRoute(mux,"/listByAlbum", "", ms.listByAlbum)
+	registerRoute(mux,"/listByOnlyAlbums", "", ms.listByOnlyAlbums)
+	registerRoute(mux,"/search", "", ms.search)
 
 	// Manage musics
-	mux.HandleFunc("/genres", ms.listGenres)
-	mux.HandleFunc("/index", ms.index)
-	mux.HandleFunc("/fullReindex", ms.fullReindex)
+	registerRoute(mux,"/genres", "", ms.listGenres)
+	registerRoute(mux,"/index", "", ms.index)
+	registerRoute(mux,"/fullReindex", "", ms.fullReindex)
 
 	// Manage favorites
-	mux.HandleFunc("/setFavorite", ms.setFavorite)
-	mux.HandleFunc("/getFavorites", ms.getFavorites)
+	registerRoute(mux,"/setFavorite", "", ms.setFavorite)
+	registerRoute(mux,"/getFavorites", "", ms.getFavorites)
 
 	// Manage share device
-	mux.HandleFunc("/share", ms.share)
-	mux.HandleFunc("/killshare", ms.killShare)
-	mux.HandleFunc("/shares", ms.getShares)
-	mux.HandleFunc("/shareUpdate", ms.shareUpdate)
-	mux.HandleFunc("/volume", ms.volume)
+	registerRoute(mux,"/share", "", ms.share)
+	registerRoute(mux,"/killshare", "", ms.killShare)
+	registerRoute(mux,"/shares", "", ms.getShares)
+	registerRoute(mux,"/shareUpdate", "", ms.shareUpdate)
+	registerRoute(mux,"/volume", "", ms.volume)
 
 	// Serve files
-	mux.HandleFunc("/", ms.root)
+	registerRoute(mux,"/help", "", ms.help)
+	registerRoute(mux,"/", "", ms.root)
 	return mux
+}
+
+var routesDefinitions = make(map[string]string)
+
+func registerRoute(mux * http.ServeMux,pattern, doc string, handler func(w http.ResponseWriter,r * http.Request)) {
+	mux.HandleFunc(pattern,handler)
+	routesDefinitions[pattern] = doc
+}
+
+func (ms * MusicServer)help(w http.ResponseWriter,r * http.Request){
+	if data,err := json.Marshal(routesDefinitions) ; err == nil {
+		w.Write(data)
+	}
 }
 
 func main() {

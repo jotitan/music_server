@@ -343,7 +343,7 @@ label > [type="checkbox"] {
     background-size: 16px 16px;
 }
 
-.favorites .remove {
+.favorites .remove,.remove.remove-music {
     margin-right:10px;
     color:red;
 }
