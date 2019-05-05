@@ -58,7 +58,11 @@ func (ms *MusicServer) root(response http.ResponseWriter, request *http.Request)
 		// Reinit at each reload page
 		http.ServeFile(response, request, filepath.Join(ms.webfolder, "music.html"))
 	} else {
-		http.ServeFile(response, request, filepath.Join(ms.webfolder, url[1:]))
+		if url == "/remote" {
+			http.ServeFile(response, request, filepath.Join(ms.webfolder, "html/remote_control_full.html"))
+		}else {
+			http.ServeFile(response, request, filepath.Join(ms.webfolder, url[1:]))
+		}
 	}
 }
 
@@ -351,7 +355,12 @@ func getSessionID(request *http.Request) string {
 }
 
 func sessionID(response http.ResponseWriter, request *http.Request) string {
-	if id := getSessionID(request); id != "" {
+	return sessionIDWithOpts(response,request,false)
+}
+
+// If forceNew == true, create a new sessionID
+func sessionIDWithOpts(response http.ResponseWriter, request *http.Request, forceNew bool) string {
+	if id := getSessionID(request); !forceNew && id != "" {
 		return id
 	}
 	h := md5.New()
@@ -385,7 +394,8 @@ func getShare(request *http.Request, idName string) *music.SharedSession {
 func (ms MusicServer) share(response http.ResponseWriter, request *http.Request) {
 	// If id is present, connect as clone
 	if ss := getShare(request, "id"); ss != nil {
-		ss.ConnectToShare(response, request.FormValue("device"), sessionID(response, request))
+		// Create new SessionID at each connection
+		ss.ConnectToShare(response, request.FormValue("device"), sessionIDWithOpts(response, request,true))
 	} else {
 		music.CreateShareConnection(response, request.FormValue("device"), sessionID(response, request))
 	}

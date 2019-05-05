@@ -69,9 +69,6 @@ var PlaylistPanel = {
             _self.cleanPlaylist(true);
             // If share, close it
             _self.shareManager.disable();
-            if (ActivePlaylist.get() == this) {
-                ActivePlaylist.set(null);
-            }
         });
         // Load saved playlist
         if (noLoad == true) {
@@ -84,12 +81,12 @@ var PlaylistPanel = {
     play: function () {
         MusicPlayer.play();
         this.isPaused = false;
-        this.shareManager.event('play');
+        this.shareManager.event('play',JSON.stringify({position:MusicPlayer.player.currentTime}));
     },
     pause: function () {
         MusicPlayer.pause();
         this.isPaused = true;
-        this.shareManager.event('pause');
+        this.shareManager.event('pause',JSON.stringify({position:MusicPlayer.player.currentTime}));
     },
     volumeUp: function () {
         MusicPlayer.volume.up();
@@ -214,7 +211,6 @@ var PlaylistPanel = {
         if (this.listDiv.scrollTop() != position) {
             this.listDiv.scrollTop(position);
         }
-        //this.listDiv.scrollTop(line.position().top);
     },
     getPlayedPosition: function () {
         var nb = $('> div', this.listDiv).length
@@ -305,10 +301,6 @@ var PlaylistPanel = {
     },
     // Add many musics from list of id
     addMusicsFromIds: function (datas, noShare) {
-        /*var playlist = ActivePlaylist.getReal(this);
-        if (playlist != this) {
-            return playlist.addMusicsFromIds(datas, noShare);
-        }*/
         var ids = datas.ids;
         this.current = datas.current != null ? datas.current : this.current;
         var _self = this;
@@ -321,9 +313,6 @@ var PlaylistPanel = {
                     data.forEach(m => musics[m.id] = m);
                     ids.forEach(id => {
                         var music = musics[id];
-                        /*if((noShare == null || noShare == false)){
-                            _self.shareManager.event('add',music.id);
-                        }*/
                         _self.add(music, true, true);
                     });
                     if ((noShare == null || noShare == false)) {
@@ -337,10 +326,6 @@ var PlaylistPanel = {
         }
     },
     addMusicFromId: function (id, noShare) {
-        /*var playlist = ActivePlaylist.getReal(this);
-        if (playlist != this) {
-            return playlist.addMusicFromId(id, noShare);
-        }*/
         if (noShare == null || noShare == false) {
             this.shareManager.event('add', id);
         }
@@ -403,11 +388,11 @@ var PlaylistPanel = {
     },
     // Share current music
     shareCurrent: function () {
-        this.shareManager.event('playMusic', JSON.stringify({ position: this.current, id: this.list[this.current].id }));
+        this.shareManager.event('playMusic', JSON.stringify({length:this.list[this.current].length, position: this.current, id: this.list[this.current].id }));
         this.hideRadio();
     },
     next: function (noShare) {
-        if (this.current > this.list.length) {
+        if (this.current >= this.list.length-1) {
             return;
         }
         this.current++;

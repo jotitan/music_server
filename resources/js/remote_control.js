@@ -5,46 +5,82 @@ var RemoteControlManager = {
     divSelect:null,
     url:'',
     init:function(idDiv,idSelect,musicUrl){
-        var _self = this;
         this.url = musicUrl || '';
         this.div = $('#' + idDiv);
         this.divSelect = $('#' + idSelect);
-        $('.play',this.div).bind('click',function(){
-            _self.manager.event('play');
-            _self.setIsPlaying(true);
+        $('.play',this.div).bind('click',()=>{
+            this.manager.event('play');
+            this.setIsPlaying(true);
         });
 
-        $('.pause',this.div).bind('click',function(){
-            _self.manager.event('pause');
-            _self.setIsPlaying(false);
+        $('.pause',this.div).bind('click',()=>{
+            this.manager.event('pause');
+            this.setIsPlaying(false);
         });
 
-        $('.previous',this.div).bind('click',function() {
-            _self.manager.event('previous');
-        });
+        $('.previous',this.div).bind('click',()=>this.manager.event('previous'));
 
-        $('.next',this.div).bind('click',function() {
-            _self.manager.event('next');
-        });
+        $('.next',this.div).bind('click',() =>this.manager.event('next'));
 
-        this.divSelect.bind('change',function(){
-            _self._connect($(this).val());
+        $('.vup',this.div).bind('click',() =>this.manager.event('volumeUp'));
+        $('.vdown',this.div).bind('click',() =>this.manager.event('volumeDown'));
+
+        this.divSelect.bind('change',e=>this._connect($(e.target).val()));
+        Share.getShares(data=> {
+            if(data == null || data.length === 0){
+                return this.divSelect.hide();
+            }
+            if(data.length === 1){
+                // Auto select the on_self._connect(data[0].Id);dxmàb
+                this._connect(data[0].Id);
+                return this.divSelect.hide();
+            }else{
+                this.divSelect.empty().append('<option>...</option>');
+                data.forEach(s=>this.divSelect.append('<option value="' + s.Id + '">' + s.Name + '</option>'));
+            }
         });
-        Share.getShares(function(data) {
-            if(data == null || data.length == 0){
-                _self.divSelect.hide();
+        this.timer.init();
+        return this;
+    },
+    // Manage time counter
+    timer:{
+        totalPanel:null,
+        progressPanel:null,
+        currentTime:0,
+        currentTotal:0,
+        interval:null,
+        init(){
+            this.progressPanel = $('.time-progress > .current-position',this.div);
+            this.totalPanel = $('.time-progress > .total-length',this.div);
+        },
+        reset(){
+            this.set(0,true);
+        },
+        set(time,start,stop){
+            this.currentTime = time;
+            // Avoid override total
+            if(this.currentTotal != 0 && this.currentTime > this.currentTotal){
+                clearInterval(this.interval);
+                this.interval = null;
                 return;
             }
-            if(data.length == 1){
-                // Auto select the on_self._connect(data[0].Id);dxmàb
-            }else{
-                _self.divSelect.empty().append('<option>...</option>');
-                data.forEach(function (s) {
-                    _self.divSelect.append('<option value="' + s.Id + '">' + s.Name + '</option>');
-                });
+            this.progressPanel.html(MusicPlayer._formatTime(this.currentTime));
+            if(start === true){
+                // Start interval and update time
+                if(this.interval != null){
+                    clearInterval(this.interval);
+                }
+                this.interval = setInterval(()=>this.set(this.currentTime+1,false),1000);
             }
-        });
-        return this;
+            if(stop ===true && this.interval != null){
+                clearInterval(this.interval);
+                this.interval = null;
+            }
+        },
+        setTotal(total){
+            this.currentTotal = parseInt(total);
+            this.totalPanel.html(MusicPlayer._formatTime(total));
+        }
     },
     _connect:function(id){
         this.manager = CreateRemote(id,this);
@@ -53,6 +89,7 @@ var RemoteControlManager = {
     },
     updateMusic:function(music) {
         $('.title',this.div).html(music.title + " - " + music.artist);
+        this.timer.setTotal(music.length);
     },
     setIsPlaying:function(isPlaying){
         if(isPlaying){
@@ -63,37 +100,42 @@ var RemoteControlManager = {
             $('.play',this.div).show();
         }
     }
-}
+};
 
 // Create a simple and light remote cntrol (only play, pause, next and previous). No music read
 function CreateRemote(id,target){
     if(target == null){
-        return null;
+        return;
     }
     var manager = {id:id};
-    var sse = new EventSource('/share?id=' + id + '&device=' + MusicPlayer.device.name);
+    var sse = new EventSource('/share?id=' + id + '&device=' + MusicPlayer.device.getName());
 
-    sse.addEventListener('close',function(){
-        manager.disable();
-    });
+    sse.addEventListener('close',()=>manager.disable());
     sse.addEventListener('playMusic',function(response){
+        target.timer.setTotal(response.length);
+        target.timer.reset();
         manager.loadMusic(JSON.parse(response.data).id);
         target.setIsPlaying(true);
     });
 
-    sse.addEventListener('pause',function(response){
+    sse.addEventListener('pause',(response)=>{
+        var data = JSON.parse(response.data);
         target.setIsPlaying(false);
+        target.timer.set(data.position,false,true);
     });
-    sse.addEventListener('play',function(response){
+    sse.addEventListener('play',(response)=>{
+        var data = JSON.parse(response.data);
         target.setIsPlaying(true);
+        target.timer.set(data.position,true,false);
     });
 
-    sse.addEventListener('playlist',function(response){
+    sse.addEventListener('playlist',response=>{
         var data = JSON.parse(response.data);
-        if(data.current!=-1){
+        if(data.current!==-1){
             var idMusic = data.ids[data.current];
             manager.loadMusic(idMusic);
             target.setIsPlaying(data.playing);
+            target.timer.set(data.position,data.playing,!data.playing);
         }
     });
 
@@ -102,11 +144,9 @@ function CreateRemote(id,target){
     manager.loadMusic = function(id){
         $.ajax({
             url:'/musicInfo?id=' + id,
-            success:function(data){
-                target.updateMusic(JSON.parse(data));
-            }
+            success:data=>target.updateMusic(JSON.parse(data))
         })
-    }
+    };
     manager.event = function(event,data){
         data = data == null ? "" : data;
         $.ajax({
@@ -115,11 +155,12 @@ function CreateRemote(id,target){
         });
     };
     manager.disable = function(noclose){
+        console.log("CLOSE STREAM");
         this.sse.close();
         this.event('close');
-        if(noclose == null ||noclose == false){
+        if(noclose == null ||noclose === false){
             remotePlaylist.close();
         }
-    }
+    };
     return manager;
 }

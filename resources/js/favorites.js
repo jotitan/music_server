@@ -31,9 +31,7 @@ var FavoritesPanel = {
             $('.remove',line).bind('click',e=>FavoritesPanel._removeFavorite($(e.currentTarget).closest('.music')));
             $('.folders',this.div).append(line);
         });
-        $('.folders .add-music',this.div).bind('click',function(e){
-            PlaylistPanel.addMusicFromId($(e.currentTarget).closest('div').data('id'));
-        });
+        $('.folders .add-music',this.div).bind('click',e=>ActivePlaylist.getReal(this).addMusicFromId($(e.currentTarget).closest('div').data('id')));
         this._updateTotal(musics.length);
     },
     _removeFavorite:function(line){

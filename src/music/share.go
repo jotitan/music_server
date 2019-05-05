@@ -34,7 +34,7 @@ func (ss SharedSession) isClone(sessionID string) (bool, *Device) {
 //ForwardEvent from a remote control. Possible event : add music, remove music, play music, play, pause, next, previous
 // Detect the sender from his session ID
 func (ss SharedSession) ForwardEvent(sessionID string, event, data string) {
-	logger.GetLogger().Info("Receive event", event, "from", sessionID)
+	logger.GetLogger().Info("Receive event", event, "from", sessionID,"(",len(ss.clones),")")
 	// Detect sender
 	if ss.isOriginal(sessionID) {
 		// Send to all clone
@@ -115,7 +115,8 @@ func (ss *SharedSession) removeClone(sessionID string) {
 	}
 }
 
-func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
+// create new connection at each time, no connection recup
+func (ss *SharedSession) 	ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
 	var device *Device
 	logger.GetLogger().Info("Connect clone", ss.id)
 	// Check if sessionID exist
@@ -131,7 +132,7 @@ func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName
 	device.send("id", fmt.Sprintf("%d", ss.id))
 	ss.original.send("askPlaylist", "")
 	checkConnection(device)
-	// remove clone cause connection is lost
+	// remove clone cause connection is lost and checkconnection ended
 	ss.removeClone(sessionID)
 }
 

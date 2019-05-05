@@ -29,6 +29,9 @@ var MusicPlayer = {
                }
             });
         },
+        getName(){
+          return name != "" ? name : "No device name";
+        },
         save:function(){
            this.name = this.input.val();
            this.input.addClass('disabled').unbind('keydown,blur');
