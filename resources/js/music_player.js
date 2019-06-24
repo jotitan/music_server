@@ -121,7 +121,7 @@ var MusicPlayer = {
                  MusicPlayer.player.volume+=this.step;
              }
              VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
-            $.ajax({url:'/volume?volume=up'});
+            $.ajax({url:basename + 'volume?volume=up'});
             // Share event
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         },
@@ -132,7 +132,7 @@ var MusicPlayer = {
                 MusicPlayer.player.volume-=this.step;
             }
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10));
-            $.ajax({url:'/volume?volume=down'});
+            $.ajax({url:basename + 'volume?volume=down'});
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         }
     },
@@ -166,7 +166,7 @@ var MusicPlayer = {
         });
         this.device.init();
         // Get nb musics
-        $.ajax({url:'/nbMusics',success:data=>$('#nbMusics').html(data)});
+        $.ajax({url:basename + 'nbMusics',success:data=>$('#nbMusics').html(data)});
     },
     load:function(music){
         if(music == null){return;}

@@ -16,6 +16,7 @@ type SharedSession struct {
 	clones    []*Device
 	response  http.ResponseWriter
 	connected bool
+	latency float64
 }
 
 func (ss SharedSession) isOriginal(sessionID string) bool {
@@ -29,6 +30,14 @@ func (ss SharedSession) isClone(sessionID string) (bool, *Device) {
 		}
 	}
 	return false, nil
+}
+
+func (ss * SharedSession)SetLatency(latency float64){
+	ss.latency = latency
+}
+
+func (ss SharedSession)GetLatency()float64{
+	return ss.latency
 }
 
 //ForwardEvent from a remote control. Possible event : add music, remove music, play music, play, pause, next, previous
@@ -85,7 +94,7 @@ func (d Device) send(event string, data string) (success bool) {
 var sharedSessions = make(map[int]*SharedSession)
 
 // Create standard header for SSE
-func createSSEHeader(response http.ResponseWriter) {
+func CreateSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
 	response.Header().Set("Connection", "keep-alive")
@@ -116,11 +125,11 @@ func (ss *SharedSession) removeClone(sessionID string) {
 }
 
 // create new connection at each time, no connection recup
-func (ss *SharedSession) 	ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
+func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
 	var device *Device
 	logger.GetLogger().Info("Connect clone", ss.id)
 	// Check if sessionID exist
-	createSSEHeader(response)
+	CreateSSEHeader(response)
 	if v, dev := ss.isClone(sessionID); !v {
 		//check device exist
 		device = &Device{name: deviceName, sessionID: sessionID, response: response, connected: true}
@@ -159,16 +168,18 @@ func checkConnection(d *Device) {
 
 //CreateShareConnection create an original connexion
 func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID string) {
-	createSSEHeader(response)
+	CreateSSEHeader(response)
 	// Generate unique code to receive order
 	device := &Device{name: deviceName, response: response, sessionID: sessionID, connected: true}
 	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
 	sharedSessions[ss.id] = ss
 	logger.GetLogger().Info("Create share", ss.id)
 	ss.original.send("id", fmt.Sprintf("%d", ss.id))
+	computeLatency(ss.original,ss.id)
 	checkConnection(device)
 	removeSharedSession(ss.id)
 }
+
 
 type ShareInfo struct {
 	Name string

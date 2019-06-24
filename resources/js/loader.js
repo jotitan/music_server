@@ -17,7 +17,7 @@ var Loader = {
             }
         }else{
             var element =this.modules[this.current];
-            var div = $('<div></div>').load(element.url,function(){
+            var div = $('<div></div>').load(basename + element.url,function(){
                 if(element.fct){
                     window[element.fct].init()
                 }
@@ -26,7 +26,7 @@ var Loader = {
             });
             $('body').append(div);
             if(element.css!=null && element.css!=""){
-                $('head').append('<link rel="stylesheet" href="' + element.css + '"/>');
+                $('head').append('<link rel="stylesheet" href="' + basename + element.css + '"/>');
             }
         }
     }

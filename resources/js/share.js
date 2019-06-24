@@ -22,7 +22,7 @@ var Share = {
     },
     getShares:function(callback){
         $.ajax({
-            url:'/shares',
+            url:basename +  + '/shares',
             dataType:'json',
             success:function(data){
                 callback(data);
@@ -92,7 +92,7 @@ function CreateClone(id,remotePlaylist){
     manager.event = function(event,data){
         data = data == null ? "" : data;
         $.ajax({
-            url:'/shareUpdate',
+            url:basename + 'shareUpdate',
             data:{id:this.id,event:event,data:data}
         });
     };
@@ -124,6 +124,16 @@ function CreateOriginal(playlist){
     sse.addEventListener('playlist',function(data){
         playlist.addMusicsFromIds(JSON.parse(data.data),true);
     });
+    sse.addEventListener('check-latency',data=>{
+
+        var localReceive = Math.round(window.performance.now()*1000000);
+        var data = JSON.parse(data.data);
+        var originalTime = parseInt(data.time);
+        $.ajax({
+            url:basename + 'latency',
+            data:{id:data.id,local_receive:localReceive,local_push:Math.round(window.performance.now()*1000000),original_time:originalTime}
+        })
+    });
     sse.addEventListener('askPlaylist',function(data){
         var ids = playlist.list.map(function(m){return parseInt(m.id)});
         var data = {
@@ -135,7 +145,7 @@ function CreateOriginal(playlist){
             radio:Radio.currentRadio,
         };
         $.ajax({
-            url:'/shareUpdate',
+            url:basename + 'shareUpdate',
             data:{id:manager.id,event:'playlist',data:JSON.stringify(data)}
         });
     });
@@ -159,7 +169,7 @@ function CreateOriginal(playlist){
     manager.event = function(event,data){
         data = data == null ? "" : data;
         $.ajax({
-            url:'/shareUpdate',
+            url:basename + 'shareUpdate',
             data:{id:this.id,event:event,data:data}
         });
     };

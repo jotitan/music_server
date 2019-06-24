@@ -50,13 +50,6 @@
                 <span class="navbar-brand glyphicon glyphicon-music" style="cursor:pointer" onclick="toggleFullScreen();">
                 Music
             </span>
-
-                <!--p class="progress navbar-text" style="width:200px;display:inline-block;margin-bottom:0px">
-                    <span id="idTotalBar" class="progress-bar  progress-bar-success" style="display:inline-block"
-                         title="musics" role="progressbar" aria-valuenow="1">
-                        <span id="idNbTaskers"></span>
-                    </span>
-                </-->
                 <p style="display:inline-block;width:120px" class="navbar-text">
                     <span id="nbMusics"></span> Musics
                 </p>
@@ -163,6 +156,9 @@
 <audio id="idPlayer"></audio>
 
 <script>
+    // Basename use for url request
+    var basename="/";
+
     let selCase = null;
     function setSelected(span,fct){
         var show = selCase === span;
@@ -178,9 +174,9 @@
         WindowsNavManager.init('idWindowsNav');
         Loader.launch(function(){
             // Show just display the block, no reload block
-            ExplorerManager.register("byArtist","Explorer by artist",getRestDataProviderFunction('/listByArtist'));
-            ExplorerManager.register("byAlbum","Explore by artist/album",getRestDataProviderFunction('/listByAlbum'));
-            ExplorerManager.register("byOnlyAlbums","Explore all albums",getRestDataProviderFunction('/listByOnlyAlbums'));
+            ExplorerManager.register("byArtist","Explorer by artist",getRestDataProviderFunction(basename + 'listByArtist'));
+            ExplorerManager.register("byAlbum","Explore by artist/album",getRestDataProviderFunction(basename + 'listByAlbum'));
+            ExplorerManager.register("byOnlyAlbums","Explore all albums",getRestDataProviderFunction(basename + 'listByOnlyAlbums'));
             createMyPlaylistsPanel();
 
             MusicPlayer.init();

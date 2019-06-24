@@ -306,7 +306,7 @@ var PlaylistPanel = {
         var _self = this;
         if (ids.length > 0) {
             $.ajax({
-                url: '/musicsInfo?ids=' + JSON.stringify(ids),
+                url: basename + 'musicsInfo?ids=' + JSON.stringify(ids),
                 dataType: 'json',
                 success: data => {
                     var musics = [];
@@ -330,7 +330,7 @@ var PlaylistPanel = {
             this.shareManager.event('add', id);
         }
         $.ajax({
-            url: '/musicInfo?id=' + id,
+            url: basename + 'musicInfo?id=' + id,
             dataType: 'json',
             // No need to create a real Music, just a container with properties, no methods
             success: data => this.add(data)

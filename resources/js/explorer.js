@@ -74,7 +74,7 @@ var Explorer = {
         var select = $('.info-folders > span.filter > select.genres',this.div);
         $('option:not(:first)',select).remove();
         $.ajax({
-            url:'/genres',
+            url:basename + 'genres',
             dataType:'json',
             success:function(genres){
                 for(var i in genres){
@@ -241,7 +241,7 @@ var Explorer = {
         var id = line.data('id');
         var favorite = !span.hasClass('favorite');
         $.ajax({
-            url:'/setFavorite?id=' + id + "&value=" + favorite,
+            url:basename + 'setFavorite?id=' + id + "&value=" + favorite,
             dataType:'json',
             success:function(data){
                 if(data.error == null){

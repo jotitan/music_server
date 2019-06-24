@@ -58,10 +58,14 @@ func (args Arguments) GetUInt(argName string) uint {
 }
 
 func (args Arguments) GetString(argName string) string {
+	return args.GetStringDefault(argName,"")
+}
+
+func (args Arguments) GetStringDefault(argName, defaultValue string) string {
 	if value, ok := args.data[argName]; ok {
 		return value
 	}
-	return ""
+	return defaultValue
 }
 
 func ParseArgs() Arguments {

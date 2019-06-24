@@ -89,6 +89,7 @@ var RemoteControlManager = {
     },
     updateMusic:function(music) {
         $('.title',this.div).html(music.title + " - " + music.artist);
+        $('.cover > img',this.div).attr('src',music.cover);
         this.timer.setTotal(music.length);
     },
     setIsPlaying:function(isPlaying){
@@ -143,14 +144,14 @@ function CreateRemote(id,target){
 
     manager.loadMusic = function(id){
         $.ajax({
-            url:'/musicInfo?id=' + id,
+            url:basename + 'musicInfo?id=' + id,
             success:data=>target.updateMusic(JSON.parse(data))
         })
     };
     manager.event = function(event,data){
         data = data == null ? "" : data;
         $.ajax({
-            url:'/shareUpdate',
+            url:basename + 'shareUpdate',
             data:{id:this.id,event:event,data:data}
         });
     };

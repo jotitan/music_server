@@ -13,7 +13,7 @@ var FavoritesPanel = {
     },
     load:function(){
         $.ajax({
-            url:'/getFavorites',
+            url:basename + 'getFavorites',
             dataType:'json',
             success:(data)=>this.display(data)
         });
@@ -36,7 +36,7 @@ var FavoritesPanel = {
     },
     _removeFavorite:function(line){
         $.ajax({
-            url:'/setFavorite?id=' + line.data('id') + '&value=false',
+            url:basename + 'setFavorite?id=' + line.data('id') + '&value=false',
             dataType:'json',
             success:data=>{
                 if(data.value == false)line.remove();
