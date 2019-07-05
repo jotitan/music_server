@@ -22,7 +22,7 @@ var Share = {
     },
     getShares:function(callback){
         $.ajax({
-            url:basename +  + '/shares',
+            url:basename + 'shares',
             dataType:'json',
             success:function(data){
                 callback(data);
