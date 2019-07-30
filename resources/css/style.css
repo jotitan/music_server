@@ -362,11 +362,11 @@ label > [type="checkbox"] {
 }
 
 .favorite {
-    background-image: url('/images/star_full.png');
+    background-image: url('../images/star_full.png');
 }
 
 .not-favorite {
-    background-image: url('/images/star_empty.png');
+    background-image: url('../images/star_empty.png');
 }
 
 .folders.line > span,.folders.line > div {
