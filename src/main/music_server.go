@@ -94,7 +94,7 @@ func main() {
 	if args.Has("log") {
 		logger.InitLogger(filepath.Join(args.GetString("log"), "music_"+port+".log"), true)
 	}
-
+	logger.GetLogger().Info("Starting music server....")
 	ms := server.MusicServer{}
 	ms.Create(
 		port,
