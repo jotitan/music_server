@@ -18,26 +18,26 @@ var MusicPlayer = {
             }else {
                 this.name = "Default";
             }
-            this.input.val(this.name);            
-             this.input.bind('click',(e)=>{
-               if(this.input.hasClass('disabled')){
-                $(this.input).removeClass('disabled').bind('keydown',(e)=>{
-                   if(e.keyCode == 13){
-                      MusicPlayer.device.save();
-                   }    
-                }).bind('blur',(e)=>MusicPlayer.device.save());
-               }
+            this.input.val(this.name);
+            this.input.bind('click',(e)=>{
+                if(this.input.hasClass('disabled')){
+                    $(this.input).removeClass('disabled').bind('keydown',(e)=>{
+                        if(e.keyCode == 13){
+                            MusicPlayer.device.save();
+                        }
+                    }).bind('blur',(e)=>MusicPlayer.device.save());
+                }
             });
         },
         getName(){
-          return name != "" ? name : "No device name";
+            return name != "" ? name : "No device name";
         },
         save:function(){
-           this.name = this.input.val();
-           this.input.addClass('disabled').unbind('keydown,blur');
-           if(localStorage){
-            localStorage["deviceName"] = this.name;
-           }
+            this.name = this.input.val();
+            this.input.addClass('disabled').unbind('keydown,blur');
+            if(localStorage){
+                localStorage["deviceName"] = this.name;
+            }
         }
     },
     // Manage the list of music
@@ -78,7 +78,7 @@ var MusicPlayer = {
             $(document).bind('volume_down',()=>ActivePlaylist.getReal().volumeDown());
             $(document).bind('focus-panel',(e,id)=>{
                 if(id.indexOf('idRemotePlaylist') == 0){
-                    
+
                     $('.local','#player').hide();
                     $('.remote','#player').show();
                 }else{
@@ -94,11 +94,11 @@ var MusicPlayer = {
             $(document).trigger('previous_event');
         },*/
         setShareManager:function(manager){
-          this.shareManager = manager;
+            this.shareManager = manager;
         },
         setTitle:function(music){
             $('.title',this.div).text(music.title);
-            $('title').html(music.artist + " - " + music.title);            
+            $('title').html(music.artist + " - " + music.title);
         },
         setMax:function(value){
             this.seeker.slider('option','max',value)
@@ -114,13 +114,20 @@ var MusicPlayer = {
     },
     volume:{
         step:0.05,
+        set:function(value){
+            MusicPlayer.player.volume=value/100;
+            this.draw();
+        },
+        draw:function(){
+            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+        },
         up:function(){
             if(MusicPlayer.player.volume >= 1-this.step){
-                 MusicPlayer.player.volume=1;
-             }else{
-                 MusicPlayer.player.volume+=this.step;
-             }
-             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+                MusicPlayer.player.volume=1;
+            }else{
+                MusicPlayer.player.volume+=this.step;
+            }
+            this.draw();
             $.ajax({url:basename + 'volume?volume=up'});
             // Share event
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
@@ -131,7 +138,7 @@ var MusicPlayer = {
             }else{
                 MusicPlayer.player.volume-=this.step;
             }
-            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10));
+            this.draw();
             $.ajax({url:basename + 'volume?volume=down'});
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         }
@@ -222,16 +229,16 @@ var MusicPlayer = {
     },
     // Format time in second in minutes:secondes
     _formatTime:function(time){
-       if(time == null || isNaN(time)) {
-        return "00:00";
-       }
-       time = Math.round(time);
-       if(time < 60){
-          return "00:" + ((time < 10)?"0":"") + time;
-       }
-       var min = Math.floor(time/60);
-       var rest = time%60;
-       return ((min < 10)?"0":"") + min + ":" + ((rest < 10)?"0":"") + rest;
+        if(time == null || isNaN(time)) {
+            return "00:00";
+        }
+        time = Math.round(time);
+        if(time < 60){
+            return "00:" + ((time < 10)?"0":"") + time;
+        }
+        var min = Math.floor(time/60);
+        var rest = time%60;
+        return ((min < 10)?"0":"") + min + ":" + ((rest < 10)?"0":"") + rest;
     }
 }
 
@@ -247,11 +254,11 @@ var VolumeDrawer = {
         this.canvas.save()
         this.canvas.translate(12,12)
         for(var i = 0 ; i < 10 ; i++){
-          if(i > pourcent-1){
-              this.canvas.fillStyle = '#c6c6c6'
-          }
-          this.canvas.rotate(this.step);
-          this.canvas.fillRect(0,4,2,8)
+            if(i > pourcent-1){
+                this.canvas.fillStyle = '#c6c6c6'
+            }
+            this.canvas.rotate(this.step);
+            this.canvas.fillRect(0,4,2,8)
         }
         this.canvas.restore()
     }

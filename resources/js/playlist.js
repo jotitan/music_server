@@ -1,5 +1,6 @@
 if (Loader) { Loader.toLoad("html/playlist.html", "PlaylistPanel", "css/playlist.css"); }
 
+// Local playlist
 var PlaylistPanel = {
     listDiv: null,
     list: [],
@@ -87,6 +88,9 @@ var PlaylistPanel = {
         MusicPlayer.pause();
         this.isPaused = true;
         this.shareManager.event('pause',JSON.stringify({position:MusicPlayer.player.currentTime}));
+    },
+    updateVolume:function(value){
+        MusicPlayer.volume.set(value);
     },
     volumeUp: function () {
         MusicPlayer.volume.up();
@@ -426,6 +430,7 @@ var PlaylistPanel = {
     }
 }
 
+// Playlist of a remote device
 var RemotePlaylist = {
     init2: function () {
         // If remote player, shareManager exist for sure

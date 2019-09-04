@@ -26,6 +26,7 @@ var RemoteControlManager = {
         $('.vdown',this.div).bind('click',() =>this.manager.event('volumeDown'));
 
         this.divSelect.bind('change',e=>this._connect($(e.target).val()));
+        this.initVolumeSlider();
         Share.getShares(data=> {
             if(data == null || data.length === 0){
                 return this.divSelect.hide();
@@ -39,8 +40,25 @@ var RemoteControlManager = {
                 data.forEach(s=>this.divSelect.append('<option value="' + s.Id + '">' + s.Name + '</option>'));
             }
         });
+
         this.timer.init();
         return this;
+    },
+    initVolumeSlider:function(){
+        $(".volume-slider").roundSlider({
+            radius: 80,
+            circleShape: "pie",
+            sliderType: "min-range",
+            value: 50,
+            startAngle: 315,
+            editableTooltip: false,
+            mouseScrollAction: true,
+            handleShape: "dot",
+            circleShape: "half-top",
+            width: 33,
+            step:5,
+            change:e=>this.manager.event('volume',e.value)
+        });
     },
     // Manage time counter
     timer:{
@@ -92,6 +110,9 @@ var RemoteControlManager = {
         $('.cover > img',this.div).attr('src',music.cover);
         this.timer.setTotal(music.length);
     },
+    updateVolume:function(value) {
+        $(".volume-slider").roundSlider('option', 'value', value);
+    },
     setIsPlaying:function(isPlaying){
         if(isPlaying){
             $('.play',this.div).hide();
@@ -110,7 +131,6 @@ function CreateRemote(id,target){
     }
     var manager = {id:id};
     var sse = new EventSource('/share?id=' + id + '&device=' + MusicPlayer.device.getName());
-
     sse.addEventListener('close',()=>manager.disable());
     sse.addEventListener('playMusic',function(response){
         target.timer.setTotal(response.length);
@@ -123,6 +143,9 @@ function CreateRemote(id,target){
         var data = JSON.parse(response.data);
         target.setIsPlaying(false);
         target.timer.set(data.position,false,true);
+    });
+    sse.addEventListener('volume',(response)=>{
+        target.updateVolume(response.data);
     });
     sse.addEventListener('play',(response)=>{
         var data = JSON.parse(response.data);
@@ -137,6 +160,8 @@ function CreateRemote(id,target){
             manager.loadMusic(idMusic);
             target.setIsPlaying(data.playing);
             target.timer.set(data.position,data.playing,!data.playing);
+            // Set volume
+            target.updateVolume(data.volume);
         }
     });
 

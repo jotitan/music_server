@@ -9,10 +9,16 @@
     <script src="/js/remote_control.js"></script>
     <script src="/js/music_player.js"></script>
     <link rel="stylesheet" href="/vendors/bootstrap/css/bootstrap.min.css">
+
+    <link href="//cdnjs.cloudflare.com/ajax/libs/roundSlider/1.3.2/roundslider.min.css" rel="stylesheet" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/roundSlider/1.3.2/roundslider.min.js"></script>
+
+
 </head>
 <body>
 
 <style>
+
     body {
         background-color: transparent;
     }
@@ -32,14 +38,8 @@
         left:calc(50% - 4vw);
         top:calc(50% - 4vw);
     }
-    .vdown,.vup {
-        top:calc(100% - 9vw);
-    }
-    .vdown {
-        left:20px;
-    }
-    .vup {
-        right:20px;
+    .volume-slider {
+        top:calc(100% - 6vw);
     }
     .title {
         text-shadow:0px 0px 29px #333;
@@ -74,13 +74,13 @@
         <span class="glyphicon glyphicon-play play middle close"></span>
         <span class="glyphicon glyphicon-pause middle pause close" style="display:none"></span>
         <span class="glyphicon glyphicon-fast-backward previous close"></span>
-        <span class="glyphicon glyphicon-volume-down vdown close"></span>
-        <span class="glyphicon glyphicon-volume-up vup close"></span>
+        <span class="volume-slider close"></span>
         <div class="title"></div>
         <div class="time-progress">
             <span class="current-position"></span> /
             <span class="total-length"></span>
         </div>
+
         <div class="cover" style="height:100%;position:absolute;top:0px;width:100%;z-index:2">
             <img src="" style="height:100%;opacity: 0.4;margin:auto;display:block"/>
         </div>
@@ -100,6 +100,7 @@
             wakeLockEnabled = true;
         }
     }, false);
+
 </script>
 
 </body>
