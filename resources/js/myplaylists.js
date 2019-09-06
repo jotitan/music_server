@@ -20,7 +20,7 @@ function createMyPlaylistsPanel(){
         }
     });
     // Receive list of musics from explorer
-    myPlaylists.addMusicsFromIds = function(params){
+    myPlaylists.addMusicsFromIds = params=>{
         if(this.currentPlaylist == null){
             return;
         }
@@ -33,7 +33,7 @@ function createMyPlaylistsPanel(){
 
     };
     // Receive a music from explorer
-    myPlaylists.addMusicFromId = function(id){
+    myPlaylists.addMusicFromId = id => {
         if(this.currentPlaylist == null){
             return;
         }
@@ -121,7 +121,7 @@ function getMyPlaylistsProvider(updateStatus){
     }
 }
 // Two tables : playlist (id, name) and music of playlist (playlistId, musicId)
-var DatabaseAccess = {
+let DatabaseAccess = {
     db:null,
     init(){
         window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;

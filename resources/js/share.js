@@ -28,7 +28,7 @@ var Share = {
             }
         });
     },
-    addShare:(id,remotePlaylist)=>this.listShared[id] = remotePlaylist,
+    addShare:(id,remotePlaylist)=>{this.listShared[id] = remotePlaylist},
     removeShare:id=>delete(this.listShared[id]),
     init:()=>{
         // Manage original share
