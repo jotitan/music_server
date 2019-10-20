@@ -48,6 +48,8 @@ var MusicPlayer = {
     // Contains all controls to manipulate player
     controls:{
         div:null,
+        // Hide title
+        quizzMode:false,
         seeker:null,
         // Default implementation to avoid test shareManager every time
         shareManager:Share.emptyManager,
@@ -97,7 +99,11 @@ var MusicPlayer = {
             this.shareManager = manager;
         },
         setTitle:function(music){
-            $('.title',this.div).text(music.title);
+            if(this.quizzMode){
+                $('.title',this.div).text('#### QUIZZ n°' + (PlaylistPanel.current+1) + ' ####');
+            }else {
+                $('.title', this.div).text(music.title);
+            }
             $('title').html(music.artist + " - " + music.title);
         },
         setMax:function(value){
@@ -128,7 +134,7 @@ var MusicPlayer = {
                 MusicPlayer.player.volume+=this.step;
             }
             this.draw();
-            $.ajax({url:basename + 'volume?volume=up'});
+            ajax({url:basename + 'volume?volume=up'});
             // Share event
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         },
@@ -139,7 +145,7 @@ var MusicPlayer = {
                 MusicPlayer.player.volume-=this.step;
             }
             this.draw();
-            $.ajax({url:basename + 'volume?volume=down'});
+            ajax({url:basename + 'volume?volume=down'});
             MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         }
     },
@@ -147,12 +153,13 @@ var MusicPlayer = {
         this.player = $('#idPlayer').get(0);
         this.controls.init('player')
         this.player.addEventListener('canplay',()=>MusicPlayer.initMusic());
-        this.player.addEventListener('error',()=>console.log("Error when loading music"));
+        this.player.addEventListener('error',()=>Logger.error("Error when loading music"));
         this.player.addEventListener('timeupdate',()=>MusicPlayer.controls.update(MusicPlayer.player.currentTime));
         this.player.addEventListener('ended',()=>PlaylistPanel.next());
         // Detect key controls
         $(document).bind('keyup',function(e){
-            var key = (e.keyCode != 0)?e.keyCode:e.charCode;
+            if(PlaylistPanel.searching){return;}
+            var key = (e.keyCode !== 0)?e.keyCode:e.charCode;
             switch(key){
                 case 46 : $(document).trigger('delete_event');break;
                 case 80 : $(document).trigger('pause_event');break;
@@ -173,11 +180,12 @@ var MusicPlayer = {
         });
         this.device.init();
         // Get nb musics
-        $.ajax({url:basename + 'nbMusics',success:data=>$('#nbMusics').html(data)});
+        ajax({url:basename + 'nbMusics',success:data=>$('#nbMusics').html(data)});
     },
     load:function(music){
         if(music == null){return;}
         Radio.stopRadio();
+        Logger.info("Load " + music.src)
         this.player.src = music.src;
         this.controls.setTitle(music);
         this.controls.setMax(music.length);
@@ -186,8 +194,9 @@ var MusicPlayer = {
         }
         this.play();
     },
-    // load a music by url
+    // load a music by url, like a radio
     loadUrl:function(url,title){
+        Logger.info("Load URL " + url + " (" + title + ")");
         this.player.src = url;
         this.controls.setTitle(title);
         this.play();

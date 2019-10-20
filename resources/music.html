@@ -31,6 +31,7 @@
     <script src="js/favorites.js"></script>
     <script src="js/big_player.js"></script>
     <script src="js/explorer.js"></script>
+    <script src="js/log_panel.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/canvas_progress_bar.js"></script>
     <script src="js/radio.js"></script>
@@ -96,6 +97,10 @@
                                 <span class="glyphicon glyphicon-phone"></span>
                                 Mobile !!!</a>
                             </li>
+                            <li><a href="#" onclick='LogPanel.open()'>
+                                <span class="glyphicon glyphicon-align-justify"></span>
+                                Show Log</a>
+                            </li>
 
                         </ul>
                     </li>
@@ -145,6 +150,7 @@
     <span class="glyphicon glyphicon-record" title="List by album" onclick="setSelected(this,show=>ExplorerManager.open('byAlbum',show));"></span>
     <span class="glyphicon glyphicon-tags" title="List only by albums" onclick="setSelected(this,show=>ExplorerManager.open('byOnlyAlbums',show))"></span>
     <span class="glyphicon glyphicon-flash" title="Connect to share" onclick="connectToShare();"></span>
+    <span class="glyphicon glyphicon-hourglass" title="Mode QUIZZ" onclick="MusicPlayer.controls.quizzMode=!MusicPlayer.controls.quizzMode;"></span>
 </div>
 
 <style>
@@ -158,6 +164,10 @@
 <script>
     // Basename use for url request
     var basename="/";
+    window.ajax = function(param){
+        Logger.info("Request " + param.url + (param.data!=null ? " (" + param.data + ")":""));
+        $.ajax(param);
+    }
 
     let selCase = null;
     function setSelected(span,fct){
@@ -192,7 +202,7 @@
             for(var i in params){
                 attrs.push(i + "=" + params[i]);
             }
-            $.ajax({
+            ajax({
                 url: url + "?" + attrs.join('&'),
                 dataType: 'json',
                 success: success

@@ -168,14 +168,14 @@ function CreateRemote(id,target){
     manager.sse = sse;
 
     manager.loadMusic = function(id){
-        $.ajax({
+        ajax({
             url:basename + 'musicInfo?id=' + id,
             success:data=>target.updateMusic(JSON.parse(data))
         })
     };
     manager.event = function(event,data){
         data = data == null ? "" : data;
-        $.ajax({
+        ajax({
             url:basename + 'shareUpdate',
             data:{id:this.id,event:event,data:data}
         });

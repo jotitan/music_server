@@ -46,7 +46,7 @@ function createMyPlaylistsPanel(){
 
     myPlaylists.addMusicsInPlaylist = function(rawMusics,orders){
         var ids = rawMusics.map(m=>m.musicId);
-        $.ajax({
+        ajax({
             url: basename + 'musicsInfo?short=true&ids=' + JSON.stringify(ids),
             dataType: 'json',
             success: data => {
@@ -105,7 +105,7 @@ function getMyPlaylistsProvider(updateStatus){
                     var ids = musics.map(m=>m.musicId);
                     updateStatus(params.id, lastOrder);
                     var counter = 0;
-                    $.ajax({
+                    ajax({
                         url: basename + 'musicsInfo?short=true&ids=' + JSON.stringify(ids),
                         dataType: 'json',
                         success: data => success(data.map(m => {

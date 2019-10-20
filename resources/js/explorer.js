@@ -73,7 +73,7 @@ var Explorer = {
     _loadGenres:function(){
         var select = $('.info-folders > span.filter > select.genres',this.div);
         $('option:not(:first)',select).remove();
-        $.ajax({
+        ajax({
             url:basename + 'genres',
             dataType:'json',
             success:function(genres){
@@ -240,7 +240,7 @@ var Explorer = {
         var line = span.closest('.music');
         var id = line.data('id');
         var favorite = !span.hasClass('favorite');
-        $.ajax({
+        ajax({
             url:basename + 'setFavorite?id=' + id + "&value=" + favorite,
             dataType:'json',
             success:function(data){

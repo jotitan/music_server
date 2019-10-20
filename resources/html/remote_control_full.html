@@ -81,7 +81,7 @@
             <span class="total-length"></span>
         </div>
 
-        <div class="cover" style="height:100%;position:absolute;top:0px;width:100%;z-index:2">
+        <div class="cover" style="height:100%;position:absolute;top:0px;width:100%;z-index:-1">
             <img src="" style="height:100%;opacity: 0.4;margin:auto;display:block"/>
         </div>
     </div>
@@ -90,6 +90,9 @@
 
 <script>
     var basename="/";
+    window.ajax = function(param){
+        $.ajax(param);
+    }
     RemoteControlManager.init('idRemoteControl','idSelectShare');
 
     var noSleep = new NoSleep();

@@ -17,6 +17,10 @@
     height: calc(100% - 58px);
 }
 
+#idLogPanel.float-panel > .content {
+    height: calc(100% - 38px);
+}
+
 .float-panel.active {
     z-index:100;
     box-shadow: 2px 4px 5px 1px rgba(150, 100, 0, 0.7);

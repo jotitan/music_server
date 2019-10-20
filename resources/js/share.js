@@ -20,7 +20,7 @@ var Share = {
         $('.share-button').removeClass('active');
     },
     getShares:callback=>{
-        $.ajax({
+        ajax({
             url:basename + 'shares',
             dataType:'json',
             success:function(data){
@@ -86,7 +86,7 @@ function CreateClone(id,remotePlaylist){
     manager.sse = sse;
     manager.event = function(event,data){
         data = data == null ? "" : data;
-        $.ajax({
+        ajax({
             url:basename + 'shareUpdate',
             data:{id:this.id,event:event,data:data}
         });
@@ -123,7 +123,7 @@ function CreateOriginal(playlist){
         var localReceive = Math.round(window.performance.now()*1000000);
         var data = JSON.parse(rawData.data);
         var originalTime = parseInt(data.time);
-        $.ajax({
+        ajax({
             url:basename + 'latency',
             data:{id:data.id,local_receive:localReceive,local_push:Math.round(window.performance.now()*1000000),original_time:originalTime}
         })
@@ -138,7 +138,7 @@ function CreateOriginal(playlist){
             volume:Math.round(MusicPlayer.player.volume*100),
             radio:Radio.currentRadio,
         };
-        $.ajax({
+        ajax({
             url:basename + 'shareUpdate',
             data:{id:manager.id,event:'playlist',data:JSON.stringify(data)}
         });
@@ -162,7 +162,7 @@ function CreateOriginal(playlist){
 
     manager.event = function(event,data){
         data = data == null ? "" : data;
-        $.ajax({
+        ajax({
             url:basename + 'shareUpdate',
             data:{id:this.id,event:event,data:data}
         });

@@ -12,7 +12,7 @@ var FavoritesPanel = {
         $(document).bind('refresh-favorites',()=>this.load());
     },
     load:function(){
-        $.ajax({
+        ajax({
             url:basename + 'getFavorites',
             dataType:'json',
             success:(data)=>this.display(data)
@@ -35,7 +35,7 @@ var FavoritesPanel = {
         this._updateTotal(musics.length);
     },
     _removeFavorite:function(line){
-        $.ajax({
+        ajax({
             url:basename + 'setFavorite?id=' + line.data('id') + '&value=false',
             dataType:'json',
             success:data=>{

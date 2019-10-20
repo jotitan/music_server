@@ -134,6 +134,7 @@ func (ms *MusicServer) Get(response http.ResponseWriter, request *http.Request) 
 }
 
 func (ms MusicServer) checkRequester(request *http.Request) bool {
+	// Trouble with IPV6
 	return true
 	addr := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr, ":")]
 	if "[::1]" != addr {

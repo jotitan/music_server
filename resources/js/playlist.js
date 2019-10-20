@@ -10,6 +10,8 @@ var PlaylistPanel = {
     shareManager: Share.emptyManager,
     // To avoid load music
     noLoadMusic: false,
+    // True if user is searching something, avoid key intercept
+    searching:false,
     init: function (idDiv, title, noLoad) {
         idDiv = idDiv || '#idPlaylist';
         title = title || 'Playlist'
@@ -100,6 +102,8 @@ var PlaylistPanel = {
     },
     // return songs around current
     initSearch: function () {
+        $('#idSearch,.remoteSearch', this.div).bind('focus',()=>this.searching=true)
+            .bind('blur',()=>this.searching=false);
         $('#idSearch,.remoteSearch', this.div).autocomplete({
             source: 'search?size=20&',
             minLength: 2,
@@ -309,7 +313,7 @@ var PlaylistPanel = {
         this.current = datas.current != null ? datas.current : this.current;
         var _self = this;
         if (ids.length > 0) {
-            $.ajax({
+            ajax({
                 url: basename + 'musicsInfo?ids=' + JSON.stringify(ids),
                 dataType: 'json',
                 success: data => {
@@ -333,7 +337,7 @@ var PlaylistPanel = {
         if (noShare == null || noShare == false) {
             this.shareManager.event('add', id);
         }
-        $.ajax({
+        ajax({
             url: basename + 'musicInfo?id=' + id,
             dataType: 'json',
             // No need to create a real Music, just a container with properties, no methods
@@ -342,7 +346,7 @@ var PlaylistPanel = {
     },
     addMusicsFromUrl: function (url) {
         var _self = this;
-        $.ajax({
+        ajax({
             url: url,
             dataType: 'json',
             success: function (data) {
@@ -522,7 +526,7 @@ var RemotePlaylist = {
     // Override add from url to avoid many add request to send only big one
     addMusicsFromUrl: function (url) {
         var _self = this;
-        $.ajax({
+        ajax({
             url: url,
             dataType: 'json',
             success: function (data) {
