@@ -100,7 +100,6 @@ func (aba AlbumByArtist) Save(folder string) {
 			max = id
 		}
 	}
-
 	// Prepare header (nb elements and size artist
 	aba.header = make([]int64, max)
 	aba.previousPosition = int64(4 + 8*max)
@@ -118,8 +117,8 @@ func (aba AlbumByArtist) Save(folder string) {
 
 // Save position of data in header. header | len album (2) | id (4) | len name album (1) | album name
 func (aba *AlbumByArtist) Read(p []byte) (int, error) {
+	// Length of written bytes
 	dataLength := 0
-
 	for {
 		if aba.currentArtist > aba.max {
 			return dataLength, io.EOF
@@ -128,15 +127,18 @@ func (aba *AlbumByArtist) Read(p []byte) (int, error) {
 		artist, ok := aba.idxByArtist[aba.currentArtist]
 		if ok {
 			// Artist id start at one
-			// write first header
-			aba.header[aba.currentArtist-1] = aba.previousPosition + aba.previousDataLength
-			aba.previousPosition = aba.header[aba.currentArtist-1]
+			// write first header, only if not done yet
+			if aba.header[aba.currentArtist-1] == 0 {
+				aba.header[aba.currentArtist-1] = aba.previousPosition + aba.previousDataLength
+				aba.previousPosition = aba.header[aba.currentArtist-1]
+			}
 
 			// Check enough place
 			estimateSize := 2
 			for _, album := range artist {
 				estimateSize += 5 + len(album.Name)
 			}
+
 			aba.previousDataLength = int64(estimateSize)
 			if dataLength+estimateSize > len(p) {
 				return dataLength, nil
@@ -148,7 +150,6 @@ func (aba *AlbumByArtist) Read(p []byte) (int, error) {
 				p[dataLength+4] = byte(len(album.Name))
 				writeBytes(p, []byte(album.Name), dataLength+5)
 				dataLength += 5 + len(album.Name)
-
 			}
 		}
 		aba.currentArtist++
@@ -167,12 +168,12 @@ func (mba AlbumByArtist) GetAlbums(folder string, artistId int) []Album {
 		return []Album{}
 	}
 	posInHeader := int64(4 + (artistId-1)*8)
+
 	posInFile := getInt64FromFile(f, posInHeader)
 	if posInFile == 0 {
 		return []Album{}
 	}
 	nbAlbums := int(getInt16FromFile(f, posInFile))
-
 	posInFile += 2
 	albums := make([]Album, nbAlbums)
 	for i := 0; i < nbAlbums; i++ {
@@ -334,7 +335,7 @@ func (mas *musicByAlbumSaver) Read(p []byte) (int, error) {
 		// Check enough place to write musics. If not, check number of music which can be written
 		nbWritable := (len(p) - lengthData) / 4
 		if len(album) > nbWritable {
-			logger.GetLogger().Info("Write partial", nbWritable)
+			logger.GetLogger().Info("Write partial", nbWritable, mas.current)
 			// Partial write, just some musics
 			data := getInts32AsByte(album[:nbWritable])
 			writeBytes(p, data, lengthData)
