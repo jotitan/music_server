@@ -1,10 +1,3 @@
-function Music(id,src,title,time){
-    this.id = id;
-    this.src = src;
-    this.title = title;
-    this.time = (time !=null)?parseInt(time):0;
-}
-
 var MusicPlayer = {
     player:null,
     // manage name device
@@ -61,7 +54,6 @@ var MusicPlayer = {
                 value:0,
                 slide:(e,ui)=>MusicPlayer.player.currentTime = ui.value
             });
-            var _self = this;
             MusicPlayer.player.volume = 0.6;
             this.initActions();
             // Volume Behaviour
@@ -89,12 +81,6 @@ var MusicPlayer = {
                 }
             });
         },
-        /*next:function(){
-            $(document).trigger('next_event');
-        },
-        previous:function(){
-            $(document).trigger('previous_event');
-        },*/
         setShareManager:function(manager){
             this.shareManager = manager;
         },
@@ -186,7 +172,7 @@ var MusicPlayer = {
         if(music == null){return;}
         Radio.stopRadio();
         Logger.info("Load " + music.src)
-        this.player.src = music.src;
+        this.player.src = basename + music.src;
         this.controls.setTitle(music);
         this.controls.setMax(music.length);
         if(MusicProgressBar!=null){
@@ -251,7 +237,7 @@ var MusicPlayer = {
     }
 }
 
-var VolumeDrawer = {
+let VolumeDrawer = {
     canvas:null,
     step:Math.PI/5,
     init:function(id){
@@ -262,7 +248,7 @@ var VolumeDrawer = {
         this.canvas.fillStyle = '#303030'
         this.canvas.save()
         this.canvas.translate(12,12)
-        for(var i = 0 ; i < 10 ; i++){
+        for(let i = 0 ; i < 10 ; i++){
             if(i > pourcent-1){
                 this.canvas.fillStyle = '#c6c6c6'
             }
