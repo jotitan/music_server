@@ -18,20 +18,16 @@
     <div style="border-bottom:solid 1px lightgray;padding:5px" class="title">
         <span>Remote playlist</span>
         <span class="glyphicon glyphicon-eye-close close half-screen" data-split="Explorer"/>
+        <span class="glyphicon glyphicon-trash close trash-playlist" style="padding-right:15px"/>
     </div>
 
     <div style="overflow:auto;padding-left:5px;position:relative;" class="playlist remote">
         <!--div class="head"><span></span><span>#</span><span>Title</span><span>Time</span><span></span></div-->
     </div>
     <div style="border-top:solid 1px lightgray;padding-left:10px" class="controls_footer">
-        <span><span class="total_playlist"></span> music(s) in playlist</span>
-        <div style="display:inline-block;float:right;padding-right:20px;" class="controls">
-            <span class="glyphicon glyphicon-fast-backward"></span>
-            <span class="glyphicon glyphicon-play"></span>
-            <span class="glyphicon glyphicon-pause" style="display:none"></span>
-            <span class="glyphicon glyphicon-fast-forward"></span>
-            <span class="glyphicon glyphicon-phone" style="display:none"></span>
-        </div>
+        <span><span class="total_playlist"></span> music(s)</span>
+        <select class="list-radios"><option value="">Aucune</option></select>
+        <input type="text" placeholder="Search" class="remoteSearch" style="float:right;margin-right:10px" size="20"/>
     </div>
 
 </div>

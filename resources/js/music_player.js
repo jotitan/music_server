@@ -1,12 +1,3 @@
-
-function Music(id,src,title,time){
-    this.id = id;
-    this.src = src;
-    this.title = title;
-    this.time = (time !=null)?parseInt(time):0;
-}
-
-
 var MusicPlayer = {
     player:null,
     // manage name device
@@ -21,22 +12,25 @@ var MusicPlayer = {
                 this.name = "Default";
             }
             this.input.val(this.name);
-             this.input.bind('click',function(){
-               if($(this).hasClass('disabled')){
-                $(this).removeClass('disabled').bind('keydown',function(e){
-                   if(e.keyCode == 13){
-                      MusicPlayer.device.save();
-                   }
-                });
-               }
+            this.input.bind('click',(e)=>{
+                if(this.input.hasClass('disabled')){
+                    $(this.input).removeClass('disabled').bind('keydown',(e)=>{
+                        if(e.keyCode == 13){
+                            MusicPlayer.device.save();
+                        }
+                    }).bind('blur',(e)=>MusicPlayer.device.save());
+                }
             });
         },
+        getName(){
+            return name != "" ? name : "No device name";
+        },
         save:function(){
-           this.name = this.input.val();
-           this.input.addClass('disabled').unbind('keydown');
-           if(localStorage){
-            localStorage["deviceName"] = this.name;
-           }
+            this.name = this.input.val();
+            this.input.addClass('disabled').unbind('keydown,blur');
+            if(localStorage){
+                localStorage["deviceName"] = this.name;
+            }
         }
     },
     // Manage the list of music
@@ -47,72 +41,56 @@ var MusicPlayer = {
     // Contains all controls to manipulate player
     controls:{
         div:null,
+        // Hide title
+        quizzMode:false,
         seeker:null,
-        shareManager:null,
+        // Default implementation to avoid test shareManager every time
+        shareManager:Share.emptyManager,
         init:function(idDiv){
             this.div = $('#' + idDiv)
             this.seeker = $('.seeker',this.div);
             this.seeker.slider({
                 min:0,
                 value:0,
-                slide:function(e,ui){
-                    MusicPlayer.player.currentTime = ui.value;
-                }
+                slide:(e,ui)=>MusicPlayer.player.currentTime = ui.value
             });
-            var _self = this;
-            $('.play',this.div).bind('click',function(){
-                _self.play();
-            });
-            $('.pause',this.div).bind('click',function(){
-                _self.pause();
-            });
-            $('.next',this.div).bind('click',function(){
-                _self.next();
-            });
-            $('.previous',this.div).bind('click',function(){
-                _self.previous();
-            });
-            MusicPlayer.player.volume = 0.5;
+            MusicPlayer.player.volume = 0.6;
+            this.initActions();
             // Volume Behaviour
-            $('.volume-plus',this.div).bind('click',function(){
-                MusicPlayer.volume.up();
-            });
-            $('.volume-minus',this.div).bind('click',function(){
-                MusicPlayer.volume.down();
-            });
-            $(document).bind('volume_up',function(){MusicPlayer.volume.up();})
-            $(document).bind('volume_down',function(){MusicPlayer.volume.down();})
             VolumeDrawer.init('idVolume');
             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
         },
-        play:function(){
-            MusicPlayer.play();
-            if(this.shareManager!=null){
-                this.shareManager.event('play');
-            }
-        },
-        pause:function(){
-            MusicPlayer.pause();
-            if(this.shareManager!=null){
-                this.shareManager.event('pause');
-            }
-        },
-        next:function(){
-            $(document).trigger('next_event');
-        },
-        previous:function(){
-            $(document).trigger('previous_event');
+        // Init button actions to control local player
+        initActions:function(){
+            $('.play',this.div).bind('click',()=>ActivePlaylist.getReal().play());
+            $('.pause',this.div).bind('click',()=>ActivePlaylist.getReal().pause());
+            $('.next',this.div).bind('click',()=>ActivePlaylist.getReal().next());
+            $('.previous',this.div).bind('click',()=>ActivePlaylist.getReal().previous());
+            $('.volume-plus',this.div).bind('click',()=>ActivePlaylist.getReal().volumeUp());
+            $('.volume-minus',this.div).bind('click',()=>ActivePlaylist.getReal().volumeDown());
+            $(document).bind('volume_up',()=>ActivePlaylist.getReal().volumeUp());
+            $(document).bind('volume_down',()=>ActivePlaylist.getReal().volumeDown());
+            $(document).bind('focus-panel',(e,id)=>{
+                if(id.indexOf('idRemotePlaylist') == 0){
+
+                    $('.local','#player').hide();
+                    $('.remote','#player').show();
+                }else{
+                    $('.local','#player').show();
+                    $('.remote','#player').hide();
+                }
+            });
         },
         setShareManager:function(manager){
-          this.shareManager = manager;
+            this.shareManager = manager;
         },
         setTitle:function(music){
-            $('.title',this.div).text(music.title);
-            $('title').html(music.artist + " - " + music.title);
-            if(this.shareManager!=null){
-                // Trigger that a music is loaded
-                this.shareManager.event('load',music.id)
+            if(this.quizzMode){
+                $('.title',this.div).text('#### QUIZZ n°' + (PlaylistPanel.current+1) + ' ####');
+            }else {
+                $('.title', this.div).text(music.title);
             }
+            $('title').html(music.artist + " - " + music.title);
         },
         setMax:function(value){
             this.seeker.slider('option','max',value)
@@ -127,43 +105,47 @@ var MusicPlayer = {
         }
     },
     volume:{
+        step:0.05,
+        set:function(value){
+            MusicPlayer.player.volume=value/100;
+            this.draw();
+        },
+        draw:function(){
+            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
+        },
         up:function(){
-            if(MusicPlayer.player.volume >= 0.9){
-                 MusicPlayer.player.volume=1;
-             }else{
-                 MusicPlayer.player.volume+=0.1;
-             }
-             VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10))
-            $.ajax({url:'/volume?volume=up'});
+            if(MusicPlayer.player.volume >= 1-this.step){
+                MusicPlayer.player.volume=1;
+            }else{
+                MusicPlayer.player.volume+=this.step;
+            }
+            this.draw();
+            ajax({url:basename + 'volume?volume=up'});
+            // Share event
+            MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         },
         down:function(){
-            if(MusicPlayer.player.volume <= 0.1){
+            if(MusicPlayer.player.volume <= this.step){
                 MusicPlayer.player.volume=0;
             }else{
-                MusicPlayer.player.volume-=0.1;
+                MusicPlayer.player.volume-=this.step;
             }
-            VolumeDrawer.draw(Math.round(MusicPlayer.player.volume*10));
-            $.ajax({url:'/volume?volume=down'});
+            this.draw();
+            ajax({url:basename + 'volume?volume=down'});
+            MusicPlayer.controls.shareManager.event('volume',Math.round(MusicPlayer.player.volume*100));
         }
     },
     init:function(){
         this.player = $('#idPlayer').get(0);
         this.controls.init('player')
-        this.player.addEventListener('canplay',function(e){
-            MusicPlayer.initMusic();
-        })
-        this.player.addEventListener('error',function(e){
-            console.log("Error when loading music")
-        });
-        this.player.addEventListener('timeupdate',function(e){
-            MusicPlayer.controls.update(MusicPlayer.player.currentTime);
-        });
-        this.player.addEventListener('ended',function(e){
-            MusicPlayer.controls.next();
-        });
+        this.player.addEventListener('canplay',()=>MusicPlayer.initMusic());
+        this.player.addEventListener('error',()=>Logger.error("Error when loading music"));
+        this.player.addEventListener('timeupdate',()=>MusicPlayer.controls.update(MusicPlayer.player.currentTime));
+        this.player.addEventListener('ended',()=>PlaylistPanel.next());
         // Detect key controls
         $(document).bind('keyup',function(e){
-            var key = (e.keyCode != 0)?e.keyCode:e.charCode;
+            if(PlaylistPanel.searching){return;}
+            var key = (e.keyCode !== 0)?e.keyCode:e.charCode;
             switch(key){
                 case 46 : $(document).trigger('delete_event');break;
                 case 80 : $(document).trigger('pause_event');break;
@@ -176,30 +158,38 @@ var MusicPlayer = {
             }
         });
         $(document).unbind('pause_event.player').bind('pause_event.player',function(){
-            if(MusicPlayer.player.src == ""){
-                return;
-            }
-            if(MusicPlayer.player.paused){
-                MusicPlayer.controls.play();
+            if(ActivePlaylist.get().isPaused){
+                ActivePlaylist.get().play();
             }else{
-                MusicPlayer.controls.pause();
+                ActivePlaylist.get().pause();
             }
         });
         this.device.init();
         // Get nb musics
-        $.ajax({url:'/nbMusics',success:function(data){
-            $('#nbMusics').html(data);
-        }});
+        ajax({url:basename + 'nbMusics',success:data=>$('#nbMusics').html(data)});
     },
     load:function(music){
         if(music == null){return;}
-        this.player.src = music.src;
+        Radio.stopRadio();
+        Logger.info("Load " + music.src)
+        this.player.src = basename + music.src;
         this.controls.setTitle(music);
         this.controls.setMax(music.length);
         if(MusicProgressBar!=null){
             MusicProgressBar.load(parseInt(music.length));
         }
         this.play();
+    },
+    // load a music by url, like a radio
+    loadUrl:function(url,title){
+        Logger.info("Load URL " + url + " (" + title + ")");
+        this.player.src = url;
+        this.controls.setTitle(title);
+        this.play();
+    },
+    stop:function(){
+        this.player.src = "";
+        this.pause();
     },
     _showPlaying:function(play){
         if(play){
@@ -222,9 +212,9 @@ var MusicPlayer = {
         if(this.player.src == "" && this.playlist != null){
             // Try to load selected playlist music or first
             this.load(this.playlist.getOne());
-            return
+            return ActivePlaylist.get().shareCurrent();
         }
-        MusicPlayer.player.play();
+        this.player.play();
         this._showPlaying(true);
     },
     // launch after load
@@ -234,20 +224,20 @@ var MusicPlayer = {
     },
     // Format time in second in minutes:secondes
     _formatTime:function(time){
-       if(time == null || isNaN(time)) {
-        return "00:00";
-       }
-       time = Math.round(time);
-       if(time < 60){
-          return "00:" + ((time < 10)?"0":"") + time;
-       }
-       var min = Math.floor(time/60);
-       var rest = time%60;
-       return ((min < 10)?"0":"") + min + ":" + ((rest < 10)?"0":"") + rest;
+        if(time == null || isNaN(time)) {
+            return "00:00";
+        }
+        time = Math.round(time);
+        if(time < 60){
+            return "00:" + ((time < 10)?"0":"") + time;
+        }
+        var min = Math.floor(time/60);
+        var rest = time%60;
+        return ((min < 10)?"0":"") + min + ":" + ((rest < 10)?"0":"") + rest;
     }
 }
 
-var VolumeDrawer = {
+let VolumeDrawer = {
     canvas:null,
     step:Math.PI/5,
     init:function(id){
@@ -258,12 +248,12 @@ var VolumeDrawer = {
         this.canvas.fillStyle = '#303030'
         this.canvas.save()
         this.canvas.translate(12,12)
-        for(var i = 0 ; i < 10 ; i++){
-          if(i > pourcent-1){
-              this.canvas.fillStyle = '#c6c6c6'
-          }
-          this.canvas.rotate(this.step);
-          this.canvas.fillRect(0,4,2,8)
+        for(let i = 0 ; i < 10 ; i++){
+            if(i > pourcent-1){
+                this.canvas.fillStyle = '#c6c6c6'
+            }
+            this.canvas.rotate(this.step);
+            this.canvas.fillRect(0,4,2,8)
         }
         this.canvas.restore()
     }

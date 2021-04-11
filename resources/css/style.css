@@ -17,6 +17,10 @@
     height: calc(100% - 58px);
 }
 
+#idLogPanel.float-panel > .content {
+    height: calc(100% - 38px);
+}
+
 .float-panel.active {
     z-index:100;
     box-shadow: 2px 4px 5px 1px rgba(150, 100, 0, 0.7);
@@ -313,6 +317,10 @@ label > [type="checkbox"] {
     height:calc(100% - 50px);
 }
 
+.favorites.folders {
+    height:100%;
+}
+
 .folders.block > span {
     display:inline-block;
     padding:20px 10px 20px 10px;
@@ -326,7 +334,7 @@ label > [type="checkbox"] {
     font-size:12px;
 }
 
-.folders.block > span > span.info {
+.folders.block > span > span.info , .folders.block > span > span.info-left {
     display:none;
 }
 
@@ -334,7 +342,38 @@ label > [type="checkbox"] {
     padding-left:25px;
 }
 
-.folders.line > span {
+.favorite,.not-favorite {
+    width:16px;
+    height:16px;
+    display:inline-block;
+    vertical-align: baseline;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+}
+
+.favorites .remove,.remove.remove-music {
+    margin-right:10px;
+    color:red;
+}
+
+.favorites .music .details {
+    width:calc(100% - 40px);
+    display:inline-block;
+}
+
+.favorites .music .details span.info {
+    float:right;
+}
+
+.favorite {
+    background-image: url('../images/star_full.png');
+}
+
+.not-favorite {
+    background-image: url('../images/star_empty.png');
+}
+
+.folders.line > span,.folders.line > div {
     display:inline-block;
     margin:5px 0px 0px 5px;
     border-bottom:solid 1px lightgray;
