@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"music"
+	"github.com/jotitan/music_server/music"
 	"testing"
 )
 

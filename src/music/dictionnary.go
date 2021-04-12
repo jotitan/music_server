@@ -4,12 +4,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/jotitan/music_server/logger"
 	"io"
 	"io/ioutil"
-	"logger"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 )
 
 const (
@@ -58,6 +59,28 @@ func (ml MusicLibrary) GetPosition(id int32) int64 {
 
 func (ml MusicLibrary) GetNbMusics() int {
 	return len(ml.musicPositions)
+}
+
+func (ml MusicLibrary) RecreateIndex()  {
+	ids := make([]int32,0,len(ml.musicPositions))
+	for id := range ml.musicPositions {
+		ids = append(ids,id)
+	}
+	// recreate artists
+	ai := ArtistIndex{artists: make(map[string]int), artistsToSave: make([]string, 0),currentId: 1}
+	ami := ArtistMusicIndex{MusicsByArtist:make(map[int][]int),checkDuplicateArtists:make(map[int]map[int]struct{})}
+	for _,info := range ml.GetMusicsInfo(ids) {
+		if idMusic,err := strconv.ParseInt(info["id"],10,32) ; err == nil {
+			id := ai.Add(info["artist"])
+			ami.Add(id, int(idMusic))
+		}
+
+	}
+	ai.Save(ml.folder,true)
+	ami.Save(ml.folder)
+
+	logger.GetLogger().Info("Index artist recreated")
+	IndexArtists(ml.folder)
 }
 
 //GetMusicInfoAsJSON

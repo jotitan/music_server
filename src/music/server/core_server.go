@@ -1,10 +1,10 @@
 package server
 
 import (
+	"github.com/jotitan/music_server/logger"
+	"github.com/jotitan/music_server/music"
 	"io"
 	"io/ioutil"
-	"logger"
-	"music"
 	"net"
 	"net/http"
 	"os"

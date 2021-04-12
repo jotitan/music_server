@@ -1,9 +1,9 @@
 package music
-import (
-    "strconv"
-    "sort"
-)
 
+import (
+    "sort"
+    "strconv"
+)
 
 /* A sequence give the next available music id. Based on removed music id and new available after previous max */
 type Sequence struct{

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mjibson/id3"
+	"github.com/ascherkus/go-id3/src/id3"
 )
 
 //Music represent a music with all informations

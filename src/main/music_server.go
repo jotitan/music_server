@@ -1,11 +1,11 @@
 package main
 
 import (
-	"arguments"
 	"encoding/json"
+	"github.com/jotitan/music_server/arguments"
+	"github.com/jotitan/music_server/logger"
+	"github.com/jotitan/music_server/music/server"
 	"io"
-	"logger"
-	"music/server"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -33,6 +33,7 @@ func createRoutes(ms * server.MusicServer) *http.ServeMux {
 	registerRoute(mux,"/statsAsSSE", "", ms.StatsAsSSE)
 
 	registerRoute(mux,"/music", "", ms.Readmusic)
+	registerRoute(mux,"/recreateIndex", "", ms.RecreateIndex)
 	registerRoute(mux,"/nbMusics", "", ms.NbMusics)
 
 

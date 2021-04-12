@@ -1,7 +1,7 @@
 package music
 
 import (
-	"logger"
+	"github.com/jotitan/music_server/logger"
 	"strings"
 )
 
