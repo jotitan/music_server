@@ -1,8 +1,8 @@
 package music
 
 import (
+	"github.com/jotitan/music_server/logger"
 	"io/ioutil"
-	"logger"
 	"math"
 	"os"
 	"path/filepath"

@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"logger"
+	"github.com/jotitan/music_server/logger"
 	"net/http"
 	"strconv"
 

@@ -2,12 +2,16 @@ package server
 
 import (
 	"fmt"
+	"github.com/jotitan/music_server/logger"
 	"io"
-	"logger"
 	"net/http"
 	"os"
 	"strconv"
 )
+
+func (ms *MusicServer) RecreateIndex(response http.ResponseWriter, request *http.Request) {
+	ms.library.RecreateIndex()
+}
 
 // Return music content
 func (ms *MusicServer) Readmusic(response http.ResponseWriter, request *http.Request) {

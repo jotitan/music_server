@@ -1,8 +1,8 @@
 package main
 
 import (
-	"logger"
-	"music"
+	"github.com/jotitan/music_server/logger"
+	"github.com/jotitan/music_server/music"
 	"os"
 )
 

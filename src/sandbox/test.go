@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"github.com/jotitan/music_server/logger"
+	"github.com/jotitan/music_server/music"
 	"io/ioutil"
-	"logger"
-	"music"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mjibson/id3"
+	"github.com/jotitan/music_server/id3"
 )
 
 type ITest interface {

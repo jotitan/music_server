@@ -3,8 +3,8 @@ package music
 import (
 	"encoding/gob"
 	"errors"
+	"github.com/jotitan/music_server/logger"
 	"io"
-	"logger"
 	"os"
 	"path/filepath"
 	"strings"

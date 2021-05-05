@@ -1,7 +1,7 @@
 package server
 
 import (
-	"music"
+	"github.com/jotitan/music_server/music"
 	"net/http"
 )
 

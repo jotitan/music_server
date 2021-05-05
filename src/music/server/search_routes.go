@@ -3,8 +3,8 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"logger"
-	"music"
+	"github.com/jotitan/music_server/logger"
+	"github.com/jotitan/music_server/music"
 	"net/http"
 	"sort"
 	"strconv"

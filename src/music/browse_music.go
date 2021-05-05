@@ -6,9 +6,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/jotitan/music_server/logger"
 	"io"
 	"io/ioutil"
-	"logger"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mjibson/id3"
+	"github.com/ascherkus/go-id3/src/id3"
 )
 
 /* Give methods to browse musics in a specific directory */

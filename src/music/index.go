@@ -2,7 +2,7 @@ package music
 
 import (
 	"fmt"
-	"logger"
+	"github.com/jotitan/music_server/logger"
 	"math"
 	"sort"
 	"strconv"
