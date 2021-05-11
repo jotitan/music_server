@@ -23,9 +23,6 @@ func (sse SSEWriter) Write(message string) {
 	sse.f.Flush()
 }
 
-/**
-@basename : use when apache redirection is front of app. Basename is the /basename. Default is /
- */
 func createRoutes(ms * server.MusicServer) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -59,6 +56,8 @@ func createRoutes(ms * server.MusicServer) *http.ServeMux {
 
 	// Manage share device
 	registerRoute(mux,"/share", "", ms.Share)
+	registerRoute(mux,"/shareService", "", ms.ShareService)
+	registerRoute(mux,"/heartbeat", "", ms.Heartbeat)
 	registerRoute(mux,"/killshare", "", ms.KillShare)
 	registerRoute(mux,"/shares", "", ms.GetShares)
 	registerRoute(mux,"/shareUpdate", "", ms.ShareUpdate)

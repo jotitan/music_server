@@ -1,7 +1,7 @@
 // Use to remote control playlist
 
 // when share, create a connexion to server
-var Share = {
+let Share = {
     original:null,
     emptyManager:{event:function(){},disable:function(){}},
     listShared:[],
@@ -11,12 +11,12 @@ var Share = {
             return;
         }
         // Get unique share id from server
-        this.original = CreateOriginal(PlaylistPanel);
+        Share.original = CreateOriginal(PlaylistPanel);
         PlaylistPanel.open();
     },
     disable:()=>{
-        this.original.disable();
-        this.original = null;
+        Share.original.disable();
+        Share.original = null;
         $('.share-button').removeClass('active');
     },
     getShares:callback=>{
@@ -39,8 +39,8 @@ var Share = {
                 Share.enable();
             }
         });
-        // Detect auto share
-        if(location.search.indexOf('autoshare=true')!==-1){
+        // If name existe, enable autoshare
+        if(MusicPlayer.device.name !== "No name" && MusicPlayer.device.name !== ""){
             Share.enable();
         }
     }
@@ -49,18 +49,16 @@ var Share = {
 // Create a clone manager (for a specific share id). receive event from original
 function CreateClone(id,remotePlaylist){
     // Add behaviour on remotePlaylist, receive event for remoteplaylist
-    var manager = {id:id};
-    var sse = new EventSource('/share?id=' + id + '&device=' + MusicPlayer.device.name);
+    let manager = {id:id};
+    let sse = new EventSource(`/share?id=${id}&device=${MusicPlayer.device.name}`);
     sse.onerror = e=>{
         console.log("Error with share",e)
     };
     // Set receive events behaviour
-    sse.addEventListener('add',function(data){
+    sse.addEventListener('add',data => {
         remotePlaylist.addMusicsFromIds({ids:data.data.split(',')},true);
     });
-    sse.addEventListener('close',function(data){
-        manager.disable();
-    });
+    sse.addEventListener('close',()=>manager.disable());
     sse.addEventListener('playlist',function(data){
         let info = JSON.parse(data.data);
         remotePlaylist._cleanPlaylist(true);
@@ -71,17 +69,17 @@ function CreateClone(id,remotePlaylist){
             remotePlaylist.selectRadio(info.radio);
         }
     });
-    sse.addEventListener('remove',function(data){remotePlaylist._removeMusic(data.data,true);});
-    sse.addEventListener('cleanPlaylist',function(data){remotePlaylist._cleanPlaylist(true);});
+    sse.addEventListener('remove',data => remotePlaylist._removeMusic(data.data,true));
+    sse.addEventListener('cleanPlaylist',(data)=>remotePlaylist._cleanPlaylist(true));
     // Send position and position to check
-    sse.addEventListener('playMusic',function(data){
-        var d = JSON.parse(data.data);
-        remotePlaylist.showMusicByPosAndId(d.position,d.id);
+    sse.addEventListener('playMusic',data => {
+        let d = JSON.parse(data.data);
+        remotePlaylist.showMusicByPosAndId(d.position,d.id, false);
     });
     // No next or previous, receive only position to play
-    sse.addEventListener('pause',function(){remotePlaylist._pause();});
-    sse.addEventListener('play',function(){remotePlaylist._play();});
-    sse.addEventListener('volume',function(data){remotePlaylist.updateVolume(data.data)});
+    sse.addEventListener('pause',()=>remotePlaylist._pause());
+    sse.addEventListener('play',()=>remotePlaylist._play());
+    sse.addEventListener('volume',data => remotePlaylist.updateVolume(data.data));
 
     manager.sse = sse;
     manager.event = function(event,data){
@@ -103,10 +101,11 @@ function CreateClone(id,remotePlaylist){
 
 // Create a original manager (for a specific share id). Receive event and apply on player (read music). Send event to clones
 function CreateOriginal(playlist){
-    var manager = {};
-    var sse = new EventSource('/share?device=' + MusicPlayer.device.name);
+    let manager = {};
+    let sse = new EventSource('/share?device=' + MusicPlayer.device.name);
 
-    sse.onerror = ()=>{
+    sse.onerror = (e)=>{
+        console.log('err',e)
         $('.share-button').removeClass('active');
     };
 
@@ -118,8 +117,11 @@ function CreateOriginal(playlist){
     sse.addEventListener('id',data=>manager.id = parseInt(data.data));
     sse.addEventListener('reload',()=>location.href='/?autoshare=true');
     sse.addEventListener('add',data=>playlist.addMusicsFromIds({ids:data.data.split(',').map(v=>parseInt(v))},true));
-    sse.addEventListener('playlist',data=>playlist.addMusicsFromIds(JSON.parse(data.data),true));
-    sse.addEventListener('check-latency',rawData=>{
+    sse.addEventListener('playlist',data=>{
+        console.log("GGG",data)
+        playlist.addMusicsFromIds(JSON.parse(data.data),true)
+    });
+    /*sse.addEventListener('check-latency',rawData=>{
         var localReceive = Math.round(window.performance.now()*1000000);
         var data = JSON.parse(rawData.data);
         var originalTime = parseInt(data.time);
@@ -127,7 +129,7 @@ function CreateOriginal(playlist){
             url:basename + 'latency',
             data:{id:data.id,local_receive:localReceive,local_push:Math.round(window.performance.now()*1000000),original_time:originalTime}
         })
-    });
+    });*/
     sse.addEventListener('askPlaylist',()=>{
         let ids = playlist.list.map(function(m){return parseInt(m.id)});
         let data = {

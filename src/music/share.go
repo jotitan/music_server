@@ -1,9 +1,13 @@
 package music
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jotitan/music_server/logger"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -17,6 +21,33 @@ type SharedSession struct {
 	response  http.ResponseWriter
 	connected bool
 	latency float64
+	// Used to monitor heartbeat of real service
+	heartbeartChannel chan struct{}
+}
+
+func (ss *SharedSession)NotifyHeartbeat(sessionID string){
+	if strings.EqualFold(sessionID,ss.original.sessionID) && ss.heartbeartChannel != nil {
+		ss.heartbeartChannel <- struct{}{}
+	}
+}
+
+func (ss *SharedSession)startHeartbeatChecker(sharedSessions map[int]*SharedSession){
+	if ss.original.isBrowser {
+		return
+	}
+	ss.heartbeartChannel = make(chan struct{})
+	go func(){
+		for{
+			select {
+			case <-ss.heartbeartChannel:
+			case <- time.NewTimer(3*time.Minute).C:
+				// To late, stop shareSession
+				delete(sharedSessions,ss.id)
+				logger.GetLogger().Info("Remove service session, timeout",ss.id)
+				return
+			}
+		}
+	}()
 }
 
 func (ss SharedSession) isOriginal(sessionID string) bool {
@@ -61,7 +92,14 @@ func (ss SharedSession) ForwardEvent(sessionID string, event, data string) {
 				ss.removeClone(sessionID)
 
 			} else {
-				ss.original.send(event, data)
+				newEvent, newData, success := ss.original.send(event, data)
+				if success && !strings.EqualFold("",newEvent) {
+					logger.GetLogger().Info("Send service new event", newEvent)
+					// Send event to clone
+					for _, clone := range ss.clones {
+						clone.send(newEvent, newData)
+					}
+				}
 			}
 		}
 	}
@@ -73,9 +111,74 @@ type Device struct {
 	response  http.ResponseWriter
 	sessionID string
 	connected bool
+	isBrowser bool
+	// only if isBrowser false
+	url          string
+	getMusicInfo func(int32) map[string]string
 }
 
-func (d Device) send(event string, data string) (success bool) {
+func (d Device) send(event string, data string) (newEvent, message string,success bool) {
+	if d.isBrowser {
+		return "", "",d.sendBrowser(event, data)
+	}else{
+		return d.sendService(event, data)
+	}
+}
+
+func jsonToParams(data string)string{
+	mapData := make(map[string]string)
+	json.Unmarshal([]byte(data),&mapData)
+	params := make([]string,0,len(mapData))
+	for key,value := range mapData {
+		params = append(params,fmt.Sprintf("%s=%s",key,value))
+	}
+	return strings.Join(params,"&")
+}
+
+func extractFieldFromJson(data, field string)interface{}{
+	dataAsMap := make(map[string]interface{})
+	json.Unmarshal([]byte(data),&dataAsMap)
+	return dataAsMap[field]
+}
+
+// Send event thru api
+func (d Device) sendService(event string, data string) (newEvent, message string, success bool) {
+	// Work without data for pause, next, previous
+	urlToCall := ""
+	switch event {
+	case "playMusic":
+		// Extract field position from json and send as index
+		urlToCall = fmt.Sprintf("%s/music/play?index=%d",d.url,int(extractFieldFromJson(data,"position").(float64)))
+	case "play","pause","next","previous":
+		urlToCall = fmt.Sprintf("%s/music/%s?%s",d.url,event,jsonToParams(data))
+	case "add":
+		// Get path to inject
+		if id, err := strconv.ParseInt(data, 10,32) ; err == nil {
+			musicInfo := d.getMusicInfo(int32(id))
+			// Encode path
+			urlToCall = fmt.Sprintf("%s/playlist/%s?id=%s&path=%s", d.url, event, data, url.PathEscape(musicInfo["path"]))
+		}
+	case "askPlaylist":
+		urlToCall = fmt.Sprintf("%s/playlist/state",d.url)
+	case "remove","list","clean":
+		urlToCall = fmt.Sprintf("%s/playlist/%s?%s",d.url,event,jsonToParams(data))
+	}
+
+	resp,err := http.Get(urlToCall)
+	if err == nil && resp.StatusCode == 200 {
+		switch event {
+		case "askPlaylist":
+			if data,err := ioutil.ReadAll(resp.Body) ; err == nil {
+				return "playlist",string(data),true
+			}
+		}
+		return "", "", true
+
+	}
+	return "", "",false
+}
+
+func (d Device) sendBrowser(event string, data string) (success bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			success = false
@@ -127,19 +230,22 @@ func (ss *SharedSession) removeClone(sessionID string) {
 // create new connection at each time, no connection recup
 func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
 	var device *Device
-	logger.GetLogger().Info("Connect clone", ss.id)
+	logger.GetLogger().Info("Connect clone", ss.id, "with sessionID",sessionID)
 	// Check if sessionID exist
 	CreateSSEHeader(response)
 	if v, dev := ss.isClone(sessionID); !v {
 		//check device exist
-		device = &Device{name: deviceName, sessionID: sessionID, response: response, connected: true}
+		device = &Device{name: deviceName, sessionID: sessionID, response: response, connected: true, isBrowser: true}
 		ss.clones = append(ss.clones, device)
 	} else {
 		dev.response = response
 		device = dev
 	}
 	device.send("id", fmt.Sprintf("%d", ss.id))
-	ss.original.send("askPlaylist", "")
+	newEvent, data, success := ss.original.send("askPlaylist", "")
+	if success && !strings.EqualFold(newEvent,"") {
+		device.send(newEvent, data)
+	}
 	checkConnection(device)
 	// remove clone cause connection is lost and checkconnection ended
 	ss.removeClone(sessionID)
@@ -163,19 +269,28 @@ func checkConnection(d *Device) {
 		time.Sleep(5 * time.Second)
 	}
 	logger.GetLogger().Info("End device", d.sessionID)
-	// Check disconnexion
+	// wait before remove
+}
+
+func CreateShareConnectionService(deviceName, url, sessionID string, getMusicInfo func(int32)map[string]string)int{
+	device := &Device{name: deviceName, sessionID: sessionID, connected: true, isBrowser: false, url : url, getMusicInfo:getMusicInfo}
+	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
+	sharedSessions[ss.id] = ss
+	logger.GetLogger().Info("Create share service", ss.id)
+	ss.startHeartbeatChecker(sharedSessions)
+	return ss.id
 }
 
 //CreateShareConnection create an original connexion
 func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID string) {
 	CreateSSEHeader(response)
 	// Generate unique code to receive order
-	device := &Device{name: deviceName, response: response, sessionID: sessionID, connected: true}
+	device := &Device{name: deviceName, response: response, sessionID: sessionID, connected: true, isBrowser: true}
 	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
 	sharedSessions[ss.id] = ss
 	logger.GetLogger().Info("Create share", ss.id)
 	ss.original.send("id", fmt.Sprintf("%d", ss.id))
-	computeLatency(ss.original,ss.id)
+	//computeLatency(ss.original,ss.id)
 	checkConnection(device)
 	removeSharedSession(ss.id)
 }

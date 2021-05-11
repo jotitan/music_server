@@ -179,7 +179,7 @@ var PlaylistPanel = {
     },
     hideRadio: function () { },
     // Show music by position. Check if id is same. If not, reload playlist
-    showMusicByPosAndId: function (pos, id) {
+    showMusicByPosAndId: function (pos, id, noShare = false) {
         if (pos >= this.list.length || this.list[pos].id != id) {
             //error
             console.log("Error");
@@ -188,10 +188,10 @@ var PlaylistPanel = {
         if (!this.noLoadMusic) {
             MusicPlayer.load(this.list[pos]);
         }
-        this.showMusicByPosition(pos);
+        this.showMusicByPosition(pos, noShare);
         this.hideRadio();
     },
-    showMusicByPosition: function (position) {
+    showMusicByPosition: function (position, noShare = false) {
         this.current = parseInt(position);
         this._selectLine();
         this.play();
@@ -504,9 +504,11 @@ var RemotePlaylist = {
     selectRadio: function (radio) {
         $('.list-radios', this.div).val(radio);
     },
-    play: function () {
+    play: function (noShare=false) {
         this.isPaused = false;
-        this.shareManager.event("play");
+        if(noShare) {
+            this.shareManager.event("play");
+        }
         this._play();
     },
     _play: function () {
@@ -575,7 +577,12 @@ function connectToShare() {
     sharePanel.init2();
 
     // Show shares
-    Share.getShares(function (data) {
+    Share.getShares(data => {
+        // Remove local device
+        if(Share.original != null){
+            // Remove id from list
+            data = data.filter(d=>d.Name !== MusicPlayer.device.name)
+        }
         if (data.length == 1) {
             // only one share, direct connect
             sharePanel.open();
@@ -583,7 +590,7 @@ function connectToShare() {
             CreateClone(data[0].Id, sharePanel);
             $('.title > span:first', sharePanel.div).html('Remote playlist for ' + data[0].Name);
         } else {
-            data.forEach(function (s) {
+            data.forEach(s => {
                 var share = $('<div> => ' + s.Name + ' : <button>Connect</button></div>');
                 $('button', share).bind('click', function () {
                     sharePanel.listDiv.empty();

@@ -36,6 +36,7 @@ var RemoteControlManager = {
                 this._connect(data[0].Id);
                 return this.divSelect.hide();
             }else{
+                this.divSelect.select()
                 this.divSelect.empty().append('<option>...</option>');
                 data.forEach(s=>this.divSelect.append('<option value="' + s.Id + '">' + s.Name + '</option>'));
             }
@@ -169,7 +170,7 @@ function CreateRemote(id,target){
 
     manager.loadMusic = function(id){
         ajax({
-            url:basename + 'musicInfo?id=' + id,
+            url:`${basename}musicInfo?id=${id}`,
             success:data=>target.updateMusic(JSON.parse(data))
         })
     };
