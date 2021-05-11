@@ -132,7 +132,9 @@ func (pp * PlayerPlaylist)Pause(){
 func (pp * PlayerPlaylist)playWithEndDetection(path string){
 	go func(){
 		pp.notifyCurrent()
-		pp.player.Play(path)
+		if err := pp.player.Play(path) ; err != nil {
+			logger.GetLogger().Error("Impossible to read music",err)
+		}
 		pp.Next()
 		pp.notifyCurrent()
 	}()
