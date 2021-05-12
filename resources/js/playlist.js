@@ -38,14 +38,6 @@ var PlaylistPanel = {
             // Delete music. Find position element in list
             _self.removeMusic(_self.getFocusedPosition());
         });
-        /*$(document).unbind('next_event').bind('next_event',function(){
-            _self.next();
-            $(document).trigger('show_next_event');
-        });
-        $(document).unbind('previous_event').bind('previous_event',function(){
-            _self.previous();
-            $(document).trigger('show_previous_event');
-        });*/
         this.listDiv.droppable({
             drop: function (event, ui) {
                 var idMusic = ui.draggable.data('id');
@@ -194,7 +186,7 @@ var PlaylistPanel = {
     showMusicByPosition: function (position, noShare = false) {
         this.current = parseInt(position);
         this._selectLine();
-        this.play();
+        this.play(noShare);
     },
     // No need to propagate share
     playMusic: function (id) {
@@ -504,9 +496,9 @@ var RemotePlaylist = {
     selectRadio: function (radio) {
         $('.list-radios', this.div).val(radio);
     },
-    play: function (noShare=false) {
+    play: function (noShare= false) {
         this.isPaused = false;
-        if(noShare) {
+        if(!noShare) {
             this.shareManager.event("play");
         }
         this._play();

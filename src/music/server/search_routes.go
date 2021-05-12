@@ -119,7 +119,7 @@ func (ms *MusicServer) MusicInfo(response http.ResponseWriter, request *http.Req
 func (ms *MusicServer) MusicsInfo(response http.ResponseWriter, request *http.Request) {
 	var ids []int32
 	json.Unmarshal([]byte(request.FormValue("ids")), &ids)
-	logger.GetLogger().Info("Load musics", len(ids))
+	//logger.GetLogger().Info("Load musics", len(ids))
 	if request.FormValue("short") != "" {
 		ms.getMusics(response, request, int32asInt(ids), false, []string{"artist"})
 	}else {

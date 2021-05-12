@@ -74,7 +74,7 @@ function CreateClone(id,remotePlaylist){
     // Send position and position to check
     sse.addEventListener('playMusic',data => {
         let d = JSON.parse(data.data);
-        remotePlaylist.showMusicByPosAndId(d.position,d.id, false);
+        remotePlaylist.showMusicByPosAndId(d.position,d.id, true);
     });
     // No next or previous, receive only position to play
     sse.addEventListener('pause',()=>remotePlaylist._pause());

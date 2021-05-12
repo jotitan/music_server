@@ -104,12 +104,14 @@ func (pp *PlayerPlaylist) notifyCurrent(){
 	http.DefaultClient.Do(req)
 }
 
-func (pp * PlayerPlaylist)Next(){
+func (pp * PlayerPlaylist)Next()bool{
 	if playlist.HasNext() {
 		logger.GetLogger().Info("Next music")
 		music,_ := pp.playlist.SetCurrent(pp.playlist.currentMusic+1)
 		pp.playWithEndDetection(music.path)
+		return true
 	}
+	return false
 }
 
 func (pp * PlayerPlaylist)Previous(){
@@ -135,8 +137,9 @@ func (pp * PlayerPlaylist)playWithEndDetection(path string){
 		if err := pp.player.Play(path) ; err != nil {
 			logger.GetLogger().Error("Impossible to read music",err)
 		}
-		pp.Next()
-		pp.notifyCurrent()
+		if pp.Next() {
+			pp.notifyCurrent()
+		}
 	}()
 }
 

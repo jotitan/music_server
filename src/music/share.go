@@ -178,6 +178,14 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 	return "", "",false
 }
 
+func (d Device)isUp()bool{
+	if d.isBrowser {
+		return true
+	}
+	resp,err := http.Get(fmt.Sprintf("%s/health",d.url))
+	return err == nil && resp.StatusCode == 200
+}
+
 func (d Device) sendBrowser(event string, data string) (success bool) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -229,6 +237,11 @@ func (ss *SharedSession) removeClone(sessionID string) {
 
 // create new connection at each time, no connection recup
 func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
+	// Check if original still exist
+	if !ss.original.isUp() {
+		logger.GetLogger().Error("Impossible to connect to share")
+		return
+	}
 	var device *Device
 	logger.GetLogger().Info("Connect clone", ss.id, "with sessionID",sessionID)
 	// Check if sessionID exist
@@ -246,8 +259,8 @@ func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName
 	if success && !strings.EqualFold(newEvent,"") {
 		device.send(newEvent, data)
 	}
+	// Block until connexion is up
 	checkConnection(device)
-	// remove clone cause connection is lost and checkconnection ended
 	ss.removeClone(sessionID)
 }
 
@@ -268,8 +281,7 @@ func checkConnection(d *Device) {
 		}
 		time.Sleep(5 * time.Second)
 	}
-	logger.GetLogger().Info("End device", d.sessionID)
-	// wait before remove
+	//logger.GetLogger().Info("End device", d.sessionID)
 }
 
 func CreateShareConnectionService(deviceName, url, sessionID string, getMusicInfo func(int32)map[string]string)int{
