@@ -13,6 +13,8 @@ func RunLocalServer(port string){
 	server.HandleFunc("/music/pause",Pause)
 	server.HandleFunc("/music/next",Next)
 	server.HandleFunc("/music/previous",Previous)
+	server.HandleFunc("/control/volumeUp",VolumeUp)
+	server.HandleFunc("/control/volumeDown",VolumeDown)
 	server.HandleFunc("/playlist/add",Add)
 	server.HandleFunc("/playlist/remove",Remove)
 	server.HandleFunc("/playlist/clean",Clean)

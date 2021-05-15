@@ -149,3 +149,15 @@ func (pp * PlayerPlaylist)Play(index int){
 		pp.playWithEndDetection(music.path)
 	}
 }
+
+func (pp *PlayerPlaylist) PauseOrPlayFirst() {
+	if pp.playlist.currentMusic == -1 {
+		pp.Play(0)
+	}else {
+		pp.Pause()
+	}
+}
+
+func (pp *PlayerPlaylist) UpdateVolume(step float64) {
+	pp.player.updateVolume(step)
+}

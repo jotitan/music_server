@@ -160,6 +160,8 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 		}
 	case "askPlaylist":
 		urlToCall = fmt.Sprintf("%s/playlist/state",d.url)
+	case "volumeUp","volumeDown":
+		urlToCall = fmt.Sprintf("%s/control/%s",d.url,event)
 	case "remove","list","clean":
 		urlToCall = fmt.Sprintf("%s/playlist/%s?%s",d.url,event,jsonToParams(data))
 	}

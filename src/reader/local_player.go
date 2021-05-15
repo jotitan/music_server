@@ -3,6 +3,7 @@ package reader
 import (
 	"errors"
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/jotitan/music_server/logger"
@@ -10,9 +11,10 @@ import (
 	"time"
 )
 
-type musicReader struct{
-	control *beep.Ctrl
-	running bool
+type musicReader struct {
+	control       *beep.Ctrl
+	running       bool
+	volumeManager *effects.Volume
 }
 
 func NewMusicReader()*musicReader {
@@ -34,15 +36,15 @@ func (mr * musicReader)Play(path string)error{
 	if err != nil {
 		return err
 	}
-	mr.control = &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
+	mr.control = &beep.Ctrl{Streamer: beep.Loop(1, streamer), Paused: false}
+	mr.volumeManager = &effects.Volume{Base:2,Volume: 0,Silent: false,Streamer: mr.control}
 	mr.running = true
 
 	// Detect end and read next music (chanel to playlist)
 	end := make(chan bool)
-	speaker.Play(beep.Seq(mr.control, beep.Callback(func() {
+	speaker.Play(beep.Seq(mr.volumeManager, beep.Callback(func() {
 		end <- true
 	})))
-	logger.GetLogger().Info("Wait end music")
 	<- end
 	return nil
 }
@@ -56,4 +58,11 @@ func (mr * musicReader)Pause()error{
 	mr.control.Paused = !mr.control.Paused
 	speaker.Unlock()
 	return nil
+}
+
+func (mr *musicReader) updateVolume(step float64) {
+	speaker.Lock()
+	logger.GetLogger().Info("Update volume",step,mr.volumeManager.Volume)
+	mr.volumeManager.Volume+=step
+	speaker.Unlock()
 }

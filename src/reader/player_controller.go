@@ -22,8 +22,16 @@ func Play(_ http.ResponseWriter, r * http.Request){
 	if index, err := strconv.ParseInt(r.FormValue("index"),10,32) ; err == nil {
 		player.Play(int(index))
 	}else{
-		player.Play(0)
+		// Call Pause or Play
+		player.PauseOrPlayFirst()
 	}
+}
+
+func VolumeUp(w http.ResponseWriter, _ * http.Request){
+	player.UpdateVolume(0.5)
+}
+func VolumeDown(w http.ResponseWriter, _ * http.Request){
+	player.UpdateVolume(-0.5)
 }
 
 func Health(w http.ResponseWriter, _ * http.Request){

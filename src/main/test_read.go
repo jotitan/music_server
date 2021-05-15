@@ -30,7 +30,7 @@ func read(path string)error{
 	if err != nil {
 		return err
 	}
-	control := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
+	control := &beep.Ctrl{Streamer: beep.Loop(1, streamer), Paused: false}
 
 	// Detect end and read next music (chanel to playlist)
 	end := make(chan bool)
