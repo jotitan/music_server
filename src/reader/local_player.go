@@ -20,7 +20,7 @@ func NewMusicReader()*musicReader {
 }
 
 func (mr * musicReader)Play(path string)error{
-	logger.GetLogger().Info("Play")
+	logger.GetLogger().Info("Play",path)
 	f,err:= os.Open(path)
 	if err != nil {
 		return err
@@ -42,6 +42,7 @@ func (mr * musicReader)Play(path string)error{
 	speaker.Play(beep.Seq(mr.control, beep.Callback(func() {
 		end <- true
 	})))
+	logger.GetLogger().Info("Wait end music")
 	<- end
 	return nil
 }
