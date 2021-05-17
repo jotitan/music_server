@@ -153,31 +153,36 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 		urlToCall = fmt.Sprintf("%s/music/%s?%s",d.url,event,jsonToParams(data))
 	case "add":
 		return d.postMusicsToServer(data)
-		// Get path to inject
-		/*if id, err := strconv.ParseInt(data, 10,32) ; err == nil {
-			musicInfo := d.getMusicsInfo([]int32{int32(id)})
-			// Encode path
-			urlToCall = fmt.Sprintf("%s/playlist/%s?id=%s&path=%s", d.url, event, data, url.PathEscape(musicInfo[0]["path"]))
-		}*/
 	case "askPlaylist":
 		urlToCall = fmt.Sprintf("%s/playlist/state",d.url)
 	case "volumeUp","volumeDown":
 		urlToCall = fmt.Sprintf("%s/control/%s",d.url,event)
-	case "remove","list","clean":
-		urlToCall = fmt.Sprintf("%s/playlist/%s?%s",d.url,event,jsonToParams(data))
+	case "remove":
+		urlToCall = fmt.Sprintf("%s/playlist/%s?index=%s",d.url,event,data)
+	case "cleanPlaylist":
+		urlToCall = fmt.Sprintf("%s/playlist/clean",d.url)
+	case"list":
+		urlToCall = fmt.Sprintf("%s/playlist/%s",d.url,event)
+	default:
+		return "","",false
 	}
 
+
 	resp,err := http.Get(urlToCall)
-	return manageServiceResponse(event,resp,err)
+	return manageServiceResponse(event,data,resp,err)
 }
 
-func manageServiceResponse(event string,resp *http.Response,err error ) (string,string, bool){
+func manageServiceResponse(event, originalData string,resp *http.Response,err error ) (string,string, bool){
 	if err == nil && resp.StatusCode == 200 {
 		switch event {
 		case "askPlaylist":
 			if data,err := ioutil.ReadAll(resp.Body) ; err == nil {
 				return "playlist",string(data),true
 			}
+		case "remove":
+			return "remove",originalData,true
+		case "cleanPlaylist":
+			return "cleanPlaylist","",true
 		}
 		return "", "", true
 
@@ -201,7 +206,7 @@ func (d Device)postMusicsToServer(data string)(string,string,bool){
 	postUrl := fmt.Sprintf("%s/playlist/add",d.url)
 
 	resp,err := http.Post(postUrl,"application/json",bytes.NewBuffer(dataRequest))
-	return manageServiceResponse("add",resp,err)
+	return manageServiceResponse("add","",resp,err)
 }
 
 func stringArrayToIntArray(data string)[]int32{

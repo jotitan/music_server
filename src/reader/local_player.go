@@ -7,6 +7,8 @@ import (
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/jotitan/music_server/logger"
+	"io"
+	"net/http"
 	"os"
 	"time"
 )
@@ -28,7 +30,22 @@ func (mr * musicReader)Play(path string)error{
 	if err != nil {
 		return err
 	}
-	streamer, format,err := mp3.Decode(f)
+	return mr.readStream(f)
+}
+
+func (mr * musicReader)PlayRadio(urlRadio string)error{
+	//hack := "https://rmcinfo.cdn.dvmr.fr/rmcinfo"
+	logger.GetLogger().Info("Read radio",urlRadio)
+	resp,err := http.Get(urlRadio)
+	if err != nil {
+		return err
+	}
+	return mr.readStream(resp.Body)
+}
+
+func (mr * musicReader)readStream(stream io.ReadCloser)error{
+	defer stream.Close()
+	streamer, format,err := mp3.Decode(stream)
 	if err != nil {
 		return err
 	}
@@ -47,6 +64,7 @@ func (mr * musicReader)Play(path string)error{
 		end <- true
 	})))
 	<- end
+	// For radio, impossible, must continue if stream stop
 	return nil
 }
 
