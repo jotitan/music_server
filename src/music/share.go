@@ -1,12 +1,12 @@
 package music
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/jotitan/music_server/logger"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -114,7 +114,7 @@ type Device struct {
 	isBrowser bool
 	// only if isBrowser false
 	url          string
-	getMusicInfo func(int32) map[string]string
+	getMusicsInfo func([]int32) []map[string]string
 }
 
 func (d Device) send(event string, data string) (newEvent, message string,success bool) {
@@ -152,12 +152,13 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 	case "play","pause","next","previous":
 		urlToCall = fmt.Sprintf("%s/music/%s?%s",d.url,event,jsonToParams(data))
 	case "add":
+		return d.postMusicsToServer(data)
 		// Get path to inject
-		if id, err := strconv.ParseInt(data, 10,32) ; err == nil {
-			musicInfo := d.getMusicInfo(int32(id))
+		/*if id, err := strconv.ParseInt(data, 10,32) ; err == nil {
+			musicInfo := d.getMusicsInfo([]int32{int32(id)})
 			// Encode path
-			urlToCall = fmt.Sprintf("%s/playlist/%s?id=%s&path=%s", d.url, event, data, url.PathEscape(musicInfo["path"]))
-		}
+			urlToCall = fmt.Sprintf("%s/playlist/%s?id=%s&path=%s", d.url, event, data, url.PathEscape(musicInfo[0]["path"]))
+		}*/
 	case "askPlaylist":
 		urlToCall = fmt.Sprintf("%s/playlist/state",d.url)
 	case "volumeUp","volumeDown":
@@ -167,6 +168,10 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 	}
 
 	resp,err := http.Get(urlToCall)
+	return manageServiceResponse(event,resp,err)
+}
+
+func manageServiceResponse(event string,resp *http.Response,err error ) (string,string, bool){
 	if err == nil && resp.StatusCode == 200 {
 		switch event {
 		case "askPlaylist":
@@ -178,6 +183,36 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 
 	}
 	return "", "",false
+}
+
+func (d Device)postMusicsToServer(data string)(string,string,bool){
+	// First unsplit
+	musics := stringArrayToIntArray(data)
+	// Load musics and create request
+	musicsInfo := d.getMusicsInfo(musics)
+	request := make([]map[string]string,len(musicsInfo))
+	for pos, musicInfo := range musicsInfo {
+		request[pos] = map[string]string{
+			"id":   musicInfo["id"],
+			"path": musicInfo["path"],
+		}
+	}
+	dataRequest,_ := json.Marshal(request)
+	postUrl := fmt.Sprintf("%s/playlist/add",d.url)
+
+	resp,err := http.Post(postUrl,"application/json",bytes.NewBuffer(dataRequest))
+	return manageServiceResponse("add",resp,err)
+}
+
+func stringArrayToIntArray(data string)[]int32{
+	ids := strings.Split(data,",")
+	musics := make([]int32,0,len(ids))
+	for _,strId := range ids {
+		if id,err := strconv.ParseInt(strId, 10, 32) ; err == nil {
+			musics = append(musics, int32(id))
+		}
+	}
+	return musics
 }
 
 func (d Device)isUp()bool{
@@ -286,8 +321,8 @@ func checkConnection(d *Device) {
 	//logger.GetLogger().Info("End device", d.sessionID)
 }
 
-func CreateShareConnectionService(deviceName, url, sessionID string, getMusicInfo func(int32)map[string]string)int{
-	device := &Device{name: deviceName, sessionID: sessionID, connected: true, isBrowser: false, url : url, getMusicInfo:getMusicInfo}
+func CreateShareConnectionService(deviceName, url, sessionID string, getMusicsInfo func([]int32)[]map[string]string)int{
+	device := &Device{name: deviceName, sessionID: sessionID, connected: true, isBrowser: false, url : url, getMusicsInfo:getMusicsInfo}
 	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
 	sharedSessions[ss.id] = ss
 	logger.GetLogger().Info("Create share service", ss.id)

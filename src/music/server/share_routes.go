@@ -52,7 +52,7 @@ func (ms MusicServer) Heartbeat(response http.ResponseWriter, request *http.Requ
 
 func (ms MusicServer) ShareService(response http.ResponseWriter, request *http.Request) {
 	// Return id of shared
-	id := music.CreateShareConnectionService(request.FormValue("device"), request.FormValue("url"),sessionID(response, request),ms.library.GetMusicInfo)
+	id := music.CreateShareConnectionService(request.FormValue("device"), request.FormValue("url"),sessionID(response, request),ms.library.GetMusicsInfo)
 	response.Write([]byte(fmt.Sprintf("%d",id)))
 }
 

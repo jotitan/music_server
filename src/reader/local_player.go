@@ -15,6 +15,7 @@ type musicReader struct {
 	control       *beep.Ctrl
 	running       bool
 	volumeManager *effects.Volume
+	currentVolume float64
 }
 
 func NewMusicReader()*musicReader {
@@ -37,7 +38,7 @@ func (mr * musicReader)Play(path string)error{
 		return err
 	}
 	mr.control = &beep.Ctrl{Streamer: beep.Loop(1, streamer), Paused: false}
-	mr.volumeManager = &effects.Volume{Base:2,Volume: 0,Silent: false,Streamer: mr.control}
+	mr.volumeManager = &effects.Volume{Base:2,Volume: mr.currentVolume,Silent: false,Streamer: mr.control}
 	mr.running = true
 
 	// Detect end and read next music (chanel to playlist)
@@ -63,6 +64,7 @@ func (mr * musicReader)Pause()error{
 func (mr *musicReader) updateVolume(step float64) {
 	speaker.Lock()
 	logger.GetLogger().Info("Update volume",step,mr.volumeManager.Volume)
-	mr.volumeManager.Volume+=step
+	mr.currentVolume+=step
+	mr.volumeManager.Volume=mr.currentVolume
 	speaker.Unlock()
 }

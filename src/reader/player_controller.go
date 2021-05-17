@@ -2,6 +2,7 @@ package reader
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -50,20 +51,27 @@ func Previous(_ http.ResponseWriter, _ * http.Request){
 	player.Previous()
 }
 
-func Add(_ http.ResponseWriter, r * http.Request){
-	path := r.FormValue("path")
-	if idMusic, err := strconv.ParseInt(r.FormValue("id"),10,32) ; err == nil {
-		playlist.Add(int(idMusic), path)
+func Add(w http.ResponseWriter, r * http.Request){
+	data,_ := ioutil.ReadAll(r.Body)
+	musics := make([]map[string]string,0)
+	if err := json.Unmarshal(data,&musics) ; err == nil {
+		for _,music := range musics {
+			if idMusic, err := strconv.ParseInt(music["id"],10,32) ; err == nil {
+				playlist.Add(int(idMusic), music["path"])
+			}
+		}
+	}else{
+		http.Error(w,err.Error(),404)
 	}
 }
 
-func Remove(w http.ResponseWriter, r * http.Request){
+func Remove(_ http.ResponseWriter, r * http.Request){
 	if index, err := strconv.ParseInt(r.FormValue("index"),10,32) ; err == nil {
 		playlist.Remove(int(index))
 	}
 }
 
-func Clean(w http.ResponseWriter, r * http.Request){
+func Clean(_ http.ResponseWriter, r * http.Request){
 	playlist.Clean()
 }
 

@@ -39,10 +39,10 @@ let Share = {
                 Share.enable();
             }
         });
-        // If name existe, enable autoshare
-        if(MusicPlayer.device.name !== "No name" && MusicPlayer.device.name !== ""){
+        // Remove autoshare
+        /*if(MusicPlayer.device.name !== "No name" && MusicPlayer.device.name !== ""){
             Share.enable();
-        }
+        }*/
     }
 };
 
