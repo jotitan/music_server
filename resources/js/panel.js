@@ -43,11 +43,13 @@ var Panel = {
             });
         }
         this.div.bind('mousedown',function(){
-            WindowsNavManager.setActive(_self)
+            WindowsNavManager.setActive(_self);
+            $(document).trigger('focus.' + $(this).attr('id'));
+            $(document).trigger('focus-panel',$(this).attr('id'));
         });
 
         // Split screen
-        if($('.half-screen',this.div).length > 0 && $('.half-screen',this.data).data('split')!=""){
+        if($('.half-screen',this.div).length > 0 && $('.half-screen',this.data).data('split')!==""){
             var _self = this;
             var other = window[$('.half-screen',this.div).data('split')];
             $('.half-screen',this.div).after('<span class="glyphicon glyphicon glyphicon-eye-open close end-half-screen" style="display:none"/>');
@@ -86,7 +88,7 @@ var Panel = {
         WindowsNavManager.remove(this);
         PanelPositionManager.closeOne();
         this.div.trigger('close');
-        this.hide()
+        this.hide();
     },
     toggleMaximize:function(button){
           if(this.div.hasClass('maximize-panel-size')){
@@ -192,7 +194,6 @@ var PanelPositionManager = {
         }
     }
 };
-
 /* Use to manage window display in the taskbar. Manipulate Panel */
 var WindowsNavManager = {
     div:null,
@@ -213,24 +214,28 @@ var WindowsNavManager = {
                 return
             }
         }
-        var button = $("<button class=\"btn btn-default task-button active\">" + panel.name + "</button>")
-        button.data("panel",panel).attr("data-inner-id",panel.id)
-        panel.div.data("button",button).attr("data-inner-id",panel.id)
+        var button = $(`<button class="btn btn-default task-button active">${panel.name}</button>`)
+        button.data("panel",panel).attr("data-inner-id",panel.id);
+        panel.div.data("button",button).attr("data-inner-id",panel.id);
         button.bind('click',function(){
             WindowsNavManager.doAction($(this).data("panel"))
-        })
-         $('ul',this.div).append(button.wrap("<li></li>"))
+        });
+
+        var li = $('<li></li>').append(button);
+         //$('ul',this.div).append(button.wrap("<li></li>"))
+         $('ul',this.div).append(li)
         this.setActive(panel)
     },
     remove:function(panel){
-        this.div.find('button[data-inner-id="' + panel.id + '"]').remove()
-        //this.div.find('button[data-inner-id="' + panel.id + '"]').remove()
+        this.div.find(`button[data-inner-id="${panel.id}"]`).remove();
     },
     setActive:function(panel){
         $('button.task-button',this.div).removeClass('selected');
         $('.float-panel.active').removeClass('active')
         panel.div.addClass('active')
-        panel.div.data('button').removeClass('inactive').addClass('selected active');
+        if(panel.div.data('button').length > 0){
+            panel.div.data('button').removeClass('inactive').addClass('selected active');
+        }
     },
     doAction:function(panel){
         if(panel == null){

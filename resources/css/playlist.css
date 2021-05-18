@@ -78,6 +78,9 @@
     overflow-x: hidden;
   }
 
+  .remoteSearch {
+      font-size:12px;
+  }
 
 @media (min-width:1280px) {
     .div-playlist .artist2 {

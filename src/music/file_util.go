@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 )
 
-
-
 func getInts64AsByte(values []int64) []byte {
 	tab := make([]byte,len(values)*8)
 	for i,n := range values {
@@ -79,6 +77,12 @@ func getInt64FromBytes(data []byte)int64{
 
 func getInt32FromBytes(data []byte)int32{
 	return int32(binary.LittleEndian.Uint32(data))
+}
+
+func getBytesFromFile(f * os.File,pos,size int64)[]byte{
+	data := make([]byte,size)
+	f.ReadAt(data,pos)
+	return data
 }
 
 func getInt32FromFile(f *os.File,pos int64)int32{

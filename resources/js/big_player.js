@@ -189,7 +189,7 @@ var QueueEffectManager = {
 var CoverHelper = {
     get:function(artist,album,callback,useOnlyArtist,tries){
         var params = encodeURIComponent(((!useOnlyArtist)?'release:"' + album + '" AND ':'') + 'artist:"' + artist + '"');
-        $.ajax(
+        ajax(
             {
                 url:'http://musicbrainz.org/ws/2/release/?query=' + params,
                 dataType:'xml',

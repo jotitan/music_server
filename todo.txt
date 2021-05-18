@@ -1,0 +1,3 @@
+Permettre la creation de plusieurs fenetres d'explorateurs (pas le meme objet).
+
+On cree une nouvelle fenetre à chaque fois
