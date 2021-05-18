@@ -161,3 +161,24 @@ func (pp *PlayerPlaylist) PauseOrPlayFirst() {
 func (pp *PlayerPlaylist) UpdateVolume(step float64) {
 	pp.player.updateVolume(step)
 }
+
+func (pp *PlayerPlaylist) Radio(radio string) {
+	if foundRadio, exist := radios[radio];exist {
+		go pp.player.PlayRadio(foundRadio)
+	}
+}
+
+func (pp *PlayerPlaylist) StopRadio() {
+	pp.player.StopRadio()
+}
+
+var radios = map[string]string{
+	"FIP":"http://direct.fipradio.fr/live/fip-midfi.mp3",
+	"France Musique":"http://direct.francemusique.fr/live/francemusique-midfi.mp3",
+	"Radio Classique":"http://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3",
+	"France Inter":"https://icecast.radiofrance.fr/franceinter-midfi.mp3",
+	"Rire et Chansons":"http://cdn.nrjaudio.fm/audio1/fr/30401/mp3_128.mp3?origine=fluxradios",
+	"RMC":"https://rmcinfo.cdn.dvmr.fr/rmcinfo",
+	"RTL2":"http://streaming.radio.rtl2.fr/rtl2-1-44-96",
+	"TSF JAZZ":"http://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3",
+}

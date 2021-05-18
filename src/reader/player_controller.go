@@ -51,6 +51,15 @@ func Previous(_ http.ResponseWriter, _ * http.Request){
 	player.Previous()
 }
 
+func StopRadio(_ http.ResponseWriter, _ * http.Request){
+	player.StopRadio()
+}
+
+func Radio(w http.ResponseWriter, r * http.Request){
+	radio := r.FormValue("data")
+	player.Radio(radio)
+}
+
 func Add(w http.ResponseWriter, r * http.Request){
 	data,_ := ioutil.ReadAll(r.Body)
 	musics := make([]map[string]string,0)

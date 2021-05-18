@@ -7,6 +7,7 @@ import (
 	"github.com/jotitan/music_server/logger"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -163,10 +164,14 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 		urlToCall = fmt.Sprintf("%s/playlist/clean",d.url)
 	case"list":
 		urlToCall = fmt.Sprintf("%s/playlist/%s",d.url,event)
+	case"radio":
+		urlToCall = fmt.Sprintf("%s/radio/play?data=%s",d.url,url.PathEscape(data))
+	case"stopRadio":
+		urlToCall = fmt.Sprintf("%s/radio/stop",d.url)
+
 	default:
 		return "","",false
 	}
-
 
 	resp,err := http.Get(urlToCall)
 	return manageServiceResponse(event,data,resp,err)

@@ -33,8 +33,12 @@ func (mr * musicReader)Play(path string)error{
 	return mr.readStream(f)
 }
 
+func (mr * musicReader)StopRadio(){
+	speaker.Close()
+	mr.running = false
+}
+
 func (mr * musicReader)PlayRadio(urlRadio string)error{
-	//hack := "https://rmcinfo.cdn.dvmr.fr/rmcinfo"
 	logger.GetLogger().Info("Read radio",urlRadio)
 	resp,err := http.Get(urlRadio)
 	if err != nil {

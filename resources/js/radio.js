@@ -10,6 +10,7 @@ var Radio = {
         "Rire et Chansons":"http://cdn.nrjaudio.fm/audio1/fr/30401/mp3_128.mp3?origine=fluxradios",
         "RMC":"https://rmcinfo.cdn.dvmr.fr/rmcinfo",
         "RTL2":"http://streaming.radio.rtl2.fr/rtl2-1-44-96",
+        "France Inter":"https://icecast.radiofrance.fr/franceinter-midfi.mp3",
         "TSF JAZZ":"http://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3"},
     currentRadio:"",
     stopRadio:function(){
@@ -28,8 +29,8 @@ var Radio = {
         }
         this.currentRadio = radio;
         MusicPlayer.loadUrl(this.radios[radio],{artist:'Radio',title:radio});
-        MusicPlayer.controls.setTitle({artist:'Radio',title:radio});        
-    }    
+        MusicPlayer.controls.setTitle({artist:'Radio',title:radio});
+    }
 }
 
 var RadioPanel = {
@@ -50,6 +51,6 @@ var RadioPanel = {
             line.append('<span data-radio="' + radio + '" class="glyphicon glyphicon-play play" title="Play"></span>');
             $('.content',this.div).append(line)
         });
-        
+
     }
 }
