@@ -13,6 +13,8 @@ At home, it runs on a raspberry PI 2 and musics are on a SAN (Drobo).
 
 h2. Compile
 
+I'm using go module to manage dependencies.
+
 Dependences : 
 * https://github.com/jotitan/go_embed_resources : to embed web resources in application. Can be used without go generate (call tool directly)
 * https://github.com/mjibson/id3 : to extract id3tag info
