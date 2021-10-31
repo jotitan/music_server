@@ -23,6 +23,7 @@ jobs:
           export GOOS=linux
           export GOARCH=arm
           export CGO_ENABLED=1
+          export CC=arm-linux-gnueabi-gcc
           cd src
           go build -o music_player main/run_agent_player.go
           mkdir artifacts
