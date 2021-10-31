@@ -22,6 +22,7 @@ jobs:
           echo Run build micro music player
           export GOOS=linux
           export GOARCH=arm
+          export CGO_ENABLED=1
           cd src
           go build -o music_player main/run_agent_player.go
           mkdir artifacts
