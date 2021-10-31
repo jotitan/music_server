@@ -4,7 +4,7 @@ name: CI build music server player
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master,build_test ]
   pull_request:
     branches: [ master ]
 
