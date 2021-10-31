@@ -9,7 +9,7 @@ var Radio = {
         "Radio Classique":"http://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3",
         "Rire et Chansons":"http://cdn.nrjaudio.fm/audio1/fr/30401/mp3_128.mp3?origine=fluxradios",
         "RMC":"https://rmcinfo.cdn.dvmr.fr/rmcinfo",
-        "RTL2":"http://streaming.radio.rtl2.fr/rtl2-1-44-96",
+        "RTL2":"https://streamer-02.rtl.fr/rtl2-1-44-128",
         "France Inter":"https://icecast.radiofrance.fr/franceinter-midfi.mp3",
         "TSF JAZZ":"http://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3"},
     currentRadio:"",
