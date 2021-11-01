@@ -335,7 +335,7 @@ func CreateShareConnectionService(deviceName, url, sessionID string, getMusicsIn
 	device := &Device{name: deviceName, sessionID: sessionID, connected: true, isBrowser: false, url : url, getMusicsInfo:getMusicsInfo}
 	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
 	sharedSessions[ss.id] = ss
-	logger.GetLogger().Info("Create share service", ss.id)
+	logger.GetLogger().Info("Create share service", ss.id,url)
 	ss.startHeartbeatChecker(sharedSessions)
 	return ss.id
 }
@@ -346,6 +346,8 @@ func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID s
 	// Generate unique code to receive order
 	device := &Device{name: deviceName, response: response, sessionID: sessionID, connected: true, isBrowser: true}
 	ss := &SharedSession{id: generateShareCode(), connected: true, original: device}
+	// If shared session with device name exist, remove
+	cleanShareDevice(deviceName)
 	sharedSessions[ss.id] = ss
 	logger.GetLogger().Info("Create share", ss.id)
 	ss.original.send("id", fmt.Sprintf("%d", ss.id))
@@ -354,6 +356,14 @@ func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID s
 	removeSharedSession(ss.id)
 }
 
+func cleanShareDevice(deviceName string){
+	for id,session := range sharedSessions {
+		if strings.EqualFold(session.original.name,deviceName){
+			delete(sharedSessions,id)
+			return
+		}
+	}
+}
 
 type ShareInfo struct {
 	Name string
