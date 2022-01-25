@@ -190,7 +190,12 @@ func manageServiceResponse(event, originalData string,resp *http.Response,err er
 			return "cleanPlaylist","",true
 		}
 		return "", "", true
-
+	}else{
+		if err != nil {
+			logger.GetLogger().Error("Impossible to call server", err.Error(), resp.StatusCode)
+		}else{
+			logger.GetLogger().Error("Impossible to call server", resp.StatusCode)
+		}
 	}
 	return "", "",false
 }
@@ -209,7 +214,7 @@ func (d Device)postMusicsToServer(data string)(string,string,bool){
 	}
 	dataRequest,_ := json.Marshal(request)
 	postUrl := fmt.Sprintf("%s/playlist/add",d.url)
-
+	logger.GetLogger().Info("Add to server",len(request),"music(s)")
 	resp,err := http.Post(postUrl,"application/json",bytes.NewBuffer(dataRequest))
 	return manageServiceResponse("add","",resp,err)
 }
