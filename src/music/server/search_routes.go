@@ -31,7 +31,7 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 	sort.Sort(music.SortByArtist(artistsData))
 	bdata, _ := json.Marshal(artistsData)
 	response.Write(bdata)
-	logger.GetLogger().Info("Get all artists", genre,"in",time.Now().Sub(begin))
+	logger.GetLogger().Info("Get all artists", genre, "in", time.Now().Sub(begin))
 }
 
 func (ms *MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool, fields []string) {
@@ -68,7 +68,7 @@ func (ms *MusicServer) ListByArtist(response http.ResponseWriter, request *http.
 		artistID, _ := strconv.ParseInt(id, 10, 32)
 		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistID)]
 		ms.getMusics(response, request, musicsIds, false, []string{})
-		logger.GetLogger().Info("Load music of artist", id,"in",time.Now().Sub(begin))
+		logger.GetLogger().Info("Load music of artist", id, "in", time.Now().Sub(begin))
 	}
 
 }
@@ -105,14 +105,23 @@ func (ms *MusicServer) ListByAlbum(response http.ResponseWriter, request *http.R
 	}
 }
 
-// Return info about music
+// MusicInfo Return info about music
 func (ms *MusicServer) MusicInfo(response http.ResponseWriter, request *http.Request) {
-	id, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
+	id, _ := strconv.Atoi(request.FormValue("id"))
 	logger.GetLogger().Info("Load music info with id", id)
-	isfavorite := ms.favorites.IsFavorite(int(id))
-	musicInfoData := ms.library.GetMusicInfoAsJSON(int32(id), isfavorite)
+	isFavorite := ms.favorites.IsFavorite(int(id))
+	musicInfoData := ms.library.GetMusicInfoAsJSON(int32(id), isFavorite)
 	response.Header().Set("Access-Control-Allow-Origin", "*")
 	response.Write(musicInfoData)
+}
+
+func (ms *MusicServer) PathMusic(response http.ResponseWriter, request *http.Request) {
+	id, _ := strconv.Atoi(request.FormValue("id"))
+	logger.GetLogger().Info("Load path info with id", id)
+	response.Header().Set("Access-Control-Allow-Origin", "*")
+	music := ms.library.GetMusicInfo(int32(id))
+
+	response.Write([]byte(music["path"]))
 }
 
 // Return info about many musics
@@ -122,13 +131,12 @@ func (ms *MusicServer) MusicsInfo(response http.ResponseWriter, request *http.Re
 	//logger.GetLogger().Info("Load musics", len(ids))
 	if request.FormValue("short") != "" {
 		ms.getMusics(response, request, int32asInt(ids), false, []string{"artist"})
-	}else {
+	} else {
 		ms.musicsResponse(ids, response)
 	}
 }
 
-
-//search musics by free text
+// search musics by free text
 func (ms *MusicServer) Search(response http.ResponseWriter, request *http.Request) {
 	musics := ms.indexManager.SearchText(request.FormValue("term"), request.FormValue("size"))
 	ms.musicsResponse(musics, response)
@@ -163,14 +171,13 @@ func (ms *MusicServer) MusicsInfoInline(response http.ResponseWriter, request *h
 	ms.musicsResponse(ids, response)
 }
 
-
 func (ms *MusicServer) NbMusics(response http.ResponseWriter, request *http.Request) {
 	response.Write([]byte(fmt.Sprintf("%d", ms.library.GetNbMusics())))
 }
 
-func int32asInt(ids []int32)[]int{
-	idsInt := make([]int,len(ids))
-	for i,id := range ids {
+func int32asInt(ids []int32) []int {
+	idsInt := make([]int, len(ids))
+	for i, id := range ids {
 		idsInt[i] = int(id)
 	}
 	return idsInt

@@ -23,62 +23,62 @@ func (sse SSEWriter) Write(message string) {
 	sse.f.Flush()
 }
 
-func createRoutes(ms * server.MusicServer) *http.ServeMux {
+func createRoutes(ms *server.MusicServer) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	registerRoute(mux,"/status", "",ms.Status)
-	registerRoute(mux,"/statsAsSSE", "", ms.StatsAsSSE)
+	registerRoute(mux, "/status", "", ms.Status)
+	registerRoute(mux, "/statsAsSSE", "", ms.StatsAsSSE)
 
-	registerRoute(mux,"/music", "", ms.Readmusic)
-	registerRoute(mux,"/recreateIndex", "", ms.RecreateIndex)
-	registerRoute(mux,"/nbMusics", "", ms.NbMusics)
+	registerRoute(mux, "/music", "", ms.Readmusic)
+	registerRoute(mux, "/recreateIndex", "", ms.RecreateIndex)
+	registerRoute(mux, "/nbMusics", "", ms.NbMusics)
 
-
-	registerRoute(mux,"/get", "", ms.Get)
+	registerRoute(mux, "/get", "", ms.Get)
 
 	// Manage search
-	registerRoute(mux,"/genres", "", ms.ListGenres)
-	registerRoute(mux,"/musicInfo", "", ms.MusicInfo)
-	registerRoute(mux,"/musicsInfo", "", ms.MusicsInfo)
-	registerRoute(mux,"/musicsInfoInline", "", ms.MusicsInfoInline)
-	registerRoute(mux,"/listByArtist", "", ms.ListByArtist)
-	registerRoute(mux,"/listByAlbum", "", ms.ListByAlbum)
-	registerRoute(mux,"/listByOnlyAlbums", "", ms.ListByOnlyAlbums)
-	registerRoute(mux,"/search", "", ms.Search)
+	registerRoute(mux, "/genres", "", ms.ListGenres)
+	registerRoute(mux, "/musicInfo", "", ms.MusicInfo)
+	registerRoute(mux, "/pathOfMusic", "", ms.PathMusic)
+	registerRoute(mux, "/musicsInfo", "", ms.MusicsInfo)
+	registerRoute(mux, "/musicsInfoInline", "", ms.MusicsInfoInline)
+	registerRoute(mux, "/listByArtist", "", ms.ListByArtist)
+	registerRoute(mux, "/listByAlbum", "", ms.ListByAlbum)
+	registerRoute(mux, "/listByOnlyAlbums", "", ms.ListByOnlyAlbums)
+	registerRoute(mux, "/search", "", ms.Search)
 
 	// Manage musics
-	registerRoute(mux,"/index", "", ms.Index)
-	registerRoute(mux,"/fullReindex", "", ms.FullReindex)
+	registerRoute(mux, "/index", "", ms.Index)
+	registerRoute(mux, "/fullReindex", "", ms.FullReindex)
 
 	// Manage favorites
-	registerRoute(mux,"/setFavorite", "", ms.SetFavorite)
-	registerRoute(mux,"/getFavorites", "", ms.GetFavorites)
+	registerRoute(mux, "/setFavorite", "", ms.SetFavorite)
+	registerRoute(mux, "/getFavorites", "", ms.GetFavorites)
 
 	// Manage share device
-	registerRoute(mux,"/share", "", ms.Share)
-	registerRoute(mux,"/shareService", "", ms.ShareService)
-	registerRoute(mux,"/heartbeat", "", ms.Heartbeat)
-	registerRoute(mux,"/killshare", "", ms.KillShare)
-	registerRoute(mux,"/shares", "", ms.GetShares)
-	registerRoute(mux,"/shareUpdate", "", ms.ShareUpdate)
-	registerRoute(mux,"/volume", "", ms.Volume)
-	registerRoute(mux,"/latency", "", ms.ComputeLatency)
+	registerRoute(mux, "/share", "", ms.Share)
+	registerRoute(mux, "/shareService", "", ms.ShareService)
+	registerRoute(mux, "/heartbeat", "", ms.Heartbeat)
+	registerRoute(mux, "/killshare", "", ms.KillShare)
+	registerRoute(mux, "/shares", "", ms.GetShares)
+	registerRoute(mux, "/shareUpdate", "", ms.ShareUpdate)
+	registerRoute(mux, "/volume", "", ms.Volume)
+	registerRoute(mux, "/latency", "", ms.ComputeLatency)
 
 	// Serve files
-	registerRoute(mux,"/help", "", Help)
-	registerRoute(mux,"/", "", ms.Root)
+	registerRoute(mux, "/help", "", Help)
+	registerRoute(mux, "/", "", ms.Root)
 	return mux
 }
 
 var routesDefinitions = make(map[string]string)
 
-func registerRoute(mux * http.ServeMux,pattern, doc string, handler func(w http.ResponseWriter,r * http.Request)) {
-	mux.HandleFunc(pattern,handler)
+func registerRoute(mux *http.ServeMux, pattern, doc string, handler func(w http.ResponseWriter, r *http.Request)) {
+	mux.HandleFunc(pattern, handler)
 	routesDefinitions[pattern] = doc
 }
 
-func Help(w http.ResponseWriter,r * http.Request){
-	if data,err := json.Marshal(routesDefinitions) ; err == nil {
+func Help(w http.ResponseWriter, r *http.Request) {
+	if data, err := json.Marshal(routesDefinitions); err == nil {
 		w.Write(data)
 	}
 }
