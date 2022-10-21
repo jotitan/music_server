@@ -107,7 +107,7 @@ func State(w http.ResponseWriter, r *http.Request) {
 }
 
 func Current(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(fmt.Sprintf("{\"current\":%d", playlist.currentMusic)))
+	w.Write([]byte(fmt.Sprintf("{\"current\":%d}", playlist.currentMusic)))
 }
 
 func List(w http.ResponseWriter, r *http.Request) {
