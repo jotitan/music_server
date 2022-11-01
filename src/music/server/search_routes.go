@@ -35,7 +35,7 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 }
 
 func (ms *MusicServer) getMusics(response http.ResponseWriter, request *http.Request, musicsIds []int, sortByTrack bool, fields []string) {
-	// Get genre, if exist, filter music with
+	// Get genre, if exists, filter music with
 	genre := strings.ToLower(request.FormValue("genre"))
 	musics := make([]map[string]interface{}, 0, len(musicsIds))
 	for _, musicID := range musicsIds {
@@ -46,6 +46,8 @@ func (ms *MusicServer) getMusics(response http.ResponseWriter, request *http.Req
 			infos["favorite"] = fmt.Sprintf("%t", ms.favorites.IsFavorite(musicID))
 			infos["track"] = "#" + m["track"]
 			infos["time"] = m["length"]
+			infos["album"] = m["album"]
+			infos["artist"] = m["artist"]
 			// Recopy wanted fields
 			for _, field := range fields {
 				infos[field] = m[field]
