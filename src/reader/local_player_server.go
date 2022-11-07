@@ -17,6 +17,7 @@ func RunLocalServer(port string) {
 	server.HandleFunc("/control/volumeDown", VolumeDown)
 	server.HandleFunc("/playlist/add", Add)
 	server.HandleFunc("/radio/play", Radio)
+	server.HandleFunc("/close", ForceClose)
 	server.HandleFunc("/radio/stop", StopRadio)
 	server.HandleFunc("/playlist/remove", Remove)
 	server.HandleFunc("/playlist/clean", Clean)

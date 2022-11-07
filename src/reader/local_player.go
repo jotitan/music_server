@@ -20,36 +20,42 @@ type musicReader struct {
 	currentVolume float64
 }
 
-func NewMusicReader()*musicReader {
+func NewMusicReader() *musicReader {
 	return &musicReader{running: false}
 }
 
-func (mr * musicReader)Play(path string)error{
-	logger.GetLogger().Info("Play",path)
-	f,err:= os.Open(path)
+func (mr *musicReader) Play(path string) error {
+	logger.GetLogger().Info("Play", path)
+	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	return mr.readStream(f)
 }
 
-func (mr * musicReader)StopRadio(){
+func (mr *musicReader) StopRadio() {
 	speaker.Close()
 	mr.running = false
 }
 
-func (mr * musicReader)PlayRadio(urlRadio string)error{
-	logger.GetLogger().Info("Read radio",urlRadio)
-	resp,err := http.Get(urlRadio)
+func (mr *musicReader) PlayRadio(urlRadio string) error {
+	logger.GetLogger().Info("Read radio", urlRadio)
+	resp, err := http.Get(urlRadio)
 	if err != nil {
 		return err
 	}
 	return mr.readStream(resp.Body)
 }
 
-func (mr * musicReader)readStream(stream io.ReadCloser)error{
+func (mr *musicReader) ForceClose() {
+	speaker.Lock()
+	speaker.Close()
+	speaker.Unlock()
+}
+
+func (mr *musicReader) readStream(stream io.ReadCloser) error {
 	defer stream.Close()
-	streamer, format,err := mp3.Decode(stream)
+	streamer, format, err := mp3.Decode(stream)
 	if err != nil {
 		return err
 	}
@@ -59,7 +65,7 @@ func (mr * musicReader)readStream(stream io.ReadCloser)error{
 		return err
 	}
 	mr.control = &beep.Ctrl{Streamer: beep.Loop(1, streamer), Paused: false}
-	mr.volumeManager = &effects.Volume{Base:2,Volume: mr.currentVolume,Silent: false,Streamer: mr.control}
+	mr.volumeManager = &effects.Volume{Base: 2, Volume: mr.currentVolume, Silent: false, Streamer: mr.control}
 	mr.running = true
 
 	// Detect end and read next music (chanel to playlist)
@@ -67,12 +73,12 @@ func (mr * musicReader)readStream(stream io.ReadCloser)error{
 	speaker.Play(beep.Seq(mr.volumeManager, beep.Callback(func() {
 		end <- true
 	})))
-	<- end
+	<-end
 	// For radio, impossible, must continue if stream stop
 	return nil
 }
 
-func (mr * musicReader)Pause()error{
+func (mr *musicReader) Pause() error {
 	logger.GetLogger().Info("Pause")
 	if !mr.running {
 		return errors.New("no music running")
@@ -85,8 +91,8 @@ func (mr * musicReader)Pause()error{
 
 func (mr *musicReader) updateVolume(step float64) {
 	speaker.Lock()
-	logger.GetLogger().Info("Update volume",step,mr.volumeManager.Volume)
-	mr.currentVolume+=step
-	mr.volumeManager.Volume=mr.currentVolume
+	logger.GetLogger().Info("Update volume", step, mr.volumeManager.Volume)
+	mr.currentVolume += step
+	mr.volumeManager.Volume = mr.currentVolume
 	speaker.Unlock()
 }

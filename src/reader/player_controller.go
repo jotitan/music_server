@@ -61,6 +61,10 @@ func Radio(w http.ResponseWriter, r *http.Request) {
 	player.Radio(radio)
 }
 
+func ForceClose(w http.ResponseWriter, r *http.Request) {
+	player.ForceClose()
+}
+
 func Add(w http.ResponseWriter, r *http.Request) {
 	data, _ := ioutil.ReadAll(r.Body)
 	musics := make([]map[string]string, 0)
