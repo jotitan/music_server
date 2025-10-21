@@ -26,19 +26,19 @@ const (
 	limitMusicFile = 1000
 )
 
-//MusicSaver represent the contract to be able to save musics
+// MusicSaver represent the contract to be able to save musics
 type MusicSaver interface {
 	AddToSave(music Music)
 	FinishEnd()
 	LoadExistingMusicsInfo() map[string]map[string]string
 }
 
-//NewOldMusicSaver create an old implementation
+// NewOldMusicSaver create an old implementation
 func NewOldMusicSaver(folder string) OldMusicSaver {
 	return OldMusicSaver{folder: folder}
 }
 
-//OldMusicSaver is the old implementation of index
+// OldMusicSaver is the old implementation of index
 type OldMusicSaver struct {
 	// If file is full, change directory
 	changeFolder bool
@@ -60,7 +60,7 @@ func foundMusicInCache(musics map[string]map[string]string, filename string) (*i
 	return nil, "", 0
 }
 
-//LoadExistingMusicsInfo load already existing music in index
+// LoadExistingMusicsInfo load already existing music in index
 func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 	musicsMap := make(map[string]map[string]string)
 	for fileID := 0; ; fileID++ {
@@ -87,7 +87,7 @@ func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 	return musicsMap
 }
 
-//FullReindex load all musics in index, browse and find new ones
+// FullReindex load all musics in index, browse and find new ones
 func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver) TextIndexer {
 	logger.GetLogger().Info("Launch FullReindex")
 
@@ -121,7 +121,7 @@ func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver
 	return md.Browse(folderName, musics, musicSaver)
 }
 
-//Browse all musics in root folder, detect unindexed musics and add into library
+// Browse all musics in root folder, detect unindexed musics and add into library
 func (md *MusicDictionnary) Browse(folderName string, musics map[string]map[string]string, musicSaver MusicSaver) TextIndexer {
 	// Useless for full reindex (read everything and search in path)
 	md.loadIndexedInodes()
@@ -228,7 +228,7 @@ func (md *MusicDictionnary) browseFolder(folderName string, musics map[string]ma
 	}
 }
 
-//MusicDictionnary manage music search, index search and music browsing
+// MusicDictionnary manage music search, index search and music browsing
 type MusicDictionnary struct {
 	// Next id of music
 	nextId int64
@@ -272,7 +272,7 @@ func (md *MusicDictionnary) extractInfo(filename string, musics map[string]map[s
 	}
 	r, _ := os.Open(filename)
 	defer r.Close()
-	music := id3.Read(r)
+	music := readMusic(r)
 	if music == nil {
 		music = &id3.File{}
 	}
@@ -295,6 +295,16 @@ func (md *MusicDictionnary) extractInfo(filename string, musics map[string]map[s
 	id = md.nextId
 	md.nextId++
 	return music, cover, id
+}
+
+func readMusic(file *os.File) *id3.File {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.GetLogger().Error("Impossible to read", err)
+		}
+	}()
+	return id3.Read(file)
+
 }
 
 func (md MusicDictionnary) getTimeMusic(filename string) string {
