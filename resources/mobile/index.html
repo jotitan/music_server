@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr" data-api-base="/">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Server • Player</title>
+    <link rel="icon" href="../favicon.ico">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<noscript>Activez JavaScript pour utiliser le lecteur.</noscript>
+<div id="app">
+    <header class="top-bar">
+        <div class="branding">
+            <button id="theme-toggle" type="button" class="icon-btn theme-toggle" aria-label="Activer le thème vert" title="Activer le thème vert">
+                <span aria-hidden="true">🎨</span>
+            </button>
+            <div>
+                <h1>Music Server</h1>
+                <p id="library-stats">Chargement de la bibliothèque…</p>
+            </div>
+        </div>
+        
+    </header>
+
+    <main class="layout">
+        <section class="panel now-playing" aria-label="Lecture en cours">
+            <div class="now-playing__info">
+                <div class="meta">
+                    <div class="now-playing__header">
+                        <p class="now-playing__label">Lecture en cours</p>
+                        
+                    </div>
+                    <h2 class="now-playing__title" id="now-playing-title">Aucune piste</h2>
+                    <p class="now-playing__artist" id="now-playing-artist"></p>
+                    <p class="now-playing__album" id="now-playing-album"></p>
+                </div>
+            </div>
+
+            <div class="controls" aria-label="Commandes de lecture">
+                <button class="control-btn" id="prev-btn" title="Piste précédente" aria-label="Piste précédente">
+                    &#9664;&#9664;
+                </button>
+                <button class="control-btn primary" id="play-btn" title="Lecture" aria-label="Lecture">
+                    ▶
+                </button>
+                <button class="control-btn" id="next-btn" title="Piste suivante" aria-label="Piste suivante">
+                    &#9654;&#9654;
+                </button>
+            </div>
+            <div class="timeline">
+                <input type="range" id="progress" min="0" max="100" value="0" step="0.1" aria-label="Position de lecture">
+                <div class="timestamps">
+                    <span id="current-time">0:00</span>
+                    <span id="total-time">0:00</span>
+                </div>
+            </div>
+
+            <div class="volume">
+                <span class="volume-icon" aria-hidden="true">🔊</span>
+                <label for="volume-range" class="visually-hidden">Volume</label>
+                <input type="range" id="volume-range" min="0" max="1" step="0.01" value="0.7" aria-label="Volume">
+            </div>
+
+            <audio id="audio-player" preload="metadata" crossorigin="anonymous"></audio>
+        </section>
+
+        <section class="panel playlist" aria-label="Playlist">
+            <header class="panel__header">
+                <div>
+                    <h2>Playlist</h2>
+                    <p id="playlist-count">0 piste</p>
+                </div>
+                <div class="playlist__actions">
+                    <button id="clear-playlist-btn" type="button" class="icon-btn" aria-label="Vider la playlist" title="Vider la playlist">
+                        <span aria-hidden="true">🗑️</span>
+                    </button>
+                    <button id="shuffle-btn" type="button" class="icon-btn" aria-label="Mélanger la playlist" title="Mélanger la playlist">
+                        <span aria-hidden="true">🔀</span>
+                    </button>
+                </div>
+            </header>
+            <ol id="playlist-list" class="playlist__list"></ol>
+        </section>
+
+        <section class="panel search" aria-label="Recherche de musiques">
+            <form id="search-form" class="search__form" role="search">
+                <label class="visually-hidden" for="search-input">Rechercher un titre, un artiste ou un album</label>
+                <input id="search-input" type="search" placeholder="Rechercher un titre, un artiste ou un album…" autocomplete="off" spellcheck="false">
+                <button type="submit" class="icon-btn" aria-label="Rechercher" title="Rechercher">
+                    <span aria-hidden="true">🔍</span>
+                </button>
+            </form>
+            <div class="search__results" aria-live="polite" aria-busy="true" id="search-results">
+                <div class="empty-state">
+                    <p>Vide.</p>                
+                </div>
+            </div>
+        </section>
+
+        
+    </main>
+</div>
+
+<template id="search-result-template">
+    <article class="result-item">
+        <div class="result-item__meta">
+            <h3 class="result-item__title"></h3>
+            <p class="result-item__subtitle"></p>
+        </div>
+        <div class="result-item__actions">
+            <button type="button" class="add-btn icon-btn" aria-label="Ajouter à la playlist" title="Ajouter à la playlist">
+                <span aria-hidden="true">＋</span>
+            </button>
+        </div>
+    </article>
+</template>
+
+<template id="playlist-item-template">
+    <li class="playlist-item">
+        <button class="playlist-item__remove" type="button" title="Retirer de la playlist" aria-label="Retirer de la playlist">×</button>
+        <div class="playlist-item__meta">
+            <p class="playlist-item__title"></p>
+            <p class="playlist-item__subtitle"></p>
+        </div>
+        <span class="playlist-item__duration"></span>
+    </li>
+</template>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
+

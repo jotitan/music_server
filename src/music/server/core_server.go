@@ -4,7 +4,6 @@ import (
 	"github.com/jotitan/music_server/logger"
 	"github.com/jotitan/music_server/music"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -13,7 +12,7 @@ import (
 	"strings"
 )
 
-//MusicServer manage all request of music server. Delegate to many objects
+// MusicServer manage all request of music server. Delegate to many objects
 type MusicServer struct {
 	// Folder where indexes are stored
 	folder string
@@ -32,33 +31,29 @@ type MusicServer struct {
 	favorites *music.FavoritesManager
 }
 
-
 func (ms *MusicServer) Root(response http.ResponseWriter, request *http.Request) {
 	proxyRedirect := request.Header.Get("proxy-redirect")
 	ms.devices.Reset()
 	if url := request.RequestURI; url == "/" || strings.Index(url, "/?") == 0 {
 		// Reinit at each reload page
-		ms.serveFile(response, request, filepath.Join(ms.webfolder, "music.html"),proxyRedirect)
-		//http.ServeFile(response, request, filepath.Join(ms.webfolder, "music.html"))
+		ms.serveFile(response, request, filepath.Join(ms.webfolder, "music.html"), proxyRedirect)
 	} else {
 		if url == "/remote" {
-			ms.serveFile(response, request, filepath.Join(ms.webfolder, "html/remote_control_full.html"),proxyRedirect)
-			//http.ServeFile(response, request, filepath.Join(ms.webfolder, "html/remote_control_full.html"))
-		}else {
-			ms.serveFile(response, request, filepath.Join(ms.webfolder, url[1:]),proxyRedirect)
-			//http.ServeFile(response, request, filepath.Join(ms.webfolder, url[1:]))
+			ms.serveFile(response, request, filepath.Join(ms.webfolder, "html/remote_control_full.html"), proxyRedirect)
+		} else {
+			ms.serveFile(response, request, filepath.Join(ms.webfolder, url[1:]), proxyRedirect)
 		}
 	}
 }
 
-func (ms * MusicServer)serveFile(response http.ResponseWriter, request * http.Request, file, proxyRedirect string){
-	if strings.HasSuffix(file,".html") && proxyRedirect != ""{
+func (ms *MusicServer) serveFile(response http.ResponseWriter, request *http.Request, file, proxyRedirect string) {
+	if strings.HasSuffix(file, ".html") && proxyRedirect != "" {
 		// Rewrite all urls
-		data,_ := ioutil.ReadFile(file)
-		formatData := strings.Replace(strings.Replace(string(data),"src=\"","src=\"/" + proxyRedirect,-1),"href=\"","href=\"/" + proxyRedirect,-1)
-		formatData = strings.Replace(formatData,"var basename=\"/\";","var basename=\"/" + proxyRedirect + "\";",-1)
+		data, _ := os.ReadFile(file)
+		formatData := strings.Replace(strings.Replace(string(data), "src=\"", "src=\"/"+proxyRedirect, -1), "href=\"", "href=\"/"+proxyRedirect, -1)
+		formatData = strings.Replace(formatData, "var basename=\"/\";", "var basename=\"/"+proxyRedirect+"\";", -1)
 		response.Write([]byte(formatData))
-	}else{
+	} else {
 		http.ServeFile(response, request, file)
 	}
 
@@ -68,7 +63,6 @@ func (ms * MusicServer)serveFile(response http.ResponseWriter, request * http.Re
 func (ms MusicServer) Status(response http.ResponseWriter, request *http.Request) {
 	response.Write([]byte("Up"))
 }
-
 
 func (ms MusicServer) findExposedURL() string {
 	adr, _ := net.InterfaceAddrs()
@@ -89,8 +83,7 @@ func (ms *MusicServer) Volume(response http.ResponseWriter, request *http.Reques
 	ms.devices.SetVolume(request.FormValue("volume") == "down", host)
 }
 
-
-func (ms MusicServer) Create(port string, indexFolder, musicFolder, addressMask, webfolder string, routes func(ms * MusicServer)*http.ServeMux ) {
+func (ms MusicServer) Create(port string, indexFolder, musicFolder, addressMask, webfolder string, routes func(ms *MusicServer) *http.ServeMux) {
 	ms.folder = indexFolder
 	ms.indexManager = music.NewSearchIndex(ms.folder)
 	ms.library = music.NewMusicLibrary(ms.folder)
