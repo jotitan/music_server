@@ -60,7 +60,7 @@ class MusicSpaApp {
     constructor(doc = document) {
         this.document = doc;
         this.root = doc.documentElement;
-        this.apiBase = (this.root.dataset.apiBase || "/").replace(/\/?$/, "/");
+        this.apiBase = doc.location.href.replace("mobile/","");
 
         this.storageKeys = {
             playlist: "music-server-mobile:playlist",
