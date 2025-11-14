@@ -126,8 +126,6 @@ class MusicSpaApp {
     }
 
     resolveUrl(path) {
-        path = "http://localhost:9000/music/" + path
-        
         if (!path) {
             return "";
         }
