@@ -21,7 +21,7 @@ jobs:
       run: |
         echo Run build monitoring server and agent
         cd src/main
-        export GOOS=linux
+        export GOOS=unix
         export GOARCH=arm
         go build -o music_server music_server.go
         go build -o agent_player run_agent_player.go
