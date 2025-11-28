@@ -21,8 +21,9 @@ func InitLocalPlayer(deviceName, localUrl, urlMusicService string) {
 }
 
 func Play(_ http.ResponseWriter, r *http.Request) {
-	if index, err := strconv.ParseInt(r.FormValue("index"), 10, 32); err == nil {
-		player.Play(int(index))
+	if index, err := strconv.Atoi(r.FormValue("index")); err == nil {
+		player.ForceClose()
+		player.Play(index)
 	} else {
 		// Call Pause or Play
 		player.PauseOrPlayFirst()
@@ -74,6 +75,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 				playlist.Add(int(idMusic), music["path"])
 			}
 		}
+		w.WriteHeader(http.StatusOK)
 	} else {
 		http.Error(w, err.Error(), 404)
 	}
@@ -112,6 +114,10 @@ func State(w http.ResponseWriter, r *http.Request) {
 
 func Current(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("{\"current\":%d}", playlist.currentMusic)))
+}
+
+func Reconnect(w http.ResponseWriter, r *http.Request) {
+	player.connectToServer()
 }
 
 func List(w http.ResponseWriter, r *http.Request) {

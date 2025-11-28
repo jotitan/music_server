@@ -35,16 +35,16 @@ func getShare(request *http.Request, idName string) *music.SharedSession {
 // Heartbeat is used to monitor connected service player. After specific timeout, cut connection
 func (ms MusicServer) Heartbeat(response http.ResponseWriter, request *http.Request) {
 	sessionID := sessionID(response, request)
-	shareId,err := strconv.ParseInt(request.FormValue("id"),10,32)
+	shareId, err := strconv.Atoi(request.FormValue("id"))
 
 	if err != nil {
 		logger.GetLogger().Error("Impossible to manage heartbeat, bad share id")
 		return
 	}
 	// Search shared, if not exist or ids doesn't match, log error
-	sc := music.GetShareConnection(int(shareId))
+	sc := music.GetShareConnection(shareId)
 	if sc == nil {
-		logger.GetLogger().Error("Impossible to manage heartbeat of",shareId)
+		logger.GetLogger().Error("Impossible to manage heartbeat of", shareId)
 		return
 	}
 	sc.NotifyHeartbeat(sessionID)
@@ -52,15 +52,15 @@ func (ms MusicServer) Heartbeat(response http.ResponseWriter, request *http.Requ
 
 func (ms MusicServer) ShareService(response http.ResponseWriter, request *http.Request) {
 	// Return id of shared
-	id := music.CreateShareConnectionService(request.FormValue("device"), request.FormValue("url"),sessionID(response, request),ms.library.GetMusicsInfo)
-	response.Write([]byte(fmt.Sprintf("%d",id)))
+	id := music.CreateShareConnectionService(request.FormValue("device"), request.FormValue("url"), sessionID(response, request), ms.library.GetMusicsInfo)
+	response.Write([]byte(fmt.Sprintf("%d", id)))
 }
 
 func (ms MusicServer) Share(response http.ResponseWriter, request *http.Request) {
 	// If id is present, connect as clone
 	if ss := getShare(request, "id"); ss != nil {
 		// Create new SessionID at each connection ?
-		ss.ConnectToShare(response, request.FormValue("device"), sessionIDWithOpts(response, request,false))
+		ss.ConnectToShare(response, request.FormValue("device"), sessionIDWithOpts(response, request, false))
 	} else {
 		music.CreateShareConnection(response, request.FormValue("device"), sessionID(response, request))
 	}
@@ -73,25 +73,24 @@ func (ms MusicServer) ShareUpdate(response http.ResponseWriter, request *http.Re
 	}
 }
 
-
-func (ms MusicServer)ComputeLatency(response http.ResponseWriter, request *http.Request){
+func (ms MusicServer) ComputeLatency(response http.ResponseWriter, request *http.Request) {
 	// Get original time (original_time), two differents times (local_receive & local_push) and add current
-	originalTime := parseInt(request,"original_time")
-	localReceive := parseInt(request,"local_receive")
-	localPush := parseInt(request,"local_push")
-	idShare := parseInt(request,"id")
+	originalTime := parseInt(request, "original_time")
+	localReceive := parseInt(request, "local_receive")
+	localPush := parseInt(request, "local_push")
+	idShare := parseInt(request, "id")
 
-	latency := music.ComputeLatency(originalTime,time.Now().UnixNano(),localReceive,localPush)
-	if average,done := music.UpdateLatency(latency,int(idShare)) ; done {
-		ss := getShare(request,"id")
+	latency := music.ComputeLatency(originalTime, time.Now().UnixNano(), localReceive, localPush)
+	if average, done := music.UpdateLatency(latency, int(idShare)); done {
+		ss := getShare(request, "id")
 		ss.SetLatency(average)
-		fmt.Println("Average done : ",getSessionID(request),idShare,average)
+		fmt.Println("Average done : ", getSessionID(request), idShare, average)
 	}
 }
 
-func parseInt(request * http.Request, name string)int64{
-	if value := request.FormValue(name) ; value != "" {
-		if numValue, err := strconv.ParseInt(value,10,64) ; err == nil {
+func parseInt(request *http.Request, name string) int64 {
+	if value := request.FormValue(name); value != "" {
+		if numValue, err := strconv.ParseInt(value, 10, 64); err == nil {
 			return numValue
 		}
 	}
@@ -108,7 +107,7 @@ func getSessionID(request *http.Request) string {
 }
 
 func sessionID(response http.ResponseWriter, request *http.Request) string {
-	return sessionIDWithOpts(response,request,false)
+	return sessionIDWithOpts(response, request, false)
 }
 
 // If forceNew == true, create a new sessionID
@@ -125,4 +124,3 @@ func sessionIDWithOpts(response http.ResponseWriter, request *http.Request, forc
 	http.SetCookie(response, &http.Cookie{Name: "jsessionid", Value: hexValue})
 	return hexValue
 }
-

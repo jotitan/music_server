@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-
 func (ms MusicServer) createSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
@@ -13,8 +12,7 @@ func (ms MusicServer) createSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-
-// Return stats by server side event
+// StatsAsSSE return stats by server side event
 func (ms MusicServer) StatsAsSSE(response http.ResponseWriter, request *http.Request) {
 	ms.createSSEHeader(response)
 	ms.sendStats(response)
@@ -40,4 +38,3 @@ func (ms MusicServer) sendStats(r http.ResponseWriter) {
 		time.Sleep(1 * time.Second)
 	}
 }
-

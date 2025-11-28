@@ -85,6 +85,7 @@ func (pp *PlayerPlaylist) runHeartBeat() {
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil || resp.StatusCode != 200 {
 				// Trouble, try to reconnect after 10 seconds
+				logger.GetLogger().Info("End server connection, try to reconnect...")
 				time.Sleep(time.Second * 10)
 				pp.connectToServer()
 			}

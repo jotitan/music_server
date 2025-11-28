@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -182,7 +182,7 @@ func manageServiceResponse(event, originalData string, resp *http.Response, err 
 	if err == nil && resp.StatusCode == 200 {
 		switch event {
 		case "askPlaylist":
-			if data, err := ioutil.ReadAll(resp.Body); err == nil {
+			if data, err := io.ReadAll(resp.Body); err == nil {
 				return "playlist", string(data), true
 			}
 		case "remove":
@@ -262,11 +262,11 @@ var sharedSessions = make(map[int]*SharedSession)
 func CreateSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
-	response.Header().Set("Connection", "keep-alive")
+	//response.Header().Set("Connection", "keep-alive")
 	response.Header().Set("Access-Control-Allow-Origin", "*")
 	response.Header().Set("X-Accel-Buffering", "no")
 	// Disable compression for SSE
-	response.Header().Set("Content-Encoding", "identity")
+	//response.Header().Set("Content-Encoding", "identity")
 }
 
 func removeSharedSession(id int) {
@@ -297,6 +297,7 @@ func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName
 	// Check if original still exist
 	if !ss.original.isUp() {
 		logger.GetLogger().Error("Impossible to connect to share")
+		http.Error(response, "impossible to connect", http.StatusNotFound)
 		return
 	}
 	var device *Device

@@ -18,6 +18,8 @@ type musicReader struct {
 	running       bool
 	volumeManager *effects.Volume
 	currentVolume float64
+	isInitialize  bool
+	initResampler beep.SampleRate
 }
 
 func NewMusicReader() *musicReader {
@@ -48,9 +50,16 @@ func (mr *musicReader) PlayRadio(urlRadio string) error {
 }
 
 func (mr *musicReader) ForceClose() {
-	speaker.Lock()
-	speaker.Close()
-	speaker.Unlock()
+	speaker.Clear()
+}
+
+func (mr *musicReader) initPlayer(format beep.Format) error {
+	if mr.isInitialize {
+		return nil
+	}
+	mr.isInitialize = true
+	mr.initResampler = format.SampleRate
+	return speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 }
 
 func (mr *musicReader) readStream(stream io.ReadCloser) error {
@@ -60,11 +69,13 @@ func (mr *musicReader) readStream(stream io.ReadCloser) error {
 		return err
 	}
 	defer streamer.Close()
-	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	err = mr.initPlayer(format)
 	if err != nil {
 		return err
 	}
-	mr.control = &beep.Ctrl{Streamer: beep.Loop(1, streamer), Paused: false}
+	resampler := beep.Resample(4, mr.initResampler, format.SampleRate, beep.Loop(1, streamer))
+
+	mr.control = &beep.Ctrl{Streamer: resampler, Paused: false}
 	mr.volumeManager = &effects.Volume{Base: 2, Volume: mr.currentVolume, Silent: false, Streamer: mr.control}
 	mr.running = true
 
@@ -79,7 +90,6 @@ func (mr *musicReader) readStream(stream io.ReadCloser) error {
 }
 
 func (mr *musicReader) Pause() error {
-	logger.GetLogger().Info("Pause")
 	if !mr.running {
 		return errors.New("no music running")
 	}

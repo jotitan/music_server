@@ -24,6 +24,7 @@ func RunLocalServer(port string) {
 	server.HandleFunc("/playlist/list", List)
 	server.HandleFunc("/playlist/state", State)
 	server.HandleFunc("/playlist/current", Current)
+	server.HandleFunc("/reconnect", Reconnect)
 	logger.GetLogger().Info("Start server on", port)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), &server)
 }

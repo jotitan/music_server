@@ -1,18 +1,115 @@
-class AudioController {
+class IPlaylist {
+    add(music) {
+        return Promise.resolve();
+    }
+
+    remove(index) {
+    }
+
+    clear() {
+    }
+}
+
+const getPlaylistController = (isRemote = false, arg = {}) => {
+    return isRemote ? new RemotePlaylistController(arg) : new PlaylistController();
+}
+
+class RemotePlaylistController extends IPlaylist {
+    constructor(remoteController) {
+        super();
+        this.remoteController = remoteController;
+    }
+
+    add(music) {
+        // Add to remote and wait result
+        return this.remoteController.addMusic(music.id)
+    }
+
+    remove(index) {
+        this.remoteController.removeMusic(index);
+    }
+
+    clear() {
+        this.remoteController.clearPlaylist();
+    }
+}
+
+class PlaylistController extends IPlaylist {
+    constructor() {
+        super()
+    }
+}
+
+class IController {
+    setSource(url, index) {
+    }
+
+    clearSource() {
+    }
+
+    setVolume(value) {
+    }
+
+    isPaused() {
+    }
+
+    pause() {
+    }
+
+    play() {
+    }
+    unpause(){}
+}
+
+class RemoteAudioController extends IController {
+    constructor(remote) {
+        super();
+        this.remote = remote;
+        this._isPaused = false;
+    }
+
+    setSource(url, index) {
+        this.currentIndex = index;
+    }
+
+    isPaused() {
+        return this._isPaused;
+    }
+
+    pause() {
+        if (this._isPaused) {
+            return;
+        }
+        this._isPaused = true;
+        return this.remote.pauseMusic()
+    }
+    unpause(){
+        this._isPaused = false;
+        return this.remote.unpauseMusic();
+    }
+    play() {
+        this._isPaused = false;
+        return this.remote.playMusic(this.currentIndex);
+    }
+
+    setVolume(value) {
+        value === 1 ? this.remote.increaseVolume() : this.remote.decreaseVolume()
+    }
+}
+
+class AudioController extends IController {
     constructor(audioElement) {
+        super();
         this.element = audioElement;
     }
 
-    setSource(url) {
+    setSource(url, index) {
         this.element.src = url;
+        this.element.load();
     }
 
     clearSource() {
         this.element.removeAttribute("src");
-    }
-
-    load() {
-        this.element.load();
     }
 
     play() {
@@ -20,7 +117,11 @@ class AudioController {
     }
 
     pause() {
-        this.element.pause();
+        return this.element.pause();
+    }
+
+    unpause() {
+        return this.element.play();
     }
 
     isPaused() {
@@ -56,18 +157,223 @@ class AudioController {
     }
 }
 
-class MusicSpaApp {
-    constructor(doc = document) {
-        this.document = doc;
-        this.root = doc.documentElement;
-        this.apiBase = doc.location.href.replace("mobile/","");
+class RemotePlayerController extends IPlaylist {
+    constructor({Name, Id}, musicApp) {
+        super();
+        this.music = musicApp
+        this.sse = new EventSource(requester.resolveUrl(`/share?id=${Id}&device=mobile`));
+        this.sse.addEventListener('id', data => {
+            this.playerId = Id;
+            this.sessionId = data.data;
+        })
+        this.sse.addEventListener('playlist', message => {
+            const playlist = JSON.parse(message.data);
+            this.loadPlaylist(playlist.ids);
+        })
+        this.sse.addEventListener('error', ii => {
+            console.log("ERROR", ii)
+        })
 
+        this.sse.addEventListener('message', ii => {
+            console.log("MESSAGE", ii)
+        })
+        this.sse.addEventListener('close', a => {
+            console.log("GO", a)
+        })
+    }
+
+    playMusic(index) {
+        return requester.simpleFetch(`shareUpdate?event=playMusic&id=${this.playerId}&data={"position":${index}}`)
+    }
+
+    pauseMusic() {
+        return requester.simpleFetch(`shareUpdate?event=pause&id=${this.playerId}`)
+    }
+
+    unpauseMusic() {
+        return requester.simpleFetch(`shareUpdate?event=play&id=${this.playerId}`)
+    }
+
+    increaseVolume() {
+        return requester.simpleFetchAsBool(`shareUpdate?event=volumeUp&id=${this.playerId}`)
+    }
+
+    decreaseVolume() {
+        return requester.simpleFetchAsBool(`shareUpdate?event=volumeDown&id=${this.playerId}`)
+    }
+
+    addMusic(musicId) {
+        return requester.simpleFetch(`shareUpdate?event=add&id=${this.playerId}&data=${musicId}`, {method: 'POST'})
+    }
+
+    removeMusic(index) {
+        return requester.simpleFetchAsBool(`shareUpdate?event=remove&id=${this.playerId}&index=${index}`)
+    }
+
+    clearPlaylist() {
+        return requester.simpleFetchAsBool(`shareUpdate?event=cleanPlaylist&id=${this.playerId}`)
+    }
+
+    loadPlaylist(ids) {
+        if (ids.length === 0) {
+            return this.music.clearPlaylist()
+        }
+        requester.fetch(`musicsInfo?ids=[${ids}]`).then(data => {
+            data.forEach(m => this.music.state.add(m))
+            this.music.renderPlaylist()
+        })
+    }
+}
+
+class Requester {
+    constructor() {
+        this.apiBase = document.location.href.replace("mobile/", "");
+    }
+
+    resolveUrl(path) {
+        if (!path) {
+            return "";
+        }
+        if (/^https?:\/\//i.test(path)) {
+            return path;
+        }
+        const cleanBase = this.apiBase.endsWith("/") ? this.apiBase : `${this.apiBase}/`;
+        return `${cleanBase}${path.replace(/^\//, "")}`;
+    }
+
+    async fetch(path, isJson = true, {signal} = {}) {
+        const url = this.resolveUrl(path);
+        const response = await fetch(url, {signal});
+        if (!response.ok) {
+            const text = await response.text().catch(() => "");
+            throw new Error(`Erreur ${response.status}: ${text || response.statusText}`);
+        }
+        return isJson ? response.json() : response.text()
+    }
+
+    simpleFetchAsBool(path, args = {}) {
+        try {
+            this.simpleFetch(path, args)
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    async simpleFetch(path, args = {}) {
+        const url = this.resolveUrl(path);
+        const response = await fetch(url, args);
+        if (!response.ok) {
+            const text = await response.text().catch(() => "");
+            throw new Error(`Erreur ${response.status}: ${text || response.statusText}`);
+        }
+        return response;
+    }
+}
+
+class StateManager {
+    constructor() {
+        this.playlist = [];
+        this.currentIndex = -1;
+        this.volume = 0;
+        this.searchAbortController = null;
+        this.enableStorage = true;
         this.storageKeys = {
             playlist: "music-server-mobile:playlist",
             currentIndex: "music-server-mobile:current-index",
             volume: "music-server-mobile:volume",
             theme: "music-server-mobile:theme"
         };
+    }
+
+    setStorage(isEnable) {
+        this.enableStorage = isEnable;
+    }
+
+    isEmpty() {
+        return this.playlist.length === 0;
+    }
+
+    size() {
+        return this.playlist.length;
+    }
+
+    getCurrent() {
+        return this.currentIndex;
+    }
+
+    remove(index) {
+        this.playlist.splice(index, 1);
+    }
+
+    clear() {
+        this.playlist = [];
+        this.currentIndex = -1;
+    }
+
+    clearPlaylist() {
+        this.playlist = [];
+    }
+
+    get(index = this.currentIndex) {
+        if (index >= 0 && index < this.playlist.length) {
+            return this.playlist[index]
+        }
+        return null
+    }
+
+    add(track) {
+        this.playlist.push(track)
+        if (this.currentIndex === -1) {
+            this.currentIndex = 0;
+        }
+    }
+
+    next() {
+        return (this.currentIndex + 1 % this.size())
+    }
+
+    previous() {
+        return this.currentIndex - 1 < 0 ? this.size() - 1 : this.currentIndex - 1;
+    }
+
+    save() {
+        if (this.enableStorage) {
+            localStorage.setItem(this.storageKeys.playlist, JSON.stringify(this.playlist));
+            localStorage.setItem(this.storageKeys.currentIndex, String(this.currentIndex));
+            localStorage.setItem(this.storageKeys.theme, this.theme ?? '')
+        }
+    }
+
+    load() {
+        try {
+            const rawPlaylist = localStorage.getItem(this.storageKeys.playlist) || "[]";
+            const playlist = JSON.parse(rawPlaylist);
+            if (Array.isArray(playlist)) {
+                this.playlist = playlist;
+            }
+            const index = parseInt(localStorage.getItem(this.storageKeys.currentIndex) ?? "-1", 10);
+            if (!Number.isNaN(index)) {
+                this.currentIndex = index;
+            }
+            const volume = parseFloat(localStorage.getItem(this.storageKeys.volume) ?? "0.7");
+            this.volume = Number.isNaN(volume) ? 0.7 : Math.min(Math.max(volume, 0), 1);
+            this.theme = localStorage.getItem(this.storageKeys.theme)
+        } catch (err) {
+            console.warn("Impossible de charger l'état du lecteur", err);
+            this.playlist = [];
+            this.currentIndex = -1;
+        }
+    }
+}
+
+const requester = new Requester();
+
+class MusicSpaApp {
+    constructor(doc = document) {
+        this.document = doc;
+        this.root = doc.documentElement;
+        this.playlistController = getPlaylistController();
 
         this.dom = {
             stats: doc.getElementById("library-stats"),
@@ -83,6 +389,8 @@ class MusicSpaApp {
             currentTime: doc.getElementById("current-time"),
             totalTime: doc.getElementById("total-time"),
             volume: doc.getElementById("volume-range"),
+            volumeUp: doc.getElementById("vup-btn"),
+            volumeDown: doc.getElementById("vdown-btn"),
             searchForm: doc.getElementById("search-form"),
             searchInput: doc.getElementById("search-input"),
             searchResults: doc.getElementById("search-results"),
@@ -97,18 +405,15 @@ class MusicSpaApp {
         };
 
         this.audio = new AudioController(this.dom.audio);
-        this.theme = "default";
-        this.state = {
-            playlist: [],
-            currentIndex: -1,
-            searchAbortController: null
-        };
+        this.playlist = new PlaylistController();
+        this.state = new StateManager();
         this.debouncedSearch = this.debounce((value) => this.performSearch(value), 350);
     }
 
     init() {
-        this.loadTheme();
         this.loadState();
+        this.loadTheme();
+        this.initShare();
         this.renderPlaylist();
         this.renderNowPlaying();
         this.bindEvents();
@@ -116,24 +421,36 @@ class MusicSpaApp {
         this.loadCurrentTrack();
     }
 
-    loadCurrentTrack() {
-        if (this.state.currentIndex >= 0 && this.state.currentIndex < this.state.playlist.length) {
-            const track = this.state.playlist[this.state.currentIndex];
-            if (track && track.src) {
-                this.loadTrack(track);
-            }
+    async initShare() {
+        if (await this.isShareExists()) {
+            const share = document.getElementById('connection-share');
+            share.style.setProperty("display", "")
+            share.addEventListener('click', () => this.connectToShare())
         }
     }
 
-    resolveUrl(path) {
-        if (!path) {
-            return "";
+    isShareExists() {
+        return requester.fetch("shares").then(data => data.length === 1)
+    }
+
+    connectToShare() {
+        // Get all shares, if only one, connect to it, otherwise, error message
+        requester.fetch("shares").then(data => {
+            this.state.setStorage(false);
+            this.remotePlayer = new RemotePlayerController(data[0], this);
+            this.playlistController = getPlaylistController(true, this.remotePlayer);
+            this.dom.volume.style.setProperty("display", "none");
+            this.dom.volumeUp.style.setProperty("display", "");
+            this.dom.volumeDown.style.setProperty("display", "");
+            this.audio = new RemoteAudioController(this.remotePlayer);
+        })
+    }
+
+    loadCurrentTrack() {
+        const track = this.state.get();
+        if (track && track.src) {
+            this.loadTrack(track);
         }
-        if (/^https?:\/\//i.test(path)) {
-            return path;
-        }
-        const cleanBase = this.apiBase.endsWith("/") ? this.apiBase : `${this.apiBase}/`;
-        return `${cleanBase}${path.replace(/^\//, "")}`;
     }
 
     formatTime(value) {
@@ -146,31 +463,10 @@ class MusicSpaApp {
         return `${minutes}:${rest < 10 ? "0" : ""}${rest}`;
     }
 
-    saveState() {
-        localStorage.setItem(this.storageKeys.playlist, JSON.stringify(this.state.playlist));
-        localStorage.setItem(this.storageKeys.currentIndex, String(this.state.currentIndex));
-    }
-
     loadState() {
-        try {
-            const rawPlaylist = localStorage.getItem(this.storageKeys.playlist) || "[]";
-            const playlist = JSON.parse(rawPlaylist);
-            if (Array.isArray(playlist)) {
-                this.state.playlist = playlist;
-            }
-            const index = parseInt(localStorage.getItem(this.storageKeys.currentIndex) ?? "-1", 10);
-            if (!Number.isNaN(index)) {
-                this.state.currentIndex = index;
-            }
-            const volume = parseFloat(localStorage.getItem(this.storageKeys.volume) ?? "0.7");
-            const normalizedVolume = Number.isNaN(volume) ? 0.7 : Math.min(Math.max(volume, 0), 1);
-            this.audio.setVolume(normalizedVolume);
-            this.dom.volume.value = String(this.audio.getVolume());
-        } catch (err) {
-            console.warn("Impossible de charger l'état du lecteur", err);
-            this.state.playlist = [];
-            this.state.currentIndex = -1;
-        }
+        this.state.load();
+        this.audio.setVolume(this.state.volume);
+        this.dom.volume.value = String(this.audio.getVolume());
     }
 
     debounce(fn, delay = 300) {
@@ -179,16 +475,6 @@ class MusicSpaApp {
             clearTimeout(timeoutId);
             timeoutId = window.setTimeout(() => fn(...args), delay);
         };
-    }
-
-    async fetchJson(path, { signal } = {}) {
-        const url = this.resolveUrl(path);
-        const response = await fetch(url, { signal });
-        if (!response.ok) {
-            const text = await response.text().catch(() => "");
-            throw new Error(`Erreur ${response.status}: ${text || response.statusText}`);
-        }
-        return response.json();
     }
 
     setPlaybackStatus(message) {
@@ -221,17 +507,17 @@ class MusicSpaApp {
                 this.removeFromPlaylist(index);
             });
             clone.addEventListener("click", () => this.playTrack(index));
-            if (index === this.state.currentIndex) {
+            if (index === this.state.getCurrent()) {
                 clone.classList.add("active");
             }
             this.dom.playlistList.appendChild(clone);
         });
-        const count = this.state.playlist.length;
+        const count = this.state.size();
         this.dom.playlistCount.textContent = count === 0 ? "Aucune piste" : `${count} piste${count > 1 ? "s" : ""}`;
     }
 
     renderNowPlaying() {
-        const track = this.state.playlist[this.state.currentIndex];
+        const track = this.state.get();
         if (!track) {
             this.dom.nowPlayingTitle.textContent = "Aucune piste";
             this.dom.nowPlayingArtist.textContent = "";
@@ -286,8 +572,8 @@ class MusicSpaApp {
         this.dom.searchResults.appendChild(empty);
     }
 
-    addToPlaylist(music) {
-        const track = {
+    trackFromMusic(music) {
+        return {
             id: music.id,
             title: music.title,
             artist: music.artist,
@@ -296,67 +582,70 @@ class MusicSpaApp {
             src: music.src,
             coverUrl: music.cover
         };
-        this.state.playlist.push(track);
-        if (this.state.currentIndex === -1) {
-            this.state.currentIndex = 0;
-        }
-        this.saveState();
-        this.renderPlaylist();
-        if (this.state.playlist.length === 1) {
-            this.playTrack(0);
-        }
+    }
+
+    addToPlaylist(music) {
+        const track = this.trackFromMusic(music);
+        this.playlistController.add(track).then(() => {
+            this.state.add(track);
+            this.state.save()
+            this.renderPlaylist();
+            if (this.state.size() === 1) {
+                this.playTrack(0);
+            }
+        });
     }
 
     removeFromPlaylist(index) {
-        if (index < 0 || index >= this.state.playlist.length) {
+        if (index < 0 || index >= this.state.size()) {
             return;
         }
-        this.state.playlist.splice(index, 1);
-        if (this.state.currentIndex === index) {
-            if (this.state.playlist.length === 0) {
+        this.playlistController.remove(index)
+        this.state.remove(index);
+        if (this.state.getCurrent() === index) {
+            if (this.state.isEmpty()) {
                 this.state.currentIndex = -1;
                 this.audio.pause();
                 this.audio.clearSource();
             } else {
-                this.state.currentIndex = Math.min(index, this.state.playlist.length - 1);
-                this.playTrack(this.state.currentIndex, { autoplay: false });
+                this.state.currentIndex = this.state.previous();
+                this.playTrack(this.state.getCurrent(), {autoplay: false});
             }
-        } else if (this.state.currentIndex > index) {
-            this.state.currentIndex -= 1;
+        } else if (this.state.getCurrent() > index) {
+            this.state.currentIndex = this.state.previous();
         }
-        this.saveState();
+        this.state.save();
         this.renderPlaylist();
         this.renderNowPlaying();
     }
 
     clearPlaylist() {
-        this.state.playlist = [];
-        this.state.currentIndex = -1;
+        this.state.clear();
+        this.playlistController.clear();
         this.audio.pause();
         this.audio.clearSource();
-        this.saveState();
+        this.state.save();
         this.renderPlaylist();
         this.renderNowPlaying();
     }
 
     shufflePlaylist() {
-        for (let i = this.state.playlist.length - 1; i > 0; i -= 1) {
+        for (let i = this.state.size() - 1; i > 0; i -= 1) {
             const j = Math.floor(Math.random() * (i + 1));
             [this.state.playlist[i], this.state.playlist[j]] = [this.state.playlist[j], this.state.playlist[i]];
         }
-        this.state.currentIndex = this.state.playlist.length > 0 ? 0 : -1;
-        this.saveState();
+        this.state.currentIndex = this.state.isEmpty() ? -1 : 0;
+        this.state.save();
         this.renderPlaylist();
-        if (this.state.currentIndex !== -1) {
-            this.playTrack(0, { autoplay: false });
+        if (this.state.getCurrent() !== -1) {
+            this.playTrack(0, {autoplay: false});
         }
     }
 
-    loadTrack(track) {
-        this.audio.setSource(this.resolveUrl(track.src));
-        this.toggleCoverVisibility(Boolean(track.coverUrl));
-        this.audio.load();
+    loadTrack(track, index) {
+        this.audio.setSource(requester.resolveUrl(track.src), index);
     }
+
     toggleCoverVisibility(show) {
         if (!this.dom.cover) {
             return;
@@ -369,7 +658,7 @@ class MusicSpaApp {
     }
 
     loadTheme() {
-        const savedTheme = localStorage.getItem(this.storageKeys.theme);
+        const savedTheme = this.state.theme;
         if (savedTheme === "green") {
             this.applyTheme("green");
         } else {
@@ -397,24 +686,24 @@ class MusicSpaApp {
             }
             theme = "default";
         }
-        this.theme = theme;
-        localStorage.setItem(this.storageKeys.theme, theme);
+        this.state.theme = theme;
+        this.state.save()
     }
 
     toggleTheme() {
-        const nextTheme = this.theme === "green" ? "default" : "green";
+        const nextTheme = this.state.theme === "green" ? "default" : "green";
         this.applyTheme(nextTheme);
     }
 
     playTrack(index, options = {}) {
-        if (index < 0 || index >= this.state.playlist.length) {
+        if (this.state.size() < 0 || index < 0 || index >= this.state.size()) {
             return;
         }
-        const { autoplay = true } = options;
+        const {autoplay = true} = options;
         this.state.currentIndex = index;
-        const track = this.state.playlist[index];
-        this.loadTrack(track);
-        this.saveState();
+        const track = this.state.get(index);
+        this.loadTrack(track, index);
+        this.state.save();
         this.renderPlaylist();
         this.renderNowPlaying();
         if (autoplay) {
@@ -433,12 +722,12 @@ class MusicSpaApp {
     }
 
     togglePlayPause() {
-        if (!this.state.playlist.length) {
+        if (!this.state.size()) {
             return;
         }
         if (this.audio.isPaused()) {
             this.audio
-                .play()
+                .unpause()
                 .then(() => {
                     this.dom.playBtn.textContent = "❚❚";
                     this.dom.playBtn.setAttribute("aria-label", "Pause");
@@ -457,19 +746,11 @@ class MusicSpaApp {
     }
 
     playNext() {
-        if (!this.state.playlist.length) {
-            return;
-        }
-        const nextIndex = (this.state.currentIndex + 1) % this.state.playlist.length;
-        this.playTrack(nextIndex);
+        this.playTrack(this.state.next());
     }
 
     playPrevious() {
-        if (!this.state.playlist.length) {
-            return;
-        }
-        const index = this.state.currentIndex - 1;
-        this.playTrack(index >= 0 ? index : this.state.playlist.length - 1);
+        this.playTrack(this.state.previous());
     }
 
     updateProgressBar() {
@@ -496,10 +777,19 @@ class MusicSpaApp {
         this.audio.setCurrentTime(duration * percent);
     }
 
+    increaseVolume() {
+        this.audio.setVolume(1)
+    }
+
+    decreaseVolume() {
+        this.audio.setVolume(-1)
+    }
+
     updateVolume(event) {
         const value = Number(event.target.value);
         this.audio.setVolume(value);
-        localStorage.setItem(this.storageKeys.volume, String(value));
+        this.state.volume = value;
+        this.state.save();
     }
 
     async performSearch(query) {
@@ -517,7 +807,7 @@ class MusicSpaApp {
         this.setSearchBusy(true);
 
         try {
-            const results = await this.fetchJson(`search?term=${encodeURIComponent(trimmed)}&size=30`, {
+            const results = await requester.fetch(`search?term=${encodeURIComponent(trimmed)}&size=30`, true, {
                 signal: controller.signal
             });
             this.renderSearchResults(results ?? []);
@@ -534,7 +824,7 @@ class MusicSpaApp {
 
     async updateLibraryStats() {
         try {
-            const total = await fetch(this.resolveUrl("nbMusics")).then((res) => {
+            const total = await fetch(requester.resolveUrl("nbMusics")).then((res) => {
                 if (!res.ok) {
                     throw new Error(res.statusText);
                 }
@@ -563,6 +853,8 @@ class MusicSpaApp {
         this.dom.nextBtn.addEventListener("click", () => this.playNext());
         this.dom.progress.addEventListener("input", (event) => this.seek(event));
         this.dom.volume.addEventListener("input", (event) => this.updateVolume(event));
+        this.dom.volumeUp.addEventListener("click", (event) => this.increaseVolume());
+        this.dom.volumeDown.addEventListener("click", (event) => this.decreaseVolume());
         this.dom.clearPlaylistBtn.addEventListener("click", () => this.clearPlaylist());
         this.dom.shuffleBtn.addEventListener("click", () => this.shufflePlaylist());
 
