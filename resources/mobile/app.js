@@ -1,3 +1,4 @@
+// Interface which manage playlist
 class IPlaylist {
     add(music) {
         return Promise.resolve();
