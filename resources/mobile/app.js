@@ -884,7 +884,7 @@ class MusicSpaApp {
         });
 
         window.addEventListener("keydown", (event) => {
-            if (event.code === "Space" && (event.target === this.document.body || event.target === this.dom.searchInput)) {
+            if (event.code === "Space" && event.target !== this.dom.searchInput) {
                 event.preventDefault();
                 this.togglePlayPause();
             }
