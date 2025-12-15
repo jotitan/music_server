@@ -14,12 +14,32 @@ import (
 )
 
 type musicReader struct {
-	control       *beep.Ctrl
-	running       bool
-	volumeManager *effects.Volume
-	currentVolume float64
-	isInitialize  bool
-	initResampler beep.SampleRate
+	control            *beep.Ctrl
+	running            bool
+	volumeManager      *effects.Volume
+	currentVolume      float64
+	isInitialize       bool
+	initResampler      beep.SampleRate
+	playingMusicDetail *musicDetail
+}
+
+type musicDetail struct {
+	streamer beep.StreamSeekCloser
+	rate     beep.SampleRate
+}
+
+func (md *musicDetail) Length() int64 {
+	if md == nil {
+		return 0
+	}
+	return md.rate.D(md.streamer.Len()).Milliseconds()
+}
+
+func (md *musicDetail) Pos() int64 {
+	if md == nil {
+		return 0
+	}
+	return md.rate.D(md.streamer.Position()).Milliseconds()
 }
 
 func NewMusicReader() *musicReader {
@@ -73,9 +93,11 @@ func (mr *musicReader) readStream(stream io.ReadCloser) error {
 	if err != nil {
 		return err
 	}
-	resampler := beep.Resample(4, mr.initResampler, format.SampleRate, beep.Loop(1, streamer))
+	resampler := beep.Resample(4, format.SampleRate, mr.initResampler, beep.Loop(1, streamer))
+	//resampler := beep.Resample(4, mr.initResampler, format.SampleRate, beep.Loop(1, streamer))
 
 	mr.control = &beep.Ctrl{Streamer: resampler, Paused: false}
+	mr.playingMusicDetail = &musicDetail{streamer: streamer, rate: format.SampleRate}
 	mr.volumeManager = &effects.Volume{Base: 2, Volume: mr.currentVolume, Silent: false, Streamer: mr.control}
 	mr.running = true
 

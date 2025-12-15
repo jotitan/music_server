@@ -67,8 +67,8 @@ func (ms *MusicServer) ListByArtist(response http.ResponseWriter, request *http.
 	if id := request.FormValue("id"); id == "" {
 		ms.getAllArtists(response, request)
 	} else {
-		artistID, _ := strconv.ParseInt(id, 10, 32)
-		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[int(artistID)]
+		artistID, _ := strconv.Atoi(id)
+		musicsIds := music.LoadArtistMusicIndex(ms.folder).MusicsByArtist[artistID]
 		ms.getMusics(response, request, musicsIds, false, []string{})
 		logger.GetLogger().Info("Load music of artist", id, "in", time.Now().Sub(begin))
 	}
@@ -79,8 +79,8 @@ func (ms *MusicServer) ListByOnlyAlbums(response http.ResponseWriter, request *h
 	switch {
 	// return albums of artist
 	case request.FormValue("id") != "":
-		albumID, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
-		musicsIds := ms.indexManager.ListFullAlbumById(int(albumID))
+		albumID, _ := strconv.Atoi(request.FormValue("id"))
+		musicsIds := ms.indexManager.ListFullAlbumById(albumID)
 		ms.getMusics(response, request, musicsIds, true, []string{})
 	default:
 		albumsData := ms.indexManager.ListAllAlbums(request.FormValue("genre"))
@@ -93,13 +93,13 @@ func (ms *MusicServer) ListByAlbum(response http.ResponseWriter, request *http.R
 	switch {
 	// return albums of artist
 	case request.FormValue("id") != "":
-		artistID, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
-		albumsData := ms.indexManager.ListAlbumByArtist(int(artistID))
+		artistID, _ := strconv.Atoi(request.FormValue("id"))
+		albumsData := ms.indexManager.ListAlbumByArtist(artistID)
 		bdata, _ := json.Marshal(albumsData)
 		response.Write(bdata)
 	case request.FormValue("idAlbum") != "":
-		albumID, _ := strconv.ParseInt(request.FormValue("idAlbum"), 10, 32)
-		musicsIDs := ms.indexManager.ListAlbumById(int(albumID))
+		albumID, _ := strconv.Atoi(request.FormValue("idAlbum"))
+		musicsIDs := ms.indexManager.ListAlbumById(albumID)
 		ms.getMusics(response, request, musicsIDs, true, []string{})
 
 	default:

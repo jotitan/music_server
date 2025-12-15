@@ -15,7 +15,7 @@ func (ms *MusicServer) RecreateIndex(response http.ResponseWriter, request *http
 
 // Return music content
 func (ms *MusicServer) Readmusic(response http.ResponseWriter, request *http.Request) {
-	id, _ := strconv.ParseInt(request.FormValue("id"), 10, 32)
+	id, _ := strconv.Atoi(request.FormValue("id"))
 	logger.GetLogger().Info("Get music id", id)
 	musicInfo := ms.library.GetMusicInfo(int32(id))
 

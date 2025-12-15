@@ -127,6 +127,10 @@ func (pp *PlayerPlaylist) IsPause() bool {
 	return pp.player.control != nil && pp.player.control.Paused
 }
 
+func (pp *PlayerPlaylist) IsPlaying() bool {
+	return pp.player.control != nil && !pp.player.control.Paused
+}
+
 func (pp *PlayerPlaylist) Pause() {
 	logger.GetLogger().Info("Pause")
 	pp.player.Pause()

@@ -94,13 +94,13 @@ func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver
 	// Load in map (by path) music info
 	musics := musicSaver.LoadExistingMusicsInfo()
 	// Define nextId as highiest id
-	max := int64(0)
+	max := 0
 	for _, m := range musics {
-		if id, err := strconv.ParseInt(m["id"], 10, 32); err == nil && max < id {
+		if id, err := strconv.Atoi(m["id"]); err == nil && max < id {
 			max = id
 		}
 	}
-	md.nextId = max + 1
+	md.nextId = int64(max) + 1
 	logger.GetLogger().Info("Set next Id at ", md.nextId)
 	logger.GetLogger().Info("Load", len(musics), "elements")
 
@@ -172,8 +172,8 @@ func readInodes(folder string) map[string]int {
 		if line, _, error := r.ReadLine(); error == nil {
 			value := strings.Trim(string(line), " ")
 			pos := strings.Index(value, " ")
-			if inode, err := strconv.ParseInt(value[:pos], 10, 32); err == nil {
-				inodes[value[pos+1:]] = int(inode)
+			if inode, err := strconv.Atoi(value[:pos]); err == nil {
+				inodes[value[pos+1:]] = inode
 			}
 		} else {
 			break

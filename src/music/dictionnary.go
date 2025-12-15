@@ -34,7 +34,7 @@ func NewMusicLibrary(folder string) *MusicLibrary {
 	return ml
 }
 
-//loadMusicIndex load all index (idMusic=>position)
+// loadMusicIndex load all index (idMusic=>position)
 func (ml *MusicLibrary) loadMusicIndex() {
 	if f, err := os.Open(filepath.Join(ml.folder, "dico_index.dico")); err == nil {
 		defer f.Close()
@@ -61,29 +61,29 @@ func (ml MusicLibrary) GetNbMusics() int {
 	return len(ml.musicPositions)
 }
 
-func (ml MusicLibrary) RecreateIndex()  {
-	ids := make([]int32,0,len(ml.musicPositions))
+func (ml MusicLibrary) RecreateIndex() {
+	ids := make([]int32, 0, len(ml.musicPositions))
 	for id := range ml.musicPositions {
-		ids = append(ids,id)
+		ids = append(ids, id)
 	}
 	// recreate artists
-	ai := ArtistIndex{artists: make(map[string]int), artistsToSave: make([]string, 0),currentId: 1}
-	ami := ArtistMusicIndex{MusicsByArtist:make(map[int][]int),checkDuplicateArtists:make(map[int]map[int]struct{})}
-	for _,info := range ml.GetMusicsInfo(ids) {
-		if idMusic,err := strconv.ParseInt(info["id"],10,32) ; err == nil {
+	ai := ArtistIndex{artists: make(map[string]int), artistsToSave: make([]string, 0), currentId: 1}
+	ami := ArtistMusicIndex{MusicsByArtist: make(map[int][]int), checkDuplicateArtists: make(map[int]map[int]struct{})}
+	for _, info := range ml.GetMusicsInfo(ids) {
+		if idMusic, err := strconv.Atoi(info["id"]); err == nil {
 			id := ai.Add(info["artist"])
-			ami.Add(id, int(idMusic))
+			ami.Add(id, idMusic)
 		}
 
 	}
-	ai.Save(ml.folder,true)
+	ai.Save(ml.folder, true)
 	ami.Save(ml.folder)
 
 	logger.GetLogger().Info("Index artist recreated")
 	IndexArtists(ml.folder)
 }
 
-//GetMusicInfoAsJSON
+// GetMusicInfoAsJSON
 func (ml MusicLibrary) GetMusicInfoAsJSON(id int32, isfavorite bool) []byte {
 	musicInfo := ml.GetMusicInfo(id)
 	delete(musicInfo, "path")
@@ -97,7 +97,7 @@ func (ml MusicLibrary) GetMusicInfoAsJSON(id int32, isfavorite bool) []byte {
 	return bdata
 }
 
-//GetMusicInfo return music info from id
+// GetMusicInfo return music info from id
 func (ml MusicLibrary) GetMusicInfo(id int32) map[string]string {
 	// Find position in header
 	if pointer, ok := ml.musicPositions[id]; ok {
@@ -115,7 +115,7 @@ func (ml MusicLibrary) GetMusicInfo(id int32) map[string]string {
 	return nil
 }
 
-//GetMusicsInfo return musics information from ids
+// GetMusicsInfo return musics information from ids
 // Requested musics must be returned in the same ordre
 func (ml MusicLibrary) GetMusicsInfo(ids []int32) []map[string]string {
 	// Compute an inverted index for music position

@@ -61,6 +61,7 @@ func createRoutes(ms *server.MusicServer) *http.ServeMux {
 	registerRoute(mux, "/killshare", "", ms.KillShare)
 	registerRoute(mux, "/shares", "", ms.GetShares)
 	registerRoute(mux, "/shareUpdate", "", ms.ShareUpdate)
+	registerRoute(mux, "/sendShareRequest", "", ms.SendRequest)
 	registerRoute(mux, "/volume", "", ms.Volume)
 	registerRoute(mux, "/latency", "", ms.ComputeLatency)
 

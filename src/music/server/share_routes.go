@@ -26,8 +26,8 @@ func (ms MusicServer) KillShare(response http.ResponseWriter, request *http.Requ
 }
 
 func getShare(request *http.Request, idName string) *music.SharedSession {
-	if id, err := strconv.ParseInt(request.FormValue(idName), 10, 32); err == nil {
-		return music.GetShareConnection(int(id))
+	if id, err := strconv.Atoi(request.FormValue(idName)); err == nil {
+		return music.GetShareConnection(id)
 	}
 	return nil
 }
@@ -63,6 +63,21 @@ func (ms MusicServer) Share(response http.ResponseWriter, request *http.Request)
 		ss.ConnectToShare(response, request.FormValue("device"), sessionIDWithOpts(response, request, false))
 	} else {
 		music.CreateShareConnection(response, request.FormValue("device"), sessionID(response, request))
+	}
+}
+
+func (ms MusicServer) SendRequest(w http.ResponseWriter, r *http.Request) {
+	if ss := getShare(r, "id"); ss != nil {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		data, err := ss.SendRequest(sessionID(w, r), r.FormValue("event"), r.FormValue("data"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(200)
+		w.Write([]byte(data))
+	} else {
+		http.Error(w, "bad session id", http.StatusNotFound)
 	}
 }
 

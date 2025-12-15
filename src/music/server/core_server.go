@@ -94,8 +94,8 @@ func (ms MusicServer) Create(port string, indexFolder, musicFolder, addressMask,
 		ms.musicFolder = musicFolder
 		if addressMask != "" {
 			for i, val := range strings.Split(addressMask, ".") {
-				if intVal, e := strconv.ParseInt(val, 10, 32); e == nil {
-					ms.addressMask[i] = int(intVal)
+				if intVal, e := strconv.Atoi(val); e == nil {
+					ms.addressMask[i] = intVal
 				}
 			}
 		}

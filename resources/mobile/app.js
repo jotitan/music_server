@@ -1,3 +1,13 @@
+function formatTime(value) {
+    if (Number.isNaN(value) || value == null) {
+        return "0:00";
+    }
+    const seconds = Math.floor(value);
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return `${minutes}:${rest < 10 ? "0" : ""}${rest}`;
+}
+
 // Interface which manage playlist
 class IPlaylist {
     add(music) {
@@ -42,6 +52,9 @@ class PlaylistController extends IPlaylist {
 }
 
 class IController {
+    showStartPlayer() {
+    }
+
     setSource(url, index) {
     }
 
@@ -57,16 +70,27 @@ class IController {
     pause() {
     }
 
+    getDuration() {
+        return 0;
+    }
+
     play() {
     }
-    unpause(){}
+
+    unpause() {
+    }
+
+    updateProgress(fctDisplay) {
+    }
 }
 
 class RemoteAudioController extends IController {
-    constructor(remote) {
+    constructor(remote, fctDisplayer, music) {
         super();
         this.remote = remote;
-        this._isPaused = false;
+        this._isPaused = true;
+        this.fctDisplayer = fctDisplayer;
+        this.music = music;
     }
 
     setSource(url, index) {
@@ -81,20 +105,62 @@ class RemoteAudioController extends IController {
         if (this._isPaused) {
             return;
         }
+        if (this.updateTime != null) {
+            clearInterval(this.updateTime)
+            this.updateTime = null;
+        }
+        this.updateProgress();
         this._isPaused = true;
         return this.remote.pauseMusic()
     }
-    unpause(){
+
+    showStartPlayer(position, length, isPaused) {
+        this._isPaused = isPaused;
+        this.position = position;
+        this.length = length;
+        this._showProgress();
+        if (!isPaused) {
+            this._startPlayer();
+        }
+    }
+
+    unpause() {
         this._isPaused = false;
+        this._startPlayer();
         return this.remote.unpauseMusic();
     }
+
     play() {
         this._isPaused = false;
-        return this.remote.playMusic(this.currentIndex);
+        return this.remote.playMusic(this.currentIndex)
+            .then(()=>setTimeout(()=>this.updateProgress().then(() => this._startPlayer()),500));
+    }
+
+    _startPlayer() {
+        if (this.updateTime) {
+            clearInterval(this.updateTime);
+        }
+        this.music.showPlayingStatus(false)
+        this.updateTime = setInterval(() => {
+            this.position += 1000;
+            this._showProgress()
+        }, 1000)
     }
 
     setVolume(value) {
         value === 1 ? this.remote.increaseVolume() : this.remote.decreaseVolume()
+    }
+
+    updateProgress() {
+        return this.remote.getState().then(data => {
+            this.position = data.position;
+            this.length = data.length;
+            this._showProgress()
+        });
+    }
+
+    _showProgress() {
+        this.fctDisplayer((this.position / this.length) * 100, formatTime(this.position / 1000), formatTime(this.length / 1000))
     }
 }
 
@@ -102,6 +168,16 @@ class AudioController extends IController {
     constructor(audioElement) {
         super();
         this.element = audioElement;
+    }
+
+    updateProgress(fctDisplay) {
+        const duration = this.getDuration();
+        if (!duration) {
+            return fctDisplay("0", "0:00", "0:00")
+        }
+        const currentTime = this.getCurrentTime();
+        const percent = (currentTime / duration) * 100;
+        fctDisplay(percent.toString(), formatTime(currentTime), formatTime(duration))
     }
 
     setSource(url, index) {
@@ -168,8 +244,7 @@ class RemotePlayerController extends IPlaylist {
             this.sessionId = data.data;
         })
         this.sse.addEventListener('playlist', message => {
-            const playlist = JSON.parse(message.data);
-            this.loadPlaylist(playlist.ids);
+            this.loadPlaylist(JSON.parse(message.data));
         })
         this.sse.addEventListener('error', ii => {
             console.log("ERROR", ii)
@@ -215,13 +290,17 @@ class RemotePlayerController extends IPlaylist {
         return requester.simpleFetchAsBool(`shareUpdate?event=cleanPlaylist&id=${this.playerId}`)
     }
 
-    loadPlaylist(ids) {
-        if (ids.length === 0) {
-            return this.music.clearPlaylist()
-        }
-        requester.fetch(`musicsInfo?ids=[${ids}]`).then(data => {
+    getState() {
+        return requester.fetch(`sendShareRequest?event=state&id=${this.playerId}`);
+    }
+
+    loadPlaylist(details) {
+        this.music.clearPlaylist(false)
+        this.music.audio.showStartPlayer(details.position, details.length, !details.playing)
+        requester.fetch(`musicsInfo?ids=[${details.ids}]`).then(data => {
             data.forEach(m => this.music.state.add(m))
             this.music.renderPlaylist()
+            this.music.setCurrent(details.current, details.playing)
         })
     }
 }
@@ -443,7 +522,7 @@ class MusicSpaApp {
             this.dom.volume.style.setProperty("display", "none");
             this.dom.volumeUp.style.setProperty("display", "");
             this.dom.volumeDown.style.setProperty("display", "");
-            this.audio = new RemoteAudioController(this.remotePlayer);
+            this.audio = new RemoteAudioController(this.remotePlayer, (a, b, c) => this._updateProgressBarDisplay(a, b, c),this);
         })
     }
 
@@ -452,16 +531,6 @@ class MusicSpaApp {
         if (track && track.src) {
             this.loadTrack(track);
         }
-    }
-
-    formatTime(value) {
-        if (Number.isNaN(value) || value == null) {
-            return "0:00";
-        }
-        const seconds = Math.floor(value);
-        const minutes = Math.floor(seconds / 60);
-        const rest = seconds % 60;
-        return `${minutes}:${rest < 10 ? "0" : ""}${rest}`;
     }
 
     loadState() {
@@ -501,7 +570,7 @@ class MusicSpaApp {
             clone.querySelector(".playlist-item__subtitle").textContent = [track.artist, track.album]
                 .filter(Boolean)
                 .join(" • ");
-            clone.querySelector(".playlist-item__duration").textContent = this.formatTime(Number(track.length));
+            clone.querySelector(".playlist-item__duration").textContent = formatTime(Number(track.length));
             const removeBtn = clone.querySelector(".playlist-item__remove");
             removeBtn.addEventListener("click", (event) => {
                 event.stopPropagation();
@@ -524,11 +593,10 @@ class MusicSpaApp {
             this.dom.nowPlayingArtist.textContent = "";
             this.dom.nowPlayingAlbum.textContent = "";
             this.toggleCoverVisibility(false);
+            this.dom.currentTime.textContent = "0:00";
             this.dom.totalTime.textContent = "0:00";
             this.dom.progress.value = "0";
-            this.dom.playBtn.textContent = "▶";
-            this.dom.playBtn.setAttribute("aria-label", "Lecture");
-            this.setPlaybackStatus("En pause");
+            this.showPlayingStatus(true)
             return;
         }
 
@@ -536,11 +604,20 @@ class MusicSpaApp {
         this.dom.nowPlayingArtist.textContent = track.artist ?? "";
         this.dom.nowPlayingAlbum.textContent = track.album ?? "";
         this.toggleCoverVisibility(Boolean(track.coverUrl));
-        this.dom.totalTime.textContent = this.formatTime(Number(track.length));
-        const isPaused = this.audio.isPaused();
-        this.dom.playBtn.textContent = isPaused ? "▶" : "❚❚";
-        this.dom.playBtn.setAttribute("aria-label", isPaused ? "Lecture" : "Pause");
-        this.setPlaybackStatus(isPaused ? "En pause" : "Lecture");
+        //this.dom.totalTime.textContent = formatTime(Number(track.length));
+        this.showPlayingStatus(this.audio.isPaused())
+    }
+
+    showPlayingStatus(isPaused) {
+        if (isPaused) {
+            this.dom.playBtn.textContent = "▶";
+            this.dom.playBtn.setAttribute("aria-label", "Lecture");
+            this.setPlaybackStatus("En pause");
+        } else {
+            this.dom.playBtn.textContent = "❚❚";
+            this.dom.playBtn.setAttribute("aria-label", "Pause");
+            this.setPlaybackStatus("Lecture");
+        }
     }
 
     renderSearchResults(results) {
@@ -620,9 +697,11 @@ class MusicSpaApp {
         this.renderNowPlaying();
     }
 
-    clearPlaylist() {
+    clearPlaylist(propagation = true) {
         this.state.clear();
-        this.playlistController.clear();
+        if (propagation) {
+            this.playlistController.clear();
+        }
         this.audio.pause();
         this.audio.clearSource();
         this.state.save();
@@ -659,12 +738,7 @@ class MusicSpaApp {
     }
 
     loadTheme() {
-        const savedTheme = this.state.theme;
-        if (savedTheme === "green") {
-            this.applyTheme("green");
-        } else {
-            this.applyTheme("default");
-        }
+        this.applyTheme(this.state.theme === "green" ? "green" : "default")
     }
 
     applyTheme(theme) {
@@ -696,24 +770,32 @@ class MusicSpaApp {
         this.applyTheme(nextTheme);
     }
 
+    setCurrent(index) {
+        if (index === -1) {
+            return;
+        }
+        this.state.currentIndex = index;
+        this.renderNowPlaying();
+    }
+
     playTrack(index, options = {}) {
         if (this.state.size() < 0 || index < 0 || index >= this.state.size()) {
             return;
         }
         const {autoplay = true} = options;
-        this.state.currentIndex = index;
+
         const track = this.state.get(index);
         this.loadTrack(track, index);
-        this.state.save();
+        this.setCurrent(index);
         this.renderPlaylist();
-        this.renderNowPlaying();
+
+        this.state.save();
         if (autoplay) {
             this.audio
                 .play()
                 .then(() => {
-                    this.dom.playBtn.textContent = "❚❚";
-                    this.dom.playBtn.setAttribute("aria-label", "Pause");
-                    this.setPlaybackStatus("Lecture");
+                    this.audio.updateProgress((a, b, c) => this._updateProgressBarDisplay(a, b, c))
+                    this.showPlayingStatus(true)
                 })
                 .catch((err) => {
                     console.warn("Lecture impossible", err);
@@ -730,9 +812,7 @@ class MusicSpaApp {
             this.audio
                 .unpause()
                 .then(() => {
-                    this.dom.playBtn.textContent = "❚❚";
-                    this.dom.playBtn.setAttribute("aria-label", "Pause");
-                    this.setPlaybackStatus("Lecture");
+                    this.showPlayingStatus(false)
                 })
                 .catch((err) => {
                     console.warn("Lecture impossible", err);
@@ -740,9 +820,7 @@ class MusicSpaApp {
                 });
         } else {
             this.audio.pause();
-            this.dom.playBtn.textContent = "▶";
-            this.dom.playBtn.setAttribute("aria-label", "Lecture");
-            this.setPlaybackStatus("En pause");
+            this.showPlayingStatus(true)
         }
     }
 
@@ -754,19 +832,14 @@ class MusicSpaApp {
         this.playTrack(this.state.previous());
     }
 
+    _updateProgressBarDisplay(progress, current, total) {
+        this.dom.progress.value = progress;
+        this.dom.currentTime.textContent = current;
+        this.dom.totalTime.textContent = total;
+    }
+
     updateProgressBar() {
-        const duration = this.audio.getDuration();
-        if (duration) {
-            const currentTime = this.audio.getCurrentTime();
-            const percent = (currentTime / duration) * 100;
-            this.dom.progress.value = percent.toString();
-            this.dom.currentTime.textContent = this.formatTime(currentTime);
-            this.dom.totalTime.textContent = this.formatTime(duration);
-            return;
-        }
-        this.dom.progress.value = "0";
-        this.dom.currentTime.textContent = "0:00";
-        this.dom.totalTime.textContent = "0:00";
+        this.audio.updateProgress((a, b, c) => this._updateProgressBarDisplay(a, b, c))
     }
 
     seek(event) {
@@ -865,19 +938,15 @@ class MusicSpaApp {
 
         this.audio.on("timeupdate", () => this.updateProgressBar());
         this.audio.on("loadedmetadata", () => {
-            this.dom.totalTime.textContent = this.formatTime(this.audio.getDuration());
+            this.dom.totalTime.textContent = formatTime(this.audio.getDuration());
             this.updateProgressBar();
         });
         this.audio.on("ended", () => this.playNext());
         this.audio.on("play", () => {
-            this.dom.playBtn.textContent = "❚❚";
-            this.dom.playBtn.setAttribute("aria-label", "Pause");
-            this.setPlaybackStatus("Lecture");
+            this.showPlayingStatus(true);
         });
         this.audio.on("pause", () => {
-            this.dom.playBtn.textContent = "▶";
-            this.dom.playBtn.setAttribute("aria-label", "Lecture");
-            this.setPlaybackStatus("En pause");
+            this.showPlayingStatus(false);
         });
         this.audio.on("error", () => {
             this.setPlaybackStatus("Erreur de lecture");

@@ -3,7 +3,7 @@ package reader
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -67,12 +67,12 @@ func ForceClose(w http.ResponseWriter, r *http.Request) {
 }
 
 func Add(w http.ResponseWriter, r *http.Request) {
-	data, _ := ioutil.ReadAll(r.Body)
+	data, _ := io.ReadAll(r.Body)
 	musics := make([]map[string]string, 0)
 	if err := json.Unmarshal(data, &musics); err == nil {
 		for _, music := range musics {
-			if idMusic, err := strconv.ParseInt(music["id"], 10, 32); err == nil {
-				playlist.Add(int(idMusic), music["path"])
+			if idMusic, err := strconv.Atoi(music["id"]); err == nil {
+				playlist.Add(idMusic, music["path"])
 			}
 		}
 		w.WriteHeader(http.StatusOK)
@@ -82,8 +82,8 @@ func Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func Remove(_ http.ResponseWriter, r *http.Request) {
-	if index, err := strconv.ParseInt(r.FormValue("index"), 10, 32); err == nil {
-		playlist.Remove(int(index))
+	if index, err := strconv.Atoi(r.FormValue("index")); err == nil {
+		playlist.Remove(index)
 	}
 }
 
@@ -97,16 +97,20 @@ func State(w http.ResponseWriter, r *http.Request) {
 		ids[i] = music.idMusic
 	}
 	state := struct {
-		Ids     []int `json:"ids"`
-		Current int   `json:"current"`
-		Playing bool  `json:"playing"`
-		Volume  int   `json:"volume"`
+		Ids      []int `json:"ids"`
+		Current  int   `json:"current"`
+		Playing  bool  `json:"playing"`
+		Volume   int   `json:"volume"`
+		Length   int64 `json:"length"`
+		Position int64 `json:"position"`
 		//radio and position
 	}{
 		ids,
 		playlist.currentMusic,
-		player.IsPause(),
+		player.IsPlaying(),
 		0,
+		reader.playingMusicDetail.Length(),
+		reader.playingMusicDetail.Pos(),
 	}
 	data, _ := json.Marshal(state)
 	w.Write(data)

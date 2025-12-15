@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
@@ -9,19 +10,44 @@ import (
 	"time"
 )
 
-func main() {
-	// /home/osmc/test.mp3
-	err := read(os.Args[1])
-	logger.GetLogger().Info("UC",err)
+func test() {
+	fmt.Println(pa(1))
+	fmt.Println(pa(2))
+	fmt.Println(pa(0))
 }
 
-func read(path string)error{
+func pa(v int) *int {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.GetLogger().Error("Error when", err)
+		}
+	}()
+	return throwPanic(v)
+}
+
+func throwPanic(v int) *int {
+	if v == 0 {
+		panic("Fuck of")
+	}
+	val := 1
+	return &val
+}
+
+func main() {
+	test()
+	return
+	// /home/osmc/test.mp3
+	err := read(os.Args[1])
+	logger.GetLogger().Info("UC", err)
+}
+
+func read(path string) error {
 	logger.GetLogger().Info("Play")
-	f,err:= os.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	streamer, format,err := mp3.Decode(f)
+	streamer, format, err := mp3.Decode(f)
 	if err != nil {
 		return err
 	}
@@ -40,7 +66,7 @@ func read(path string)error{
 		end <- true
 	})))
 	logger.GetLogger().Info("Wait end")
-	<- end
+	<-end
 	logger.GetLogger().Info("End reach")
 	return nil
 }

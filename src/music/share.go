@@ -3,6 +3,7 @@ package music
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -71,6 +72,15 @@ func (ss *SharedSession) SetLatency(latency float64) {
 
 func (ss SharedSession) GetLatency() float64 {
 	return ss.latency
+}
+
+// SendRequest return results in response
+func (ss SharedSession) SendRequest(sessionID string, event, data string) (string, error) {
+	_, data, success := ss.original.sendService(event, data)
+	if !success {
+		return "", errors.New("impossible to execute request")
+	}
+	return data, nil
 }
 
 // ForwardEvent from a remote control. Possible event : add music, remove music, play music, play, pause, next, previous
@@ -155,7 +165,7 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 		urlToCall = fmt.Sprintf("%s/music/%s?%s", d.url, event, jsonToParams(data))
 	case "add":
 		return d.postMusicsToServer(data)
-	case "askPlaylist":
+	case "state", "askPlaylist":
 		urlToCall = fmt.Sprintf("%s/playlist/state", d.url)
 	case "volumeUp", "volumeDown":
 		urlToCall = fmt.Sprintf("%s/control/%s", d.url, event)
@@ -185,6 +195,10 @@ func manageServiceResponse(event, originalData string, resp *http.Response, err 
 			if data, err := io.ReadAll(resp.Body); err == nil {
 				return "playlist", string(data), true
 			}
+		case "state":
+			if data, err := io.ReadAll(resp.Body); err == nil {
+				return "state", string(data), true
+			}
 		case "remove":
 			return "remove", originalData, true
 		case "cleanPlaylist":
@@ -193,7 +207,11 @@ func manageServiceResponse(event, originalData string, resp *http.Response, err 
 		return "", "", true
 	} else {
 		if err != nil {
-			logger.GetLogger().Error("Impossible to call server", err.Error(), resp.StatusCode)
+			if resp != nil {
+				logger.GetLogger().Error("Impossible to call server", err.Error(), resp.StatusCode)
+			} else {
+				logger.GetLogger().Error("Impossible to call server", err.Error())
+			}
 		} else {
 			logger.GetLogger().Error("Impossible to call server", resp.StatusCode)
 		}
@@ -262,9 +280,9 @@ var sharedSessions = make(map[int]*SharedSession)
 func CreateSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
-	//response.Header().Set("Connection", "keep-alive")
+	response.Header().Set("Connection", "keep-alive")
 	response.Header().Set("Access-Control-Allow-Origin", "*")
-	response.Header().Set("X-Accel-Buffering", "no")
+	//response.Header().Set("X-Accel-Buffering", "no")
 	// Disable compression for SSE
 	//response.Header().Set("Content-Encoding", "identity")
 }

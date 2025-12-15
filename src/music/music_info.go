@@ -9,7 +9,7 @@ import (
 	"github.com/ascherkus/go-id3/src/id3"
 )
 
-//Music represent a music with all informations
+// Music represent a music with all informations
 type Music struct {
 	file  id3.File
 	path  string
@@ -17,7 +17,7 @@ type Music struct {
 	id    int64
 }
 
-//NewMusic create a new music from id3tag, musicId, path and cover
+// NewMusic create a new music from id3tag, musicId, path and cover
 func NewMusic(data id3.File, idMusic int64, path, cover string) Music {
 	return Music{file: data, id: idMusic, path: path, cover: cover}
 }
@@ -54,7 +54,7 @@ func (m Music) toJSON() []byte {
 	return jsonData
 }
 
-//SortByArtist is used to sort musics by artist
+// SortByArtist is used to sort musics by artist
 type SortByArtist []map[string]string
 
 func (a SortByArtist) Len() int { return len(a) }
@@ -63,7 +63,7 @@ func (a SortByArtist) Less(i, j int) bool {
 }
 func (a SortByArtist) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
-//SortByAlbum is used to sort musics by album
+// SortByAlbum is used to sort musics by album
 type SortByAlbum []map[string]interface{}
 
 func (a SortByAlbum) Len() int { return len(a) }
@@ -80,8 +80,8 @@ func getTrack(track string) int {
 	if pos := strings.Index(track, "/"); pos != -1 {
 		track = track[:pos]
 	}
-	if n, err := strconv.ParseInt(track, 10, 32); err == nil {
-		return int(n)
+	if n, err := strconv.Atoi(track); err == nil {
+		return n
 	}
 	return 0
 }
