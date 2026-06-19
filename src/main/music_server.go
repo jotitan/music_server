@@ -5,23 +5,10 @@ import (
 	"github.com/jotitan/music_server/arguments"
 	"github.com/jotitan/music_server/logger"
 	"github.com/jotitan/music_server/music/server"
-	"io"
 	"net/http"
 	"path/filepath"
 	"runtime"
 )
-
-/* Launch a server to treat resize image */
-
-type SSEWriter struct {
-	w io.Writer
-	f http.Flusher
-}
-
-func (sse SSEWriter) Write(message string) {
-	sse.w.Write([]byte("data: " + message + "\n\n"))
-	sse.f.Flush()
-}
 
 func createRoutes(ms *server.MusicServer) *http.ServeMux {
 	mux := http.NewServeMux()
@@ -41,8 +28,10 @@ func createRoutes(ms *server.MusicServer) *http.ServeMux {
 	registerRoute(mux, "/pathOfMusic", "", ms.PathMusic)
 	registerRoute(mux, "/musicsInfo", "", ms.MusicsInfo)
 	registerRoute(mux, "/musicsInfoInline", "", ms.MusicsInfoInline)
-	registerRoute(mux, "/listByArtist", "", ms.ListByArtist)
-	registerRoute(mux, "/listByAlbum", "", ms.ListByAlbum)
+	registerRoute(mux, "/listByArtist", "", ms.ListMusicsByArtist)
+	registerRoute(mux, "/listByAlbum", "", ms.ListMusicsByAlbum)
+	registerRoute(mux, "/albums", "", ms.ListAlbums)
+	registerRoute(mux, "/artists", "", ms.ListArtists)
 	registerRoute(mux, "/listByOnlyAlbums", "", ms.ListByOnlyAlbums)
 	registerRoute(mux, "/search", "", ms.Search)
 
@@ -78,9 +67,9 @@ func registerRoute(mux *http.ServeMux, pattern, doc string, handler func(w http.
 	routesDefinitions[pattern] = doc
 }
 
-func Help(w http.ResponseWriter, r *http.Request) {
+func Help(w http.ResponseWriter, _ *http.Request) {
 	if data, err := json.Marshal(routesDefinitions); err == nil {
-		w.Write(data)
+		logger.LogE(w.Write(data))
 	}
 }
 

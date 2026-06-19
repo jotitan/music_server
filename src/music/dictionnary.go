@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/jotitan/music_server/logger"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,10 +16,10 @@ const (
 	limitMusicsInFile = 1000
 )
 
-// Save original dictionnary in new structure : one file header with for all id, file id and position in file. Some files with informatiosn inside
+// Save original dictionary in new structure : one file header with for all id, file id and position in file. Some files with information inside
 // For reading, load header file in memory and keep until next scan
 
-// Structure to read musics
+// MusicLibrary Structure to read musics
 type MusicLibrary struct {
 	folder string
 	// For each music, store the position in int64 : 4 first bytes for the fileId and 4 next for position in file
@@ -37,37 +36,38 @@ func NewMusicLibrary(folder string) *MusicLibrary {
 // loadMusicIndex load all index (idMusic=>position)
 func (ml *MusicLibrary) loadMusicIndex() {
 	if f, err := os.Open(filepath.Join(ml.folder, "dico_index.dico")); err == nil {
+
 		defer f.Close()
 		nbMusics := getInt32FromFile(f, int64(0))
 		data := make([]byte, 12*nbMusics)
-		f.ReadAt(data, 4)
+		logger.LogE(f.ReadAt(data, 4))
 		ml.musicPositions = make(map[int32]int64, nbMusics)
 		for i := int32(0); i < nbMusics; i++ {
 			musicID := int32(binary.LittleEndian.Uint32(data[i*12 : i*12+4]))
 			position := int64(binary.LittleEndian.Uint64(data[i*12+4 : i*12+12]))
 			ml.musicPositions[musicID] = position
 		}
-		logger.GetLogger().Info("Load", ml.GetNbMusics(), "musics from dictionnary")
+		logger.GetLogger().Info("Load", ml.GetNbMusics(), "musics from dictionary")
 	} else {
 		logger.GetLogger().Error("Impossible to load index data", err.Error())
 	}
 }
 
-func (ml MusicLibrary) GetPosition(id int32) int64 {
+func (ml *MusicLibrary) GetPosition(id int32) int64 {
 	return ml.musicPositions[id]
 }
 
-func (ml MusicLibrary) GetNbMusics() int {
+func (ml *MusicLibrary) GetNbMusics() int {
 	return len(ml.musicPositions)
 }
 
-func (ml MusicLibrary) RecreateIndex() {
+func (ml *MusicLibrary) RecreateIndex() {
 	ids := make([]int32, 0, len(ml.musicPositions))
 	for id := range ml.musicPositions {
 		ids = append(ids, id)
 	}
 	// recreate artists
-	ai := ArtistIndex{artists: make(map[string]int), artistsToSave: make([]string, 0), currentId: 1}
+	ai := ArtistManager{artists: make(map[string]int), artistsToSave: make([]string, 0), currentId: 1}
 	ami := ArtistMusicIndex{MusicsByArtist: make(map[int][]int), checkDuplicateArtists: make(map[int]map[int]struct{})}
 	for _, info := range ml.GetMusicsInfo(ids) {
 		if idMusic, err := strconv.Atoi(info["id"]); err == nil {
@@ -76,6 +76,7 @@ func (ml MusicLibrary) RecreateIndex() {
 		}
 
 	}
+	ai.textIndexer.Build()
 	ai.Save(ml.folder, true)
 	ami.Save(ml.folder)
 
@@ -83,8 +84,7 @@ func (ml MusicLibrary) RecreateIndex() {
 	IndexArtists(ml.folder)
 }
 
-// GetMusicInfoAsJSON
-func (ml MusicLibrary) GetMusicInfoAsJSON(id int32, isfavorite bool) []byte {
+func (ml *MusicLibrary) GetMusicInfoAsJSON(id int32, isfavorite bool) []byte {
 	musicInfo := ml.GetMusicInfo(id)
 	delete(musicInfo, "path")
 	musicInfo["id"] = fmt.Sprintf("%d", id)
@@ -98,7 +98,7 @@ func (ml MusicLibrary) GetMusicInfoAsJSON(id int32, isfavorite bool) []byte {
 }
 
 // GetMusicInfo return music info from id
-func (ml MusicLibrary) GetMusicInfo(id int32) map[string]string {
+func (ml *MusicLibrary) GetMusicInfo(id int32) map[string]string {
 	// Find position in header
 	if pointer, ok := ml.musicPositions[id]; ok {
 		fileId := int32(pointer >> 32)
@@ -108,7 +108,7 @@ func (ml MusicLibrary) GetMusicInfo(id int32) map[string]string {
 			// Read size data
 			size := getInt64FromFile(dataFile, position)
 			musicInfo := make(map[string]string)
-			json.Unmarshal(getBytesFromFile(dataFile, position+8, size), &musicInfo)
+			logger.LogE(json.Unmarshal(getBytesFromFile(dataFile, position+8, size), &musicInfo))
 			return musicInfo
 		}
 	}
@@ -117,7 +117,7 @@ func (ml MusicLibrary) GetMusicInfo(id int32) map[string]string {
 
 // GetMusicsInfo return musics information from ids
 // Requested musics must be returned in the same ordre
-func (ml MusicLibrary) GetMusicsInfo(ids []int32) []map[string]string {
+func (ml *MusicLibrary) GetMusicsInfo(ids []int32) []map[string]string {
 	// Compute an inverted index for music position
 	idPositions := make(map[string]int, len(ids))
 	for pos, id := range ids {
@@ -160,12 +160,12 @@ func readMusicFromFile(dataFile *os.File, position int64) map[string]string {
 	// Read data size
 	size := getInt64FromFile(dataFile, position)
 	musicInfo := make(map[string]string)
-	json.Unmarshal(getBytesFromFile(dataFile, position+8, size), &musicInfo)
+	logger.LogE(json.Unmarshal(getBytesFromFile(dataFile, position+8, size), &musicInfo))
 	return musicInfo
 }
 
-// Used to save dictionnary in files
-type OutputDictionnary struct {
+// OutputDictionary Used to save dictionary in files
+type OutputDictionary struct {
 	folder string
 	// position (file and byte position) for each id
 	headerIds map[int32]int64
@@ -177,15 +177,15 @@ type OutputDictionnary struct {
 	// Used for saving
 	currentMusicRead      *int
 	currentPositionInFile *int
-	// Id of the file where musics are saved
+	// id of the file where musics are saved
 	currentFileId *int32
 }
 
-// Create dictionnary from old version
-func CreateNewDictionnary(fromFolderOldVersion, toFolderNewVersion string) {
+// CreateNewDictionary Create dictionary from old version
+func CreateNewDictionary(fromFolderOldVersion, toFolderNewVersion string) {
 	oldDico := NewOldMusicSaver(fromFolderOldVersion)
 	musics := oldDico.LoadExistingMusicsInfo()
-	output := NewOutputDictionnary(toFolderNewVersion)
+	output := NewOutputDictionary(toFolderNewVersion)
 
 	// Browse all path
 	for path := range musics {
@@ -206,14 +206,14 @@ func CreateNewDictionnary(fromFolderOldVersion, toFolderNewVersion string) {
 	ami.Save(toFolderNewVersion)
 }
 
-// Load all existing musics in memory. Used to avoid full reparsing
-func (od OutputDictionnary) LoadExistingMusicsInfo() map[string]map[string]string {
+// LoadExistingMusicsInfo Load all existing musics in memory. Used to avoid full reparsing
+func (od *OutputDictionary) LoadExistingMusicsInfo() map[string]map[string]string {
 	musicsMap := make(map[string]map[string]string)
 	for fileId := 0; ; fileId++ {
 		path := filepath.Join(od.folder, fmt.Sprintf("dico_music_%d.dico", fileId))
 		logger.GetLogger().Info("Read existing musics", path)
 		if f, err := os.Open(path); err == nil {
-			data, _ := ioutil.ReadAll(f)
+			data, _ := io.ReadAll(f)
 			pos := int64(0)
 			for {
 				if pos >= int64(len(data)) {
@@ -222,11 +222,11 @@ func (od OutputDictionnary) LoadExistingMusicsInfo() map[string]map[string]strin
 				lengthMusic := getInt64FromBytes(data[pos : pos+8])
 				dataMusic := data[pos+8 : pos+8+lengthMusic]
 				var results map[string]string
-				json.Unmarshal(dataMusic, &results)
+				logger.LogE(json.Unmarshal(dataMusic, &results))
 				musicsMap[results["path"]] = results
 				pos += 8 + lengthMusic
 			}
-			f.Close()
+			logger.LogE(f.Close())
 		} else {
 			break
 		}
@@ -234,13 +234,13 @@ func (od OutputDictionnary) LoadExistingMusicsInfo() map[string]map[string]strin
 	return musicsMap
 }
 
-func NewOutputDictionnary(folder string) *OutputDictionnary {
+func NewOutputDictionary(folder string) *OutputDictionary {
 	musicsList := make([]Music, 0, limitMusicsInFile)
 	ids := make([]int, 0)
 	currentFileId := int32(0)
 	currentMusicRead := 0
 	currentPositionInFile := 0
-	return &OutputDictionnary{
+	return &OutputDictionary{
 		folder:                folder,
 		headerIds:             make(map[int32]int64),
 		ids:                   &ids,
@@ -250,20 +250,20 @@ func NewOutputDictionnary(folder string) *OutputDictionnary {
 		currentPositionInFile: &currentPositionInFile}
 }
 
-func (od OutputDictionnary) AddToSave(music Music) {
+func (od *OutputDictionary) AddToSave(music Music) {
 	if len(*od.musicToSave) >= limitMusicsInFile {
 		od.save()
 	}
 	*(od.musicToSave) = append(*(od.musicToSave), music)
 }
 
-func (od OutputDictionnary) FinishEnd() {
+func (od *OutputDictionary) FinishEnd() {
 	od.save()
 	od.saveHeader()
-	logger.GetLogger().Info("End saving dictionnary")
+	logger.GetLogger().Info("End saving dictionary")
 }
 
-func (od OutputDictionnary) saveHeader() {
+func (od *OutputDictionary) saveHeader() {
 	logger.GetLogger().Info("Save header :", len(*od.ids), "elements")
 	sort.IntsAreSorted(*od.ids)
 	data := make([]byte, 12*len(*od.ids)+4)
@@ -275,18 +275,18 @@ func (od OutputDictionnary) saveHeader() {
 	// Save in file
 	if f, err := os.OpenFile(filepath.Join(od.folder, "dico_index.dico"), os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm); err == nil {
 		defer f.Close()
-		f.Write(data)
+		logger.LogE(f.Write(data))
 	} else {
-		logger.GetLogger().Error("Impossible to asve index dico", err.Error())
+		logger.GetLogger().Error("Impossible to save index dico", err.Error())
 	}
 }
 
-func (od OutputDictionnary) save() {
+func (od *OutputDictionary) save() {
 	filename := filepath.Join(od.folder, fmt.Sprintf("dico_music_%d.dico", *od.currentFileId))
 	logger.GetLogger().Info("Save in file", filename, ":", len(*od.musicToSave), "elements")
 	if f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm); err == nil {
 		defer f.Close()
-		io.Copy(f, &od)
+		logger.LogE(io.Copy(f, od))
 		*od.currentFileId++
 		*od.currentMusicRead = 0
 		*od.currentPositionInFile = 0
@@ -294,7 +294,7 @@ func (od OutputDictionnary) save() {
 	*od.musicToSave = make([]Music, 0, limitMusicsInFile)
 }
 
-func (od *OutputDictionnary) Read(tab []byte) (int, error) {
+func (od *OutputDictionary) Read(tab []byte) (int, error) {
 	// Read md musics, evaluate if enough place in tab (int32 for length + len data
 	nbWrite := 0
 	for {

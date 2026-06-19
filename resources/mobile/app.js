@@ -143,7 +143,10 @@ class RemoteAudioController extends IController {
         this.music.showPlayingStatus(false)
         this.updateTime = setInterval(() => {
             this.position += 1000;
-            this._showProgress()
+            if(!this._showProgress()){
+                clearInterval((this.updateTime))
+                this.updateTime = null;
+            }
         }, 1000)
     }
 
@@ -160,7 +163,11 @@ class RemoteAudioController extends IController {
     }
 
     _showProgress() {
+        if(this.position > this.length){
+            return false;
+        }
         this.fctDisplayer((this.position / this.length) * 100, formatTime(this.position / 1000), formatTime(this.length / 1000))
+        return true;
     }
 }
 
@@ -448,6 +455,7 @@ class StateManager {
 }
 
 const requester = new Requester();
+const kindFolder = {artist:1,album:2};
 
 class MusicSpaApp {
     constructor(doc = document) {
@@ -480,6 +488,7 @@ class MusicSpaApp {
             shuffleBtn: doc.getElementById("shuffle-btn"),
             audio: doc.getElementById("audio-player"),
             searchTemplate: doc.getElementById("search-result-template"),
+            searchFolderTemplate: doc.getElementById("search-folder-result-template"),
             playlistTemplate: doc.getElementById("playlist-item-template"),
             themeToggle: doc.getElementById("theme-toggle")
         };
@@ -620,7 +629,7 @@ class MusicSpaApp {
         }
     }
 
-    renderSearchResults(results) {
+    renderSearchResults(results, isFolderView = false, kind = kindFolder.album) {
         this.dom.searchResults.innerHTML = "";
         if (!results.length) {
             const empty = this.document.createElement("div");
@@ -629,17 +638,66 @@ class MusicSpaApp {
             this.dom.searchResults.appendChild(empty);
             return;
         }
-
         results.forEach((music) => {
-            const clone = this.dom.searchTemplate.content.firstElementChild.cloneNode(true);
-            clone.dataset.id = music.id;
-            clone.querySelector(".result-item__title").textContent = music.title ?? "Sans titre";
-            clone.querySelector(".result-item__subtitle").textContent = [music.artist, music.album]
-                .filter(Boolean)
-                .join(" • ");
-            clone.querySelector(".add-btn").addEventListener("click", () => this.addToPlaylist(music));
-            this.dom.searchResults.appendChild(clone);
+            this.dom.searchResults.appendChild(isFolderView ? this.showFolder(music, kind) : this.showMusic(music));
         });
+    }
+    adaptMusic(music){
+        music.title = music.title ?? music.name ?? "Sans titre";
+        music.album = music.album ?? music.infos.album;
+        music.artist = music.artist ?? music.infos.artist;
+        return music;
+    }
+    showMusic(music){
+        music = this.adaptMusic(music);
+        const clone = this.dom.searchTemplate.content.firstElementChild.cloneNode(true);
+        clone.dataset.id = music.id;
+        clone.querySelector(".result-item__title").textContent = music.title;
+        clone.querySelector(".result-item__subtitle").textContent = [music.artist, music.album]
+            .filter(Boolean)
+            .join(" • ");
+        clone.querySelector(".add-btn").addEventListener("click", () => this.addToPlaylist(music));
+        return clone;
+    }
+
+    showFolder(folder, kind){
+        const clone = this.dom.searchFolderTemplate.content.firstElementChild.cloneNode(true);
+        clone.dataset.id = folder.id;
+        clone.querySelector(".result-item__title").textContent = folder.name ?? "Sans titre";
+        if(kind === kindFolder.album) {
+            clone.querySelector(".show-btn").addEventListener("click", () => this.showMusicOfAlbum(folder.id));
+            clone.querySelector(".add-btn").addEventListener("click", () => this.addMusicsOfAlbum(folder.id));
+        }else{
+            clone.querySelector(".show-btn").addEventListener("click", () => this.showMusicOfArtist(folder.id));
+            clone.querySelector(".add-btn").addEventListener("click", () => this.addMusicsOfArtist(folder.id));
+        }
+        return clone;
+
+    }
+
+    addMusicsOfArtist(id){
+        this.addMusicsFromUrl(`listByArtist?id=${id}&detail=true`)
+    }
+
+    addMusicsOfAlbum(id){
+        this.addMusicsFromUrl(`listByAlbum?idAlbum=${id}`)
+    }
+
+    addMusicsFromUrl(url){
+        requester.fetch(`${url}&size=60`, true).then(results=>{
+            results.forEach(m => {
+                this.addToPlaylist(this.adaptMusic(m))
+            })
+            this.state.save();
+            this.renderPlaylist()
+        });
+    }
+
+    showMusicOfAlbum(id){
+        requester.fetch(`listByAlbum?idAlbum=${id}&size=60`, true).then(results=>this.renderSearchResults(results ?? []));
+    }
+    showMusicOfArtist(id){
+        requester.fetch(`listByArtist?id=${id}&size=60`, true).then(results=>this.renderSearchResults(results ?? []));
     }
 
     showSearchMessage(message, hint) {
@@ -657,7 +715,7 @@ class MusicSpaApp {
             artist: music.artist,
             album: music.album,
             length: music.length ?? music.time ?? music.duration,
-            src: music.src,
+            src: music.src || music.infos != null ? music.infos.src : '',
             coverUrl: music.cover
         };
     }
@@ -795,7 +853,7 @@ class MusicSpaApp {
                 .play()
                 .then(() => {
                     this.audio.updateProgress((a, b, c) => this._updateProgressBarDisplay(a, b, c))
-                    this.showPlayingStatus(true)
+                    this.showPlayingStatus(false)
                 })
                 .catch((err) => {
                     console.warn("Lecture impossible", err);
@@ -867,7 +925,7 @@ class MusicSpaApp {
     }
 
     async performSearch(query) {
-        const trimmed = query.trim();
+        const trimmed = query;//.trim();
         if (trimmed.length < 2) {
             this.showSearchMessage("Pas de résultats");
             return;
@@ -879,6 +937,21 @@ class MusicSpaApp {
         const controller = new AbortController();
         this.state.searchAbortController = controller;
         this.setSearchBusy(true);
+        if(trimmed.indexOf(":") === 0){
+            if(trimmed.indexOf(":album ") === 0 || trimmed.indexOf(":al ") === 0){
+                const results = await requester.fetch(`albums?term=${encodeURIComponent(trimmed.replace(/(:album )|(:al )/,""))}&size=30`, true, {
+                    signal: controller.signal
+                });
+                return this.renderSearchResults(results ?? [], true, kindFolder.album);
+            }
+            if(trimmed.indexOf(":artist ") === 0 || trimmed.indexOf(":ar ") === 0){
+                const results = await requester.fetch(`artists?artist=${encodeURIComponent(trimmed.replace(/(:artist )|(:ar )/,""))}&size=30`, true, {
+                    signal: controller.signal
+                });
+                return this.renderSearchResults(results ?? [], true, kindFolder.artist);
+            }
+            return
+        }
 
         try {
             const results = await requester.fetch(`search?term=${encodeURIComponent(trimmed)}&size=30`, true, {
@@ -927,8 +1000,8 @@ class MusicSpaApp {
         this.dom.nextBtn.addEventListener("click", () => this.playNext());
         this.dom.progress.addEventListener("input", (event) => this.seek(event));
         this.dom.volume.addEventListener("input", (event) => this.updateVolume(event));
-        this.dom.volumeUp.addEventListener("click", (event) => this.increaseVolume());
-        this.dom.volumeDown.addEventListener("click", (event) => this.decreaseVolume());
+        this.dom.volumeUp.addEventListener("click", (_) => this.increaseVolume());
+        this.dom.volumeDown.addEventListener("click", (_) => this.decreaseVolume());
         this.dom.clearPlaylistBtn.addEventListener("click", () => this.clearPlaylist());
         this.dom.shuffleBtn.addEventListener("click", () => this.shufflePlaylist());
 
@@ -943,10 +1016,10 @@ class MusicSpaApp {
         });
         this.audio.on("ended", () => this.playNext());
         this.audio.on("play", () => {
-            this.showPlayingStatus(true);
+            this.showPlayingStatus(false);
         });
         this.audio.on("pause", () => {
-            this.showPlayingStatus(false);
+            this.showPlayingStatus(true);
         });
         this.audio.on("error", () => {
             this.setPlaybackStatus("Erreur de lecture");

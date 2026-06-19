@@ -43,7 +43,7 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.5rem;
+    padding: 0.5rem;
     border-radius: 20px;
     background: linear-gradient(145deg, rgba(24, 28, 47, 0.9), rgba(17, 20, 33, 0.85));
     border: 1px solid rgba(255, 255, 255, 0.08);

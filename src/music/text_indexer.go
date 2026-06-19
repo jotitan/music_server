@@ -13,7 +13,8 @@ import (
 /* used to index musics and give tools to search by free text (sorted list and dicotomic search) */
 
 const (
-	tiFilename = "text_index.idx"
+	TextIndexerFilename      = "text_index.idx"
+	albumTextIndexerFilename = "album_text_index.idx"
 )
 
 type Token struct {
@@ -41,9 +42,9 @@ func NewTextIndexer() TextIndexer {
 	return TextIndexer{nil, make(map[string][]int)}
 }
 
-func LoadTextIndexer(folder string) TextIndexer {
+func LoadTextIndexer(folder, filename string) TextIndexer {
 	ti := TextIndexer{nil, make(map[string][]int)}
-	if file, e := os.Open(filepath.Join(folder, tiFilename)); e == nil {
+	if file, e := os.Open(filepath.Join(folder, filename)); e == nil {
 		dec := gob.NewDecoder(file)
 		dec.Decode(&ti)
 		file.Close()
@@ -51,10 +52,10 @@ func LoadTextIndexer(folder string) TextIndexer {
 	return ti
 }
 
-var cleanChars = regexp.MustCompile("[-!/,\\.]|(mp3)")
-var cleanSpaces = regexp.MustCompile("[ ]{2,}")
+var cleanChars = regexp.MustCompile(`[-!/,\\.\(\)\[\]]|(mp3)`)
+var cleanSpaces = regexp.MustCompile(`[ ]{2,}`)
 
-//Filter split sentence into words. Remove duplicates
+// Filter split sentence into words. Remove duplicates
 func (ti TextIndexer) Filter(values ...string) []string {
 	results := make([]string, 0)
 	for _, value := range values {
@@ -77,6 +78,12 @@ func (ti TextIndexer) Filter(values ...string) []string {
 	return results
 }
 
+func (ti *TextIndexer) IndexText(idMusic int, keys ...string) {
+	for _, value := range ti.Filter(keys...) {
+		ti.Add(value, idMusic)
+	}
+}
+
 func (ti *TextIndexer) Add(value string, idMusic int) {
 	if list, ok := ti.temp[value]; !ok {
 		ti.temp[value] = []int{idMusic}
@@ -85,7 +92,7 @@ func (ti *TextIndexer) Add(value string, idMusic int) {
 	}
 }
 
-// Parse map and create list
+// Build parse map and create list
 func (ti *TextIndexer) Build() {
 	ti.Index = make([]Token, 0, len(ti.temp))
 	for value, ids := range ti.temp {
@@ -96,7 +103,7 @@ func (ti *TextIndexer) Build() {
 	sort.Sort(ti.Index)
 }
 
-// list is sorted
+// RemoveDuplicates list is sorted
 func RemoveDuplicates(list *[]int) {
 	noDoubles := make([]int, 0, len(*list))
 	last := 0
@@ -139,7 +146,7 @@ func Intersect(a, b []int) []int {
 	return results
 }
 
-//Search text string into index and return founded musics
+// Search text string into index and return founded musics
 func (ti TextIndexer) Search(text string) []int {
 	// Convert text
 	text = strings.ToLower(text)
@@ -178,7 +185,7 @@ func (ti TextIndexer) IntSearch(text string) []int {
 	return []int{}
 }
 
-//Use dicotomy
+// Use dicotomy
 func (ti TextIndexer) searchPositionToken(tokens Tokens, text string, pos int) int {
 	if len(tokens) == 0 {
 		return -1
@@ -215,11 +222,9 @@ func (ti TextIndexer) subSearch(tokens Tokens, text string) []int {
 	return ti.subSearch(tokens[:center], text)
 }
 
-// Save with naive method, gob encoder
-func (ti TextIndexer) Save(folder string) {
-	file, _ := os.OpenFile(filepath.Join(folder, tiFilename), os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
+func (ti TextIndexer) SaveInFile(folder, filename string) {
+	file, _ := os.OpenFile(filepath.Join(folder, filename), os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
 	defer file.Close()
 	enc := gob.NewEncoder(file)
 	enc.Encode(ti)
-
 }

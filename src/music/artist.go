@@ -22,21 +22,21 @@ func (is *IndexSaver) Save(pathfile string, trunc bool) {
 	var err error
 	if trunc {
 		f, err = os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
-		f.Write(getInt32AsByte(int32(len(is.values))))
+		logger.LogE(f.Write(getInt32AsByte(int32(len(is.values)))))
 	} else {
 		f, err = os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_RDWR, os.ModePerm)
 		if err == nil {
 			// New, write size
-			f.Write(getInt32AsByte(int32(len(is.values))))
+			logger.LogE(f.Write(getInt32AsByte(int32(len(is.values)))))
 		} else {
 			f, _ = os.OpenFile(path, os.O_RDWR, os.ModePerm)
-			f.WriteAt(getInt32AsByte(int32(len(is.values))), 0)
-			f.Seek(0, 2)
+			logger.LogE(f.WriteAt(getInt32AsByte(int32(len(is.values))), 0))
+			logger.LogE(f.Seek(0, 2))
 		}
 	}
 	is.current = 0
-	io.Copy(f, is)
-	f.Close()
+	logger.LogE(io.Copy(f, is))
+	logger.LogE(f.Close())
 }
 
 // Read data from artist index
@@ -57,16 +57,18 @@ func (is *IndexSaver) Read(p []byte) (int, error) {
 	}
 }
 
-// ArtistIndex store all artists (avoid double)
-type ArtistIndex struct {
+// ArtistManager store all artists (avoid double)
+type ArtistManager struct {
 	// Used to define if an artist exist (id of artist)
-	artists map[string]int
+	artists     map[string]int
+	artistsById map[int]string
 	// Used in write
 	tempBuffer []byte
 	currentId  int
 	// new artists
 	artistsToSave []string
 	currentSave   int
+	textIndexer   TextIndexer
 }
 
 type IndexReader struct {
@@ -75,13 +77,13 @@ type IndexReader struct {
 	currentId  int
 }
 
-// LoadArtistIndex Get artist index to search...
+// Load Get artist index to search...
 // first id start at 1
 func (ir IndexReader) Load(path string) map[string]int {
 	f, err := os.Open(path)
 	if err == nil {
-		io.Copy(&ir, f)
-		f.Close()
+		logger.LogE(io.Copy(&ir, f))
+		logger.LogE(f.Close())
 		return ir.data
 	}
 	return map[string]int{}
@@ -118,7 +120,6 @@ func (ir *IndexReader) Write(p []byte) (int, error) {
 		ir.currentId++
 		pos += 2 + artistSize
 	}
-	return pSize, nil
 }
 
 func LoadArtists(folder string) map[string]int {
@@ -126,22 +127,28 @@ func LoadArtists(folder string) map[string]int {
 }
 
 // LoadArtistIndex Get artist index to search...
-func LoadArtistIndex(folder string) ArtistIndex {
-	ai := ArtistIndex{artists: make(map[string]int), artistsToSave: make([]string, 0)}
+func LoadArtistIndex(folder string) ArtistManager {
+	ai := ArtistManager{artists: make(map[string]int), artistsToSave: make([]string, 0), textIndexer: NewTextIndexer()}
 	ai.artists = LoadArtists(folder)
+	ai.artistsById = make(map[int]string, len(ai.artists))
+	for name, id := range ai.artists {
+		ai.textIndexer.IndexText(id, name)
+		ai.artistsById[id] = name
+	}
+	ai.textIndexer.Build()
 	ai.currentId = len(ai.artists) + 1
-	//logger.GetLogger().Info("Current artist id",ai.currentId)
 	return ai
 }
 
 // Add the artist in index. Return id
-func (ai *ArtistIndex) Add(artist string) int {
+func (ai *ArtistManager) Add(artist string) int {
 	// Check if exist
 	if id, exist := ai.artists[artist]; exist {
 		return id
 	}
 	id := ai.currentId
 	ai.artists[artist] = id
+	ai.textIndexer.IndexText(id, artist)
 	ai.artistsToSave = append(ai.artistsToSave, artist)
 	logger.GetLogger().Info("Add artist", artist, " :", ai.currentId)
 	ai.currentId++
@@ -149,12 +156,12 @@ func (ai *ArtistIndex) Add(artist string) int {
 }
 
 // FindAll return all artists with id
-func (ai ArtistIndex) FindAll() map[string]int {
+func (ai ArtistManager) FindAll() map[string]int {
 	return ai.artists
 }
 
 // Save only new artists
-func (ai *ArtistIndex) Save(folder string, trunc bool) {
+func (ai *ArtistManager) Save(folder string, trunc bool) {
 	is := IndexSaver{ai.artistsToSave, 0}
 	logger.GetLogger().Info("Save artists", len(ai.artistsToSave))
 	is.Save(filepath.Join(folder, "artist.dico"), trunc)
@@ -162,7 +169,7 @@ func (ai *ArtistIndex) Save(folder string, trunc bool) {
 
 // Write get data in p and write in object
 // nb artist (4) | lenght name (2) | data name...
-func (ai *ArtistIndex) Write(p []byte) (int, error) {
+func (ai *ArtistManager) Write(p []byte) (int, error) {
 	pos := 0
 	if ai.artists == nil || len(ai.artists) == 0 {
 		// Load number, first 4 bytes
@@ -190,7 +197,6 @@ func (ai *ArtistIndex) Write(p []byte) (int, error) {
 		ai.currentId++
 		pos += 2 + artistSize
 	}
-	return pSize, nil
 }
 
 // ArtistMusicIndex is an index music by artist. Use id artist and id music.
@@ -202,7 +208,7 @@ type ArtistMusicIndex struct {
 	checkDuplicateArtists map[int]map[int]struct{}
 }
 
-//Get all musics of a specific artist (id)
+// Get all musics of a specific artist (id)
 func (ami *ArtistMusicIndex) Get(artistID int) []int32 {
 	musics := ami.MusicsByArtist[artistID]
 	musicsIds := make([]int32, len(musics))
@@ -212,7 +218,7 @@ func (ami *ArtistMusicIndex) Get(artistID int) []int32 {
 	return musicsIds
 }
 
-//Add a music to an artist
+// Add a music to an artist
 func (ami *ArtistMusicIndex) Add(artist, music int) {
 	if musics, present := ami.MusicsByArtist[artist]; present {
 		// Check if number already exists
@@ -222,17 +228,17 @@ func (ami *ArtistMusicIndex) Add(artist, music int) {
 		}
 	} else {
 		ami.MusicsByArtist[artist] = []int{music}
-		ami.checkDuplicateArtists[artist] = map[int]struct{}{music: struct{}{}}
+		ami.checkDuplicateArtists[artist] = map[int]struct{}{music: {}}
 	}
 }
 
-//Save the musics for each artist (id)
+// Save the musics for each artist (id)
 func (ami ArtistMusicIndex) Save(folder string) {
 	path := filepath.Join(folder, "artist_music.index")
 	f, _ := os.OpenFile(path, os.O_TRUNC|os.O_CREATE|os.O_RDWR, os.ModePerm)
 	defer f.Close()
 	enc := gob.NewEncoder(f)
-	enc.Encode(ami)
+	logger.LogE(enc.Encode(ami))
 }
 
 func LoadArtistMusicIndex(folder string) ArtistMusicIndex {
@@ -240,8 +246,8 @@ func LoadArtistMusicIndex(folder string) ArtistMusicIndex {
 	ami := ArtistMusicIndex{}
 	if f, err := os.Open(path); err == nil {
 		dec := gob.NewDecoder(f)
-		dec.Decode(&ami)
-		f.Close()
+		logger.LogE(dec.Decode(&ami))
+		logger.LogE(f.Close())
 	} else {
 		ami.MusicsByArtist = make(map[int][]int)
 	}

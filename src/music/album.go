@@ -16,11 +16,11 @@ type AlbumsList struct {
 	albums []string
 }
 
-// One file with link between a father element id and son element id (map)
+// ElementsIndex One file with link between a father element id and son element id (map)
 type ElementsIndex struct {
 }
 
-// AlbumByArtist store all album for artist
+// ElementsByFather store all album for artist
 type ElementsByFather map[int][]int
 
 func (ebf *ElementsByFather) Add(fatherID, sonId int) {
@@ -39,25 +39,12 @@ func (ebf *ElementsByFather) Adds(fatherId int, sonsId []int) {
 	}
 }
 
-func (ebf ElementsByFather) Save(folder string) {
+func (ebf *ElementsByFather) Save(folder string) {
 	path := filepath.Join(folder, "artist_music.index")
 	f, _ := os.OpenFile(path, os.O_TRUNC|os.O_CREATE|os.O_RDWR, os.ModePerm)
 	defer f.Close()
 	enc := gob.NewEncoder(f)
-	enc.Encode(ebf)
-}
-
-func LoadElementsByFather(folder, filename string) ElementsByFather {
-	path := filepath.Join(folder, filename+".index")
-	ebf := ElementsByFather{}
-	if f, err := os.Open(path); err == nil {
-		dec := gob.NewDecoder(f)
-		dec.Decode(&ebf)
-		f.Close()
-	} else {
-		ebf = ElementsByFather(make(map[int][]int))
-	}
-	return ebf
+	logger.LogE(enc.Encode(ebf))
 }
 
 type Album struct {
@@ -90,28 +77,28 @@ func (aba *AlbumByArtist) AddAlbum(idArtist int, album Album) {
 	}
 }
 
-func (aba AlbumByArtist) Save(folder string) {
+func (aba *AlbumByArtist) Save(folder string) {
 	path := filepath.Join(folder, "album_by_artist.index")
 	f, _ := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
 	// Get max artist id
-	max := 0
+	maxId := 0
 	for id := range aba.idxByArtist {
-		if id > max {
-			max = id
+		if id > maxId {
+			maxId = id
 		}
 	}
 	// Prepare header (nb elements and size artist
-	aba.header = make([]int64, max)
-	aba.previousPosition = int64(4 + 8*max)
-	aba.max = max
-	f.Write(getInt32AsByte(int32(max)))
-	f.Write(make([]byte, 8*max))
+	aba.header = make([]int64, maxId)
+	aba.previousPosition = int64(4 + 8*maxId)
+	aba.max = maxId
+	logger.LogE(f.Write(getInt32AsByte(int32(maxId))))
+	logger.LogE(f.Write(make([]byte, 8*maxId)))
 
 	// Copy data
-	io.Copy(f, &aba)
-	f.WriteAt(getInts64AsByte(aba.header), 4)
+	logger.LogE(io.Copy(f, aba))
+	logger.LogE(f.WriteAt(getInts64AsByte(aba.header), 4))
 
-	f.Close()
+	logger.LogE(f.Close())
 
 }
 
@@ -156,7 +143,7 @@ func (aba *AlbumByArtist) Read(p []byte) (int, error) {
 	}
 }
 
-func (mba AlbumByArtist) GetAlbums(folder string, artistId int) []Album {
+func (aba *AlbumByArtist) GetAlbums(folder string, artistId int) []Album {
 	path := filepath.Join(folder, "album_by_artist.index")
 	f, _ := os.Open(path)
 	defer f.Close()
@@ -180,7 +167,7 @@ func (mba AlbumByArtist) GetAlbums(folder string, artistId int) []Album {
 		id := getInt32FromFile(f, posInFile)
 		lengthName := getInt8FromFile(f, posInFile+4)
 		nameTab := make([]byte, lengthName)
-		f.ReadAt(nameTab, posInFile+5)
+		logger.LogE(f.ReadAt(nameTab, posInFile+5))
 		albums[i] = NewAlbum(int(id), string(nameTab))
 		posInFile += int64(5 + lengthName)
 	}
@@ -197,17 +184,20 @@ type AlbumManager struct {
 	mbaa *AlbumsIndex
 	// Working folder
 	folder string
-	// Text indexer
+	// Text indexer for album names
 	textIndexer TextIndexer
 }
 
-func NewAlbumManager(folder string) *AlbumManager {
+func NewAlbumManager(folder string, loadIndex bool) *AlbumManager {
 	am := AlbumManager{}
 	am.folder = folder
 	am.musicsByAlbum = make([][]int, 0)
 	am.aba = NewAlbumByArtist()
 	am.mbaa = NewAlbumsIndex()
 	am.textIndexer = NewTextIndexer()
+	if loadIndex {
+		am.init()
+	}
 	return &am
 }
 
@@ -219,13 +209,7 @@ func (am *AlbumManager) AddAlbumsByArtist(artistID int, albums map[string][]int)
 	}
 }
 
-func (am *AlbumManager) IndexText(idMusic int, keys ...string) {
-	for _, value := range am.textIndexer.Filter(keys...) {
-		am.textIndexer.Add(value, idMusic)
-	}
-}
-
-//AddMusic return id of the album
+// AddMusic return id of the album
 func (am *AlbumManager) AddMusic(album string, idMusic int, title string) (int, error) {
 	return am.mbaa.Add(album, idMusic, strings.ToLower(title))
 }
@@ -239,7 +223,8 @@ func (am *AlbumManager) Save() {
 	(&(IndexSaver{am.mbaa.toSave, 0})).Save(filepath.Join(am.folder, "albums.dico"), true)
 
 	am.aba.Save(am.folder)
-	am.textIndexer.Save(am.folder)
+	am.textIndexer.Build()
+	am.textIndexer.SaveInFile(am.folder, albumTextIndexerFilename)
 }
 
 func (am *AlbumManager) getMusicsFrom(filename string, albumId int) []int {
@@ -258,7 +243,7 @@ func (am *AlbumManager) getMusicsFrom(filename string, albumId int) []int {
 	nbMusics := int32(getInt16FromFile(f, posInFile))
 	//logger.GetLogger().Info("Load musics of album", albumId, ", pos :", posInFile, ", musics :", nbMusics)
 	musicsTab := make([]byte, nbMusics*4)
-	f.ReadAt(musicsTab, posInFile+2)
+	logger.LogE(f.ReadAt(musicsTab, posInFile+2))
 	return getBytesAsInts32Int(musicsTab)
 }
 
@@ -270,9 +255,18 @@ func (am *AlbumManager) GetMusicsAll(albumId int) []int {
 	return am.getMusicsFrom("all_albums_music.index", albumId)
 }
 
-//LoadAllAlbums load all album names with id for each
+// LoadAllAlbums load all album names with id for each
 func (am *AlbumManager) LoadAllAlbums() map[string]int {
-	return IndexReader{}.Load(filepath.Join(am.folder, "albums.dico"))
+	return am.mbaa.names
+}
+
+// Store some data in cache
+func (am *AlbumManager) init() {
+	am.mbaa.names = IndexReader{}.Load(filepath.Join(am.folder, "albums.dico"))
+	for name, id := range am.mbaa.names {
+		am.mbaa.reverseNames[id] = name
+	}
+	am.textIndexer = LoadTextIndexer(am.folder, albumTextIndexerFilename)
 }
 
 type musicByAlbumSaver struct {
@@ -291,14 +285,14 @@ func NewMusicAlbumSaver(albums [][]int) musicByAlbumSaver {
 func (mas musicByAlbumSaver) Save(path string) {
 	f, _ := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
 	// Reserve header size (nb elements * 8 + 4)
-	f.Write(getInt32AsByte(int32(len(mas.data))))
-	f.Write(make([]byte, len(mas.data)*8))
+	logger.LogE(f.Write(getInt32AsByte(int32(len(mas.data)))))
+	logger.LogE(f.Write(make([]byte, len(mas.data)*8)))
 	mas.header = make([]int64, len(mas.data))
-	io.Copy(f, &mas)
+	logger.LogE(io.Copy(f, &mas))
 	// Rewrite header at the beginning
-	f.WriteAt(getInts64AsByte(mas.header), 4)
+	logger.LogE(f.WriteAt(getInts64AsByte(mas.header), 4))
 
-	f.Close()
+	logger.LogE(f.Close())
 }
 
 func (mas *musicByAlbumSaver) Read(p []byte) (int, error) {
@@ -348,26 +342,26 @@ func (mas *musicByAlbumSaver) Read(p []byte) (int, error) {
 		writeBytes(p, data, lengthData)
 		mas.current++
 		lengthData += len(data)
-
 	}
-	return lengthData, nil
+	//return lengthData, nil
 }
 
 // AlbumsIndex store all albums, no matter artist, only based on name
 type AlbumsIndex struct {
 	// Names albums with id
-	names      map[string]int
-	toSave     []string
-	index      [][]int
-	exists     []map[int]struct{}
-	existsName []map[string]struct{}
+	names        map[string]int
+	reverseNames map[int]string
+	toSave       []string
+	index        [][]int
+	exists       []map[int]struct{}
+	existsName   []map[string]struct{}
 }
 
 func NewAlbumsIndex() *AlbumsIndex {
-	return &AlbumsIndex{make(map[string]int), []string{}, make([][]int, 0), make([]map[int]struct{}, 0), make([]map[string]struct{}, 0)}
+	return &AlbumsIndex{make(map[string]int), make(map[int]string), []string{}, make([][]int, 0), make([]map[int]struct{}, 0), make([]map[string]struct{}, 0)}
 }
 
-//Add a music into album index, if album no already exist, create it
+// Add a music into album index, if album no already exist, create it
 // @return : the id of the album
 func (ai *AlbumsIndex) Add(album string, idMusic int, title string) (int, error) {
 	lowerAlbum := strings.ToLower(album)
@@ -375,10 +369,11 @@ func (ai *AlbumsIndex) Add(album string, idMusic int, title string) (int, error)
 	if !ok {
 		idAlbum = len(ai.names) + 1
 		ai.names[lowerAlbum] = idAlbum
+		ai.reverseNames[idAlbum] = album
 		ai.toSave = append(ai.toSave, album)
 		ai.index = append(ai.index, []int{idMusic})
-		ai.exists = append(ai.exists, map[int]struct{}{idMusic: struct{}{}})
-		ai.existsName = append(ai.existsName, map[string]struct{}{title: struct{}{}})
+		ai.exists = append(ai.exists, map[int]struct{}{idMusic: {}})
+		ai.existsName = append(ai.existsName, map[string]struct{}{title: {}})
 		return idAlbum, nil
 	}
 	// Check if id music already indexed
@@ -391,7 +386,7 @@ func (ai *AlbumsIndex) Add(album string, idMusic int, title string) (int, error)
 			ai.existsName[idAlbum-1][title] = struct{}{}
 			return idAlbum, nil
 		}
-		return idAlbum, errors.New("Music name is already indexed")
+		return idAlbum, errors.New("music name is already indexed")
 	}
-	return idAlbum, errors.New("Music id is already indexed")
+	return idAlbum, errors.New("music id is already indexed")
 }

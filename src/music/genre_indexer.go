@@ -2,6 +2,7 @@ package music
 
 import (
 	"bytes"
+	"github.com/jotitan/music_server/logger"
 	"os"
 	"path/filepath"
 	"sort"
@@ -38,7 +39,7 @@ func (gi *GenreIndexer) AddArtist(genre string, artistId int) {
 	genreData.addArtist(artistId)
 }
 
-//AddManyGenresForArtist index many genres for an artist
+// AddManyGenresForArtist index many genres for an artist
 func (gi *GenreIndexer) AddManyGenresForArtist(genres map[string]struct{}, artistID int) {
 	for genre := range genres {
 		genreData := gi.getGenreData(genre)
@@ -63,7 +64,7 @@ func (gi *GenreIndexer) getGenreData(genre string) *GenreData {
 }
 
 // Save data into a file
-func (gi GenreIndexer) Save(folder string) {
+func (gi *GenreIndexer) Save(folder string) {
 	filename := filepath.Join(folder, "genres.index")
 	// Build header : nb genre (4) | header length (4) | length genre 1 (1) | genre 1 (str) | pos genre 1 (4)
 	// data structure : nb album (4) | list album (n x 4) | nb artist (4) | list artist (n x 4)
@@ -81,7 +82,7 @@ func (gi GenreIndexer) Save(folder string) {
 		cursor += 8 + 4*(len(genreData.albums)+len(genreData.artists))
 	}
 	out, _ := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
-	out.Write(header.Bytes())
+	logger.LogE(out.Write(header.Bytes()))
 
 	for _, genre := range gi.genreNames {
 		genreData, _ := gi.genres[genre]
@@ -92,9 +93,9 @@ func (gi GenreIndexer) Save(folder string) {
 		data.Write(getInts32AsByte(genreData.albums))
 		data.Write(getIntAsByte(len(genreData.artists)))
 		data.Write(getInts32AsByte(genreData.artists))
-		out.Write(data.Bytes())
+		logger.LogE(out.Write(data.Bytes()))
 	}
-	out.Close()
+	logger.LogE(out.Close())
 }
 
 type GenreReader struct {
@@ -110,7 +111,7 @@ func NewGenreReader(folder string) *GenreReader {
 	nbGenre := getNextInt32FromFile(in)
 	lengthHeader := getNextInt32FromFile(in)
 	header := make([]byte, lengthHeader)
-	in.Read(header) 
+	logger.LogE(in.Read(header))
 	genres := make(map[string]int64, nbGenre)
 	genreNames := make([]string, nbGenre)
 	pos := 0
@@ -122,7 +123,7 @@ func NewGenreReader(folder string) *GenreReader {
 		genreNames[i] = name
 		pos += 4
 	}
-	in.Close()
+	logger.LogE(in.Close())
 	sort.Strings(genreNames)
 	return &GenreReader{genres, genreNames, filename}
 }
@@ -131,13 +132,13 @@ func (gr GenreReader) GetGenres() []string {
 	return gr.genreNames
 }
 
-// album first in block
-func (gr GenreReader) GetAlbum(genre string) map[int]struct{} {
+// GetAlbums album first in block
+func (gr GenreReader) GetAlbums(genre string) map[int]struct{} {
 	if pos, exist := gr.genres[genre]; exist {
 		in, _ := os.Open(gr.filename)
 		nbAlbums := int(getInt32FromFile(in, pos))
 		dataAlbums := make([]byte, 4*nbAlbums)
-		in.ReadAt(dataAlbums, pos+4)
+		logger.LogE(in.ReadAt(dataAlbums, pos+4))
 		results := make(map[int]struct{}, nbAlbums)
 		for i := 0; i < nbAlbums; i++ {
 			results[int(getInt32FromBytes(dataAlbums[i*4:(i+1)*4]))] = struct{}{}
@@ -147,7 +148,7 @@ func (gr GenreReader) GetAlbum(genre string) map[int]struct{} {
 	return map[int]struct{}{}
 }
 
-// artist in second position
+// GetArtist artist in second position
 // Return a map, easier to filter
 func (gr GenreReader) GetArtist(genre string) map[int]struct{} {
 	if pos, exist := gr.genres[genre]; exist {
@@ -156,12 +157,12 @@ func (gr GenreReader) GetArtist(genre string) map[int]struct{} {
 		posArtists := pos + (1+int64(nbAlbums))*4
 		nbArtists := int(getInt32FromFile(in, posArtists))
 		dataArtists := make([]byte, 4*nbArtists)
-		in.ReadAt(dataArtists, posArtists+4)
+		logger.LogE(in.ReadAt(dataArtists, posArtists+4))
 		results := make(map[int]struct{}, nbArtists)
 		for i := 0; i < nbArtists; i++ {
 			results[int(getInt32FromBytes(dataArtists[i*4:(i+1)*4]))] = struct{}{}
 		}
-		in.Close()
+		logger.LogE(in.Close())
 		return results
 	}
 	return map[int]struct{}{}

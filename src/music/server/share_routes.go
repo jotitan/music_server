@@ -13,13 +13,13 @@ import (
 	"time"
 )
 
-func (ms MusicServer) GetShares(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) GetShares(response http.ResponseWriter, _ *http.Request) {
 	data, _ := json.Marshal(music.GetSharesInfo())
 	response.Header().Set("Access-Control-Allow-Origin", "*")
-	response.Write(data)
+	logger.LogE(response.Write(data))
 }
 
-func (ms MusicServer) KillShare(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) KillShare(response http.ResponseWriter, request *http.Request) {
 	if ss := getShare(request, "id"); ss != nil {
 		ss.ForwardEvent(sessionID(response, request), "close", "")
 	}
@@ -33,7 +33,7 @@ func getShare(request *http.Request, idName string) *music.SharedSession {
 }
 
 // Heartbeat is used to monitor connected service player. After specific timeout, cut connection
-func (ms MusicServer) Heartbeat(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) Heartbeat(response http.ResponseWriter, request *http.Request) {
 	sessionID := sessionID(response, request)
 	shareId, err := strconv.Atoi(request.FormValue("id"))
 
@@ -50,13 +50,13 @@ func (ms MusicServer) Heartbeat(response http.ResponseWriter, request *http.Requ
 	sc.NotifyHeartbeat(sessionID)
 }
 
-func (ms MusicServer) ShareService(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) ShareService(response http.ResponseWriter, request *http.Request) {
 	// Return id of shared
 	id := music.CreateShareConnectionService(request.FormValue("device"), request.FormValue("url"), sessionID(response, request), ms.library.GetMusicsInfo)
-	response.Write([]byte(fmt.Sprintf("%d", id)))
+	logger.LogE(response.Write([]byte(fmt.Sprintf("%d", id))))
 }
 
-func (ms MusicServer) Share(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) Share(response http.ResponseWriter, request *http.Request) {
 	// If id is present, connect as clone
 	if ss := getShare(request, "id"); ss != nil {
 		// Create new SessionID at each connection ?
@@ -66,7 +66,7 @@ func (ms MusicServer) Share(response http.ResponseWriter, request *http.Request)
 	}
 }
 
-func (ms MusicServer) SendRequest(w http.ResponseWriter, r *http.Request) {
+func (ms *MusicServer) SendRequest(w http.ResponseWriter, r *http.Request) {
 	if ss := getShare(r, "id"); ss != nil {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		data, err := ss.SendRequest(sessionID(w, r), r.FormValue("event"), r.FormValue("data"))
@@ -75,21 +75,21 @@ func (ms MusicServer) SendRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.WriteHeader(200)
-		w.Write([]byte(data))
+		logger.LogE(w.Write([]byte(data)))
 	} else {
 		http.Error(w, "bad session id", http.StatusNotFound)
 	}
 }
 
-func (ms MusicServer) ShareUpdate(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) ShareUpdate(response http.ResponseWriter, request *http.Request) {
 	if ss := getShare(request, "id"); ss != nil {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
 		ss.ForwardEvent(sessionID(response, request), request.FormValue("event"), request.FormValue("data"))
 	}
 }
 
-func (ms MusicServer) ComputeLatency(response http.ResponseWriter, request *http.Request) {
-	// Get original time (original_time), two differents times (local_receive & local_push) and add current
+func (ms *MusicServer) ComputeLatency(_ http.ResponseWriter, request *http.Request) {
+	// Get original time (original_time), two different times (local_receive & local_push) and add current
 	originalTime := parseInt(request, "original_time")
 	localReceive := parseInt(request, "local_receive")
 	localPush := parseInt(request, "local_push")

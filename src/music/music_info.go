@@ -9,7 +9,7 @@ import (
 	"github.com/ascherkus/go-id3/src/id3"
 )
 
-// Music represent a music with all informations
+// Music represent a music with all information
 type Music struct {
 	file  id3.File
 	path  string

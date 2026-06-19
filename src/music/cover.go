@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"github.com/jotitan/music_server/logger"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -47,7 +47,7 @@ func (rl RootResponse) GetCount() int {
 
 func (rl RootResponse) GetUrl() (string, error) {
 	if len(rl.Info.Releases) == 0 {
-		return "", errors.New("Impossible to get id")
+		return "", errors.New("impossible to get id")
 	}
 	// read 10 firsts
 	for i := 0; i < 10 && i < len(rl.Info.Releases); i++ {
@@ -78,10 +78,10 @@ func (rl RootResponse) GetUrl() (string, error) {
 }
 
 // @param threashold : max number of results
-func extractInfo(data []byte, threashold int) (string, error) {
+func extractInfo(data []byte, threshold int) (string, error) {
 	var r RootResponse
-	xml.Unmarshal(data, &r)
-	if threashold != 0 && r.GetCount() > threashold {
+	logger.LogE(xml.Unmarshal(data, &r))
+	if threshold != 0 && r.GetCount() > threshold {
 		return "", errors.New("Too much results")
 	}
 	return r.GetUrl()
@@ -90,7 +90,7 @@ func extractInfo(data []byte, threashold int) (string, error) {
 // key if composed of artist-album
 var coverCache = make(map[string]string)
 
-// use to request music brainz one time max by second
+// use to request music brain one time max by second
 var lastGet = 0
 
 var waitMBTime = 2000
@@ -111,7 +111,7 @@ var musicBrainzUrl = "http://musicbrainz.org/ws/2/release/?"
 var totalMBRequest = 0
 var retryMBRequest = 0
 
-func doSearch(params string, threashold int) string {
+func doSearch(params string, threshold int) string {
 	fParams := url.Values{"query": []string{params}}.Encode()
 	checkLastGet()
 	totalMBRequest++
@@ -123,11 +123,11 @@ func doSearch(params string, threashold int) string {
 			retryMBRequest++
 			logger.GetLogger().Error("Limit exceed, retry", totalMBRequest, retryMBRequest, params)
 			time.Sleep(time.Duration(waitMBTime) * time.Millisecond)
-			return doSearch(params, threashold)
+			return doSearch(params, threshold)
 		}
 		// Check if release field are present, if not, limit
-		d, _ := ioutil.ReadAll(resp.Body)
-		if cover, err := extractInfo(d, threashold); err == nil {
+		d, _ := io.ReadAll(resp.Body)
+		if cover, err := extractInfo(d, threshold); err == nil {
 			return cover
 		}
 	}
@@ -150,7 +150,7 @@ func GetCover(artist, album, title, filename string) string {
 	// Check if cover.jpg exist in folder, if true, return url like file:/
 	if cover, e := os.Open(filepath.Join(filepath.Dir(filename), "cover.jpg")); e == nil {
 		// A jpg cover is found, return it
-		cover.Close()
+		logger.LogE(cover.Close())
 		return "/get?src=" + filepath.Join(filepath.Dir(filename), "cover.jpg")
 	}
 	// Take first artist (before ( , and &)
@@ -163,8 +163,8 @@ func GetCover(artist, album, title, filename string) string {
 		album = album[:p]
 	}
 	key := artist + "-" + album
-	if url, ok := coverCache[key]; ok {
-		return url
+	if u, ok := coverCache[key]; ok {
+		return u
 	}
 
 	// 1

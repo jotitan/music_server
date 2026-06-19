@@ -202,12 +202,12 @@
 
     function getRestDataProviderFunction(url){
         return (params,success)=>{
-            var attrs = [];
-            for(var i in params){
+            const attrs = [];
+            for(let i in params){
                 attrs.push(i + "=" + params[i]);
             }
             ajax({
-                url: url + "?" + attrs.join('&'),
+                url: `${url}?${attrs.join('&')}`,
                 dataType: 'json',
                 success: success
             });

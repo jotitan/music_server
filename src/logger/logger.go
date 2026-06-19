@@ -1,11 +1,11 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime"
 	"strings"
-	"fmt"
 	"sync"
 )
 
@@ -13,9 +13,9 @@ import (
 /* If file is defined, write inside. In any case, write in console */
 
 // Logger manage log production
-type Logger struct{
-	info * log.Logger
-	error * log.Logger
+type Logger struct {
+	info         *log.Logger
+	error        *log.Logger
 	writeConsole bool
 }
 
@@ -35,14 +35,20 @@ func (l Logger) Fatal(message ...interface{}) {
 	os.Exit(1)
 }
 
-// Erro write error message into log
+// Error write error message into log
 func (l Logger) Error(message ...interface{}) {
 	l.print(l.error, message...)
 }
 
-// pring write message into logger. If console is enabled, write into too
-func (l Logger) print(loggerElement * log.Logger, message ...interface{}) {
-	data := append([]interface{}{ getInfo()}, message...)
+func LogE(args ...interface{}) {
+	if len(args) > 0 && args[len(args)-1] != nil {
+		GetLogger().Error(args[len(args)-1])
+	}
+}
+
+// print write message into logger. If console is enabled, write into too
+func (l Logger) print(loggerElement *log.Logger, message ...interface{}) {
+	data := append([]interface{}{getInfo()}, message...)
 	loggerElement.Println(data...)
 	if l.writeConsole {
 		log.Println(data...)
@@ -53,14 +59,14 @@ func (l Logger) print(loggerElement * log.Logger, message ...interface{}) {
 func InitLogger(filename string, console bool) *Logger {
 	out := os.Stdout
 	errOut := os.Stdout
-	logger = &Logger{writeConsole:false}
+	logger = &Logger{writeConsole: false}
 	if filename != "" {
-		if file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm) ; err == nil {
+		if file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm); err == nil {
 			out = file
 			errOut = file
 			logger.writeConsole = console
-		}else{
-			fmt.Println("Error when creating logger",err)
+		} else {
+			fmt.Println("Error when creating logger", err)
 		}
 	}
 	logger.info = log.New(out, "INFO ", log.Ldate|log.Ltime|log.Lmicroseconds)

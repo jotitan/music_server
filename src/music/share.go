@@ -17,7 +17,7 @@ import (
 
 // SharedSession represent a relation between an interface (original) and copy (clones)
 type SharedSession struct {
-	// Id of the share, different from sessionID
+	// id of the share, different from sessionID
 	id        int
 	original  *Device
 	clones    []*Device
@@ -53,11 +53,11 @@ func (ss *SharedSession) startHeartbeatChecker(sharedSessions map[int]*SharedSes
 	}()
 }
 
-func (ss SharedSession) isOriginal(sessionID string) bool {
+func (ss *SharedSession) isOriginal(sessionID string) bool {
 	return strings.EqualFold(ss.original.sessionID, sessionID)
 }
 
-func (ss SharedSession) isClone(sessionID string) (bool, *Device) {
+func (ss *SharedSession) isClone(sessionID string) (bool, *Device) {
 	for _, clone := range ss.clones {
 		if strings.EqualFold(clone.sessionID, sessionID) {
 			return true, clone
@@ -70,12 +70,12 @@ func (ss *SharedSession) SetLatency(latency float64) {
 	ss.latency = latency
 }
 
-func (ss SharedSession) GetLatency() float64 {
+func (ss *SharedSession) GetLatency() float64 {
 	return ss.latency
 }
 
 // SendRequest return results in response
-func (ss SharedSession) SendRequest(sessionID string, event, data string) (string, error) {
+func (ss *SharedSession) SendRequest(_ string, event, data string) (string, error) {
 	_, data, success := ss.original.sendService(event, data)
 	if !success {
 		return "", errors.New("impossible to execute request")
@@ -85,7 +85,7 @@ func (ss SharedSession) SendRequest(sessionID string, event, data string) (strin
 
 // ForwardEvent from a remote control. Possible event : add music, remove music, play music, play, pause, next, previous
 // Detect the sender from his session ID
-func (ss SharedSession) ForwardEvent(sessionID string, event, data string) {
+func (ss *SharedSession) ForwardEvent(sessionID string, event, data string) {
 	logger.GetLogger().Info("Receive event", event, "from", sessionID, "(", len(ss.clones), ")")
 	// Detect sender
 	if ss.isOriginal(sessionID) {
@@ -139,7 +139,7 @@ func (d Device) send(event string, data string) (newEvent, message string, succe
 
 func jsonToParams(data string) string {
 	mapData := make(map[string]string)
-	json.Unmarshal([]byte(data), &mapData)
+	logger.LogE(json.Unmarshal([]byte(data), &mapData))
 	params := make([]string, 0, len(mapData))
 	for key, value := range mapData {
 		params = append(params, fmt.Sprintf("%s=%s", key, value))
@@ -149,11 +149,11 @@ func jsonToParams(data string) string {
 
 func extractFieldFromJson(data, field string) interface{} {
 	dataAsMap := make(map[string]interface{})
-	json.Unmarshal([]byte(data), &dataAsMap)
+	logger.LogE(json.Unmarshal([]byte(data), &dataAsMap))
 	return dataAsMap[field]
 }
 
-// Send event thru api
+// Send event through api
 func (d Device) sendService(event string, data string) (newEvent, message string, success bool) {
 	// Work without data for pause, next, previous
 	urlToCall := ""
@@ -266,9 +266,9 @@ func (d Device) sendBrowser(event string, data string) (success bool) {
 	}()
 	logger.GetLogger().Info("SEND", event, data, d.sessionID)
 	if event != "" {
-		d.response.Write([]byte(fmt.Sprintf("event: %s\n", event)))
+		logger.LogE(d.response.Write([]byte(fmt.Sprintf("event: %s\n", event))))
 	}
-	d.response.Write([]byte("data: " + data + "\n\n"))
+	logger.LogE(d.response.Write([]byte("data: " + data + "\n\n")))
 	d.response.(http.Flusher).Flush()
 	success = true
 	return
@@ -276,15 +276,12 @@ func (d Device) sendBrowser(event string, data string) (success bool) {
 
 var sharedSessions = make(map[int]*SharedSession)
 
-// Create standard header for SSE
+// CreateSSEHeader Create standard header for SSE
 func CreateSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
 	response.Header().Set("Connection", "keep-alive")
 	response.Header().Set("Access-Control-Allow-Origin", "*")
-	//response.Header().Set("X-Accel-Buffering", "no")
-	// Disable compression for SSE
-	//response.Header().Set("Content-Encoding", "identity")
 }
 
 func removeSharedSession(id int) {
@@ -310,7 +307,7 @@ func (ss *SharedSession) removeClone(sessionID string) {
 	}
 }
 
-// create new connection at each time, no connection recup
+// ConnectToShare create new connection at each time, no connection get back
 func (ss *SharedSession) ConnectToShare(response http.ResponseWriter, deviceName, sessionID string) {
 	// Check if original still exist
 	if !ss.original.isUp() {

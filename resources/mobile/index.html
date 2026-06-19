@@ -27,10 +27,6 @@
         <section class="panel now-playing" aria-label="Lecture en cours">
             <div class="now-playing__info">
                 <div class="meta">
-                    <div class="now-playing__header">
-                        <p class="now-playing__label">Lecture en cours</p>
-                        
-                    </div>
                     <h2 class="now-playing__title" id="now-playing-title">Aucune piste</h2>
                     <p class="now-playing__artist" id="now-playing-artist"></p>
                     <p class="now-playing__album" id="now-playing-album"></p>
@@ -114,6 +110,22 @@
         <div class="result-item__actions">
             <button type="button" class="add-btn icon-btn" aria-label="Ajouter à la playlist" title="Ajouter à la playlist">
                 <span aria-hidden="true">＋</span>
+            </button>
+        </div>
+    </article>
+</template>
+
+<template id="search-folder-result-template">
+    <article class="result-item">
+        <div class="result-item__meta">
+            <h3 class="result-item__title"></h3>
+        </div>
+        <div class="result-item__actions">
+            <button type="button" class="add-btn icon-btn" aria-label="Ajouter à la playlist" title="Ajouter à la playlist">
+                <span aria-hidden="true">＋</span>
+            </button>
+            <button type="button" class="show-btn icon-btn" aria-label="Afficher les musiques" title="Afficher les musiques">
+                <span aria-hidden="true">👁️</span>
             </button>
         </div>
     </article>

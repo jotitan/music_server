@@ -105,7 +105,7 @@ var Explorer = {
         }
         this.dataProvider(params,data=>{
             this.display(data);
-            if(JSON.stringify(params) == "{}"){
+            if(JSON.stringify(params) === "{}"){
                 // Restore home scroll
                 this.panelFolder.scrollTop(this.scrollPosition);
             }
@@ -150,10 +150,10 @@ var Explorer = {
         if(!noEmpty) {
             this.cleanPanel();
         }
-        for(var file in data){
-            var name = "";
-            var url = "";
-            var params = {};
+        for(let file in data){
+            let name = "";
+            let url = "";
+            let params = {};
             if(Number(file) == file) {
                 // Case when {}
                 name = data[file].name;

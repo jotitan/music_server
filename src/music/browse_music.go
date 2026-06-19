@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/jotitan/music_server/logger"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,8 +25,8 @@ const (
 	limitMusicFile = 1000
 )
 
-// MusicSaver represent the contract to be able to save musics
-type MusicSaver interface {
+// Savable represent the contract to be able to save musics
+type Savable interface {
 	AddToSave(music Music)
 	FinishEnd()
 	LoadExistingMusicsInfo() map[string]map[string]string
@@ -67,7 +66,7 @@ func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 		path := filepath.Join(oms.folder, fmt.Sprintf("music_%d.dico", fileID))
 		logger.GetLogger().Info("Full RI", path)
 		if f, err := os.Open(path); err == nil {
-			data, _ := ioutil.ReadAll(f)
+			data, _ := io.ReadAll(f)
 			total := int(getInt64FromBytes(data[0:8]))
 			for j := 0; j < total; j++ {
 				id := fileID*limitMusicFile + j + 1
@@ -75,11 +74,11 @@ func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 				lengthInfo := getInt64FromBytes(data[pos : pos+8])
 				musicInfo := data[pos+8 : pos+8+lengthInfo]
 				var results map[string]string
-				json.Unmarshal(musicInfo, &results)
+				logger.LogE(json.Unmarshal(musicInfo, &results))
 				results["id"] = fmt.Sprintf("%d", id)
 				musicsMap[results["path"]] = results
 			}
-			f.Close()
+			logger.LogE(f.Close())
 		} else {
 			break
 		}
@@ -88,19 +87,19 @@ func (oms OldMusicSaver) LoadExistingMusicsInfo() map[string]map[string]string {
 }
 
 // FullReindex load all musics in index, browse and find new ones
-func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver) TextIndexer {
+func (md *Dictionary) FullReindex(folderName string, musicSaver Savable) TextIndexer {
 	logger.GetLogger().Info("Launch FullReindex")
 
 	// Load in map (by path) music info
 	musics := musicSaver.LoadExistingMusicsInfo()
-	// Define nextId as highiest id
-	max := 0
+	// Define nextId as highest id
+	maxValue := 0
 	for _, m := range musics {
-		if id, err := strconv.Atoi(m["id"]); err == nil && max < id {
-			max = id
+		if id, err := strconv.Atoi(m["id"]); err == nil && maxValue < id {
+			maxValue = id
 		}
 	}
-	md.nextId = int64(max) + 1
+	md.nextId = int64(maxValue) + 1
 	logger.GetLogger().Info("Set next Id at ", md.nextId)
 	logger.GetLogger().Info("Load", len(musics), "elements")
 
@@ -109,7 +108,7 @@ func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver
 		if names, err := dir.Readdirnames(-1); err == nil {
 			for _, n := range names {
 				if strings.HasSuffix(n, ".index") || strings.HasSuffix(n, ".dico") || strings.HasSuffix(n, ".map") {
-					os.Remove(filepath.Join(md.indexFolder, n))
+					logger.LogE(os.Remove(filepath.Join(md.indexFolder, n)))
 				}
 			}
 		}
@@ -122,7 +121,7 @@ func (md *MusicDictionnary) FullReindex(folderName string, musicSaver MusicSaver
 }
 
 // Browse all musics in root folder, detect unindexed musics and add into library
-func (md *MusicDictionnary) Browse(folderName string, musics map[string]map[string]string, musicSaver MusicSaver) TextIndexer {
+func (md *Dictionary) Browse(folderName string, musics map[string]map[string]string, musicSaver Savable) TextIndexer {
 	// Useless for full reindex (read everything and search in path)
 	md.loadIndexedInodes()
 
@@ -132,35 +131,36 @@ func (md *MusicDictionnary) Browse(folderName string, musics map[string]map[stri
 	md.artistIndex.Save(md.indexFolder, false)
 	md.artistMusicIndex.Save(md.indexFolder)
 
-	return IndexArtists(md.indexFolder)
+	indexer, _ := IndexArtists(md.indexFolder)
+	return indexer
 }
 
 // Load existing music (by inode) in index. Only used for incremental updates
-func (md *MusicDictionnary) loadIndexedInodes() {
+func (md *Dictionary) loadIndexedInodes() {
 	md.musicInIndex = make(map[int]struct{})
 	// Load list of int32
 	if f, err := os.Open(filepath.Join(md.indexFolder, "existing_music.map")); err == nil {
 		// Load in memory and parse int32 (or load by block if to heavy)
-		data, _ := ioutil.ReadAll(f)
+		data, _ := io.ReadAll(f)
 		md.musicInIndex = make(map[int]struct{}, len(data)/4)
 		for i := 0; i < len(data)/4; i++ {
 			md.musicInIndex[int(binary.LittleEndian.Uint32(data[i*4:(i+1)*4]))] = struct{}{}
 		}
-		f.Close()
+		logger.LogE(f.Close())
 	} else {
 		md.musicInIndex = make(map[int]struct{})
 	}
 }
 
-// Save inodes of readed files into file
-func (md *MusicDictionnary) saveExistingMusic() {
+// Save inodes of ezs files into file
+func (md *Dictionary) saveExistingMusic() {
 	if f, err := os.OpenFile(filepath.Join(md.indexFolder, "existing_music.map"), os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm); err == nil {
 		list := make([]int, 0, len(md.musicInIndex))
 		for inode := range md.musicInIndex {
 			list = append(list, inode)
 		}
-		f.Write(getInts32AsByte(list))
-		f.Close()
+		logger.LogE(f.Write(getInts32AsByte(list)))
+		logger.LogE(f.Close())
 	}
 }
 
@@ -169,7 +169,7 @@ func readInodes(folder string) map[string]int {
 	inodes := make(map[string]int)
 	r := bufio.NewReader(bytes.NewBuffer(data))
 	for {
-		if line, _, error := r.ReadLine(); error == nil {
+		if line, _, err := r.ReadLine(); err == nil {
 			value := strings.Trim(string(line), " ")
 			pos := strings.Index(value, " ")
 			if inode, err := strconv.Atoi(value[:pos]); err == nil {
@@ -182,7 +182,7 @@ func readInodes(folder string) map[string]int {
 	return inodes
 }
 
-func (md *MusicDictionnary) browseFolder(folderName string, musics map[string]map[string]string, musicSaver MusicSaver) {
+func (md *Dictionary) browseFolder(folderName string, musics map[string]map[string]string, musicSaver Savable) {
 	if folder, err := os.Open(folderName); err == nil {
 		defer folder.Close()
 		// List all files
@@ -228,19 +228,19 @@ func (md *MusicDictionnary) browseFolder(folderName string, musics map[string]ma
 	}
 }
 
-// MusicDictionnary manage music search, index search and music browsing
-type MusicDictionnary struct {
+// Dictionary manage music search, index search and music browsing
+type Dictionary struct {
 	// Next id of music
 	nextId int64
 	// Directory where indexes are
 	indexFolder string
 	// Artist index
-	artistIndex      ArtistIndex
+	artistIndex      ArtistManager
 	artistMusicIndex ArtistMusicIndex
 	// Map which contains inode of indexed music
 	musicInIndex map[int]struct{}
-	// Store the dictionnary of music
-	dictionnary *OutputDictionnary
+	// Store the dictionary of music
+	dictionary *OutputDictionary
 }
 
 func splitArtists(artistsList string) []string {
@@ -253,9 +253,9 @@ func splitArtists(artistsList string) []string {
 	return artists
 }
 
-// LoadDictionnary load the dictionnary which store music info by id
-func LoadDictionnary(workingDirectory string) MusicDictionnary {
-	md := MusicDictionnary{indexFolder: workingDirectory}
+// LoadDictionary load the dictionary which store music info by id
+func LoadDictionary(workingDirectory string) Dictionary {
+	md := Dictionary{indexFolder: workingDirectory}
 
 	// Load artist index (list of artist, list of music by artist)
 	md.artistIndex = LoadArtistIndex(workingDirectory)
@@ -264,7 +264,7 @@ func LoadDictionnary(workingDirectory string) MusicDictionnary {
 }
 
 // extractInfo get id3tag info
-func (md *MusicDictionnary) extractInfo(filename string, musics map[string]map[string]string) (*id3.File, string, int64) {
+func (md *Dictionary) extractInfo(filename string, musics map[string]map[string]string) (*id3.File, string, int64) {
 	// check in temp cache
 	file, cover, id := foundMusicInCache(musics, filename)
 	if file != nil {
@@ -307,23 +307,23 @@ func readMusic(file *os.File) *id3.File {
 
 }
 
-func (md MusicDictionnary) getTimeMusic(filename string) string {
+func (md *Dictionary) getTimeMusic(filename string) string {
 	f, _ := os.Open(filename)
 
 	tmpName := fmt.Sprintf("%d", time.Now().Nanosecond())
 	tmpPath := filepath.Join(os.TempDir(), tmpName)
 
 	ftmp, _ := os.OpenFile(tmpPath, os.O_CREATE|os.O_RDWR, os.ModePerm)
-	io.Copy(ftmp, f)
-	f.Close()
-	ftmp.Close()
+	logger.LogE(io.Copy(ftmp, f))
+	logger.LogE(f.Close())
+	logger.LogE(ftmp.Close())
 
 	defer os.Remove(tmpPath)
 
 	mp3InfoPath := GetMp3InfoPath(md.indexFolder)
 	cmd := exec.Command(mp3InfoPath, "-p", "%S", tmpPath)
 
-	if result, error := cmd.Output(); error == nil {
+	if result, err := cmd.Output(); err == nil {
 		return string(result)
 	}
 	return ""

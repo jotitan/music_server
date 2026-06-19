@@ -3,6 +3,7 @@ package reader
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jotitan/music_server/logger"
 	"io"
 	"net/http"
 	"strconv"
@@ -30,19 +31,19 @@ func Play(_ http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func VolumeUp(w http.ResponseWriter, _ *http.Request) {
+func VolumeUp(_ http.ResponseWriter, _ *http.Request) {
 	player.UpdateVolume(0.5)
 }
-func VolumeDown(w http.ResponseWriter, _ *http.Request) {
+func VolumeDown(_ http.ResponseWriter, _ *http.Request) {
 	player.UpdateVolume(-0.5)
 }
 
 func Health(w http.ResponseWriter, _ *http.Request) {
-	w.Write([]byte("UP"))
+	logger.LogE(w.Write([]byte("UP")))
 }
 
 func Pause(_ http.ResponseWriter, _ *http.Request) {
-	reader.Pause()
+	logger.LogE(reader.Pause())
 }
 
 func Next(_ http.ResponseWriter, _ *http.Request) {
@@ -57,12 +58,12 @@ func StopRadio(_ http.ResponseWriter, _ *http.Request) {
 	player.StopRadio()
 }
 
-func Radio(w http.ResponseWriter, r *http.Request) {
+func Radio(_ http.ResponseWriter, r *http.Request) {
 	radio := r.FormValue("data")
 	player.Radio(radio)
 }
 
-func ForceClose(w http.ResponseWriter, r *http.Request) {
+func ForceClose(_ http.ResponseWriter, _ *http.Request) {
 	player.ForceClose()
 }
 
@@ -87,11 +88,11 @@ func Remove(_ http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Clean(_ http.ResponseWriter, r *http.Request) {
+func Clean(_ http.ResponseWriter, _ *http.Request) {
 	playlist.Clean()
 }
 
-func State(w http.ResponseWriter, r *http.Request) {
+func State(w http.ResponseWriter, _ *http.Request) {
 	ids := make([]int, len(playlist.musics))
 	for i, music := range playlist.musics {
 		ids[i] = music.idMusic
@@ -113,22 +114,22 @@ func State(w http.ResponseWriter, r *http.Request) {
 		reader.playingMusicDetail.Pos(),
 	}
 	data, _ := json.Marshal(state)
-	w.Write(data)
+	logger.LogE(w.Write(data))
 }
 
-func Current(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(fmt.Sprintf("{\"current\":%d}", playlist.currentMusic)))
+func Current(w http.ResponseWriter, _ *http.Request) {
+	logger.LogE(w.Write([]byte(fmt.Sprintf("{\"current\":%d}", playlist.currentMusic))))
 }
 
-func Reconnect(w http.ResponseWriter, r *http.Request) {
+func Reconnect(_ http.ResponseWriter, _ *http.Request) {
 	player.connectToServer()
 }
 
-func List(w http.ResponseWriter, r *http.Request) {
+func List(w http.ResponseWriter, _ *http.Request) {
 	list := make([]string, len(playlist.musics))
 	for i, value := range playlist.musics {
 		list[i] = value.path
 	}
 	data, _ := json.Marshal(list)
-	w.Write(data)
+	logger.LogE(w.Write(data))
 }

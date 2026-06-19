@@ -5,19 +5,20 @@ import (
 	"strings"
 )
 
-//IndexArtists index all artists of musics with musics for each
-func IndexArtists(folder string) TextIndexer {
+// IndexArtists index all artists of musics with musics for each
+func IndexArtists(folder string) (TextIndexer, *AlbumManager) {
 	library := NewMusicLibrary(folder)
 	// Recreate albums index at each time (very quick)
 	artists := LoadArtists(folder)
 	musicsByArtist := LoadArtistMusicIndex(folder)
 	logger.GetLogger().Info("Launch index with", len(artists), "artists")
 	// Contains all album name and id
-	am := NewAlbumManager(folder)
+	am := NewAlbumManager(folder, false)
+	indexer := NewTextIndexer()
 
 	genreIndexer := NewGenreIndexer()
-	// Index album by genre (consider only one genre by album)
 
+	// Index album by genre (consider only one genre by album)
 	albumsByGenre := make(map[string]map[int]struct{})
 
 	for _, artistID := range artists {
@@ -45,11 +46,12 @@ func IndexArtists(folder string) TextIndexer {
 				albums[music["album"]] = []int{int(musicID)}
 			}
 			if err == nil {
-				am.IndexText(int(musicID), music["title"], music["artist"])
+				indexer.IndexText(int(musicID), music["title"], music["artist"])
+				am.textIndexer.IndexText(albumID, music["album"])
 				// Index genre by album
 				if genre != "" {
 					if listAlbums, exist := albumsByGenre[genre]; !exist {
-						albumsByGenre[genre] = map[int]struct{}{albumID: struct{}{}}
+						albumsByGenre[genre] = map[int]struct{}{albumID: {}}
 					} else {
 						listAlbums[albumID] = struct{}{}
 					}
@@ -65,9 +67,10 @@ func IndexArtists(folder string) TextIndexer {
 			genreIndexer.AddAlbum(genre, idAlbum)
 		}
 	}
-	am.textIndexer.Build()
-	am.Save()
+	indexer.Build()
+	indexer.SaveInFile(am.folder, TextIndexerFilename)
 	genreIndexer.Save(folder)
+	am.Save()
 	logger.GetLogger().Info("End index")
-	return am.textIndexer
+	return indexer, am
 }

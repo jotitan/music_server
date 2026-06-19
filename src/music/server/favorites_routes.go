@@ -7,18 +7,18 @@ import (
 	"strconv"
 )
 
-// Return all favorites as musics
-func (ms MusicServer) GetFavorites(response http.ResponseWriter, request *http.Request) {
+// GetFavorites Return all favorites as musics
+func (ms *MusicServer) GetFavorites(response http.ResponseWriter, request *http.Request) {
 	ms.getMusics(response, request, ms.favorites.GetFavorites(), false, []string{"artist"})
 }
 
-func (ms MusicServer) SetFavorite(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) SetFavorite(response http.ResponseWriter, request *http.Request) {
 	if id, err := strconv.Atoi(request.FormValue("id")); err == nil {
 		favorite := request.FormValue("value") == "true"
 		ms.favorites.Set(id, favorite)
 		logger.GetLogger().Info("Update favorite", id, request.FormValue("value"))
-		response.Write([]byte(fmt.Sprintf("{\"value\":%t}", favorite)))
+		logger.LogE(response.Write([]byte(fmt.Sprintf("{\"value\":%t}", favorite))))
 	} else {
-		response.Write([]byte("{\"error\":true}"))
+		logger.LogE(response.Write([]byte("{\"error\":true}")))
 	}
 }

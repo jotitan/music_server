@@ -52,19 +52,19 @@ func (ms *MusicServer) serveFile(response http.ResponseWriter, request *http.Req
 		data, _ := os.ReadFile(file)
 		formatData := strings.Replace(strings.Replace(string(data), "src=\"", "src=\"/"+proxyRedirect, -1), "href=\"", "href=\"/"+proxyRedirect, -1)
 		formatData = strings.Replace(formatData, "var basename=\"/\";", "var basename=\"/"+proxyRedirect+"\";", -1)
-		response.Write([]byte(formatData))
+		logger.LogE(response.Write([]byte(formatData)))
 	} else {
 		http.ServeFile(response, request, file)
 	}
 
 }
 
-// Use to find node with very short timeout
-func (ms MusicServer) Status(response http.ResponseWriter, request *http.Request) {
-	response.Write([]byte("Up"))
+// Status Use to find node with very short timeout
+func (ms *MusicServer) Status(response http.ResponseWriter, _ *http.Request) {
+	logger.LogE(response.Write([]byte("Up")))
 }
 
-func (ms MusicServer) findExposedURL() string {
+func (ms *MusicServer) findExposedURL() string {
 	adr, _ := net.InterfaceAddrs()
 	for _, a := range adr {
 		if a.String() != "0.0.0.0" && !strings.Contains(a.String(), "127.0.0.1") {
@@ -77,13 +77,13 @@ func (ms MusicServer) findExposedURL() string {
 	return "localhost"
 }
 
-// Modify volumn of music on different server by calling a distant service on 9098
-func (ms *MusicServer) Volume(response http.ResponseWriter, request *http.Request) {
+// Volume Modify volume of music on different server by calling a distant service on 9098
+func (ms *MusicServer) Volume(_ http.ResponseWriter, request *http.Request) {
 	host := request.Host[:strings.Index(request.Host, ":")]
 	ms.devices.SetVolume(request.FormValue("volume") == "down", host)
 }
 
-func (ms MusicServer) Create(port string, indexFolder, musicFolder, addressMask, webfolder string, routes func(ms *MusicServer) *http.ServeMux) {
+func (ms *MusicServer) Create(port string, indexFolder, musicFolder, addressMask, webfolder string, routes func(ms *MusicServer) *http.ServeMux) {
 	ms.folder = indexFolder
 	ms.indexManager = music.NewSearchIndex(ms.folder)
 	ms.library = music.NewMusicLibrary(ms.folder)
@@ -109,7 +109,7 @@ func (ms MusicServer) Create(port string, indexFolder, musicFolder, addressMask,
 	}
 	localIP := ms.findExposedURL()
 
-	mux := routes(&ms)
+	mux := routes(ms)
 
 	logger.GetLogger().Info("Runner start on :", localIP, port)
 	e := http.ListenAndServe(":"+port, mux)
@@ -117,19 +117,19 @@ func (ms MusicServer) Create(port string, indexFolder, musicFolder, addressMask,
 	logger.GetLogger().Error("Runner ko", e)
 }
 
-// Load a resource like a cover
+// Get Load a resource like a cover
 func (ms *MusicServer) Get(response http.ResponseWriter, request *http.Request) {
 	url := request.FormValue("src")
 	if f, e := os.Open(url); e == nil {
 		defer f.Close()
-		io.Copy(response, f)
+		logger.LogE(io.Copy(response, f))
 	}
 }
 
-func (ms MusicServer) checkRequester(request *http.Request) bool {
+func (ms *MusicServer) checkRequester(_ *http.Request) bool {
 	// Trouble with IPV6
 	return true
-	addr := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr, ":")]
+	/*addr := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr, ":")]
 	if "[::1]" != addr {
 		// [::1] means localhost. Otherwise, compare to mask
 		for i, val := range strings.Split(addr, ".") {
@@ -144,5 +144,5 @@ func (ms MusicServer) checkRequester(request *http.Request) bool {
 			}
 		}
 	}
-	return true
+	return true*/
 }

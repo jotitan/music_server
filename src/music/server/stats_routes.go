@@ -1,11 +1,12 @@
 package server
 
 import (
+	"github.com/jotitan/music_server/logger"
 	"net/http"
 	"time"
 )
 
-func (ms MusicServer) createSSEHeader(response http.ResponseWriter) {
+func (ms *MusicServer) createSSEHeader(response http.ResponseWriter) {
 	response.Header().Set("Content-Type", "text/event-stream")
 	response.Header().Set("Cache-Control", "no-cache")
 	response.Header().Set("Connection", "keep-alive")
@@ -13,12 +14,12 @@ func (ms MusicServer) createSSEHeader(response http.ResponseWriter) {
 }
 
 // StatsAsSSE return stats by server side event
-func (ms MusicServer) StatsAsSSE(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) StatsAsSSE(response http.ResponseWriter, _ *http.Request) {
 	ms.createSSEHeader(response)
 	ms.sendStats(response)
 }
 
-func (ms MusicServer) sendStats(r http.ResponseWriter) {
+func (ms *MusicServer) sendStats(r http.ResponseWriter) {
 	defer func() {
 		if err := recover(); err != nil {
 		}
@@ -30,7 +31,7 @@ func (ms MusicServer) sendStats(r http.ResponseWriter) {
 	}()
 
 	for {
-		r.Write([]byte("data: " + "hello" + "\n\n"))
+		logger.LogE(r.Write([]byte("data: " + "hello" + "\n\n")))
 		if stop == true {
 			break
 		}

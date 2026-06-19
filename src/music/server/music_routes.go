@@ -9,11 +9,11 @@ import (
 	"strconv"
 )
 
-func (ms *MusicServer) RecreateIndex(response http.ResponseWriter, request *http.Request) {
+func (ms *MusicServer) RecreateIndex(_ http.ResponseWriter, _ *http.Request) {
 	ms.library.RecreateIndex()
 }
 
-// Return music content
+// Readmusic return music content
 func (ms *MusicServer) Readmusic(response http.ResponseWriter, request *http.Request) {
 	id, _ := strconv.Atoi(request.FormValue("id"))
 	logger.GetLogger().Info("Get music id", id)
@@ -24,5 +24,5 @@ func (ms *MusicServer) Readmusic(response http.ResponseWriter, request *http.Req
 	logger.GetLogger().Info("load", musicInfo["path"])
 	response.Header().Set("Content-type", "audio/mpeg")
 	response.Header().Set("Content-Length", fmt.Sprintf("%d", info.Size()))
-	io.Copy(response, m)
+	logger.LogE(io.Copy(response, m))
 }

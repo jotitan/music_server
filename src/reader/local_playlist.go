@@ -102,7 +102,7 @@ func (pp *PlayerPlaylist) notifyCurrent() {
 	// Add jsessionid in cookie
 	req, _ := http.NewRequest("GET", urlToCall, nil)
 	req.Header.Add("Cookie", fmt.Sprintf("jsessionid=%s", pp.sessionID))
-	http.DefaultClient.Do(req)
+	logger.LogE(http.DefaultClient.Do(req))
 }
 
 func (pp *PlayerPlaylist) Next() bool {
@@ -133,7 +133,7 @@ func (pp *PlayerPlaylist) IsPlaying() bool {
 
 func (pp *PlayerPlaylist) Pause() {
 	logger.GetLogger().Info("Pause")
-	pp.player.Pause()
+	logger.LogE(pp.player.Pause())
 }
 
 func (pp *PlayerPlaylist) playWithEndDetection(path string) {
@@ -172,7 +172,7 @@ func (pp *PlayerPlaylist) ForceClose() {
 }
 func (pp *PlayerPlaylist) Radio(radio string) {
 	if foundRadio, exist := radios[radio]; exist {
-		go pp.player.PlayRadio(foundRadio)
+		go logger.LogE(pp.player.PlayRadio(foundRadio))
 	}
 }
 
