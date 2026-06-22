@@ -121,7 +121,7 @@ func (ms *MusicServer) ListByOnlyAlbums(response http.ResponseWriter, request *h
 	case request.FormValue("idAlbum") != "":
 		albumID, _ := strconv.Atoi(request.FormValue("idAlbum"))
 		musicsIds := ms.indexManager.ListFullAlbumById(albumID)
-		ms.getMusics(response, request, musicsIds, true, []string{})
+		ms.getMusics(response, request, musicsIds, true, []string{"src"})
 	default:
 		albumsData := ms.indexManager.ListAllAlbums(request.FormValue("genre"))
 		data, _ := json.Marshal(albumsData)
