@@ -118,8 +118,8 @@ func (ms *MusicServer) ListMusicsByArtist(response http.ResponseWriter, request 
 func (ms *MusicServer) ListByOnlyAlbums(response http.ResponseWriter, request *http.Request) {
 	switch {
 	// return albums of artist
-	case request.FormValue("id") != "":
-		albumID, _ := strconv.Atoi(request.FormValue("id"))
+	case request.FormValue("idAlbum") != "":
+		albumID, _ := strconv.Atoi(request.FormValue("idAlbum"))
 		musicsIds := ms.indexManager.ListFullAlbumById(albumID)
 		ms.getMusics(response, request, musicsIds, true, []string{})
 	default:
