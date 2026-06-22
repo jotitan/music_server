@@ -680,7 +680,7 @@ class MusicSpaApp {
     }
 
     addMusicsOfAlbum(id){
-        this.addMusicsFromUrl(`listByAlbum?idAlbum=${id}`)
+        this.addMusicsFromUrl(`listByOnlyAlbums?idAlbum=${id}`)
     }
 
     addMusicsFromUrl(url){
@@ -694,7 +694,7 @@ class MusicSpaApp {
     }
 
     showMusicOfAlbum(id){
-        requester.fetch(`listByAlbum?idAlbum=${id}&size=60`, true).then(results=>this.renderSearchResults(results ?? []));
+        requester.fetch(`listByOnlyAlbums?idAlbum=${id}&size=60`, true).then(results=>this.renderSearchResults(results ?? []));
     }
     showMusicOfArtist(id){
         requester.fetch(`listByArtist?id=${id}&size=60`, true).then(results=>this.renderSearchResults(results ?? []));
