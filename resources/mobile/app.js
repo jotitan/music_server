@@ -714,7 +714,7 @@ class MusicSpaApp {
             title: music.title,
             artist: music.artist,
             album: music.album,
-            length: music.length ?? music.time ?? music.duration,
+            length: parseInt(music.length) ?? parseInt(music.time) ?? parseInt(music.duration),
             src: music.src || music.infos != null ? music.infos.src : '',
             coverUrl: music.cover
         };
