@@ -99,11 +99,11 @@ func (ss *SharedSession) ForwardEvent(sessionID string, event, data string) {
 		}
 	} else {
 		if v, dev := ss.isClone(sessionID); v {
-			if strings.EqualFold(event, "close") {
+			switch event {
+			case "close":
 				dev.connected = false
 				ss.removeClone(sessionID)
-
-			} else {
+			default:
 				newEvent, newData, success := ss.original.send(event, data)
 				if success && !strings.EqualFold("", newEvent) {
 					logger.GetLogger().Info("Send service new event", newEvent)

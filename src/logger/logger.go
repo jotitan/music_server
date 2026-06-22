@@ -42,7 +42,9 @@ func (l Logger) Error(message ...interface{}) {
 
 func LogE(args ...interface{}) {
 	if len(args) > 0 && args[len(args)-1] != nil {
-		GetLogger().Error(args[len(args)-1])
+		_, file, line, _ := runtime.Caller(1)
+		originError := fmt.Sprintf("%s:%d:", file[strings.LastIndex(file, "/")+1:], line)
+		GetLogger().Error(args[len(args)-1], " ("+originError+")")
 	}
 }
 
