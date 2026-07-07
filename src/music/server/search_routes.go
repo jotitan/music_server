@@ -45,7 +45,7 @@ func (ms *MusicServer) getAllArtists(response http.ResponseWriter, request *http
 	for artist, id := range artists {
 		// test if artist id is in the filtered genre list
 		if _, exist := filterArtist[id]; exist || (len(filterArtist) == 0 && genre == "") {
-			artistsData = append(artistsData, map[string]string{"name": artist, "url": fmt.Sprintf("id=%d", id)})
+			artistsData = append(artistsData, map[string]string{"name": artist, "url": fmt.Sprintf("id=%d", id), "id": fmt.Sprintf("%d", id)})
 		}
 	}
 	sort.Sort(music.SortByArtist(artistsData))

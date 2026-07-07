@@ -39,12 +39,14 @@ func (ms *MusicServer) Heartbeat(response http.ResponseWriter, request *http.Req
 
 	if err != nil {
 		logger.GetLogger().Error("Impossible to manage heartbeat, bad share id")
+		http.Error(response, "bad id", http.StatusBadRequest)
 		return
 	}
 	// Search shared, if not exist or ids doesn't match, log error
 	sc := music.GetShareConnection(shareId)
 	if sc == nil {
 		logger.GetLogger().Error("Impossible to manage heartbeat of", shareId)
+		http.Error(response, "unknown id", http.StatusNotFound)
 		return
 	}
 	sc.NotifyHeartbeat(sessionID)

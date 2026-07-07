@@ -162,7 +162,7 @@ func (d Device) sendService(event string, data string) (newEvent, message string
 		// Extract field position from json and send as index
 		urlToCall = fmt.Sprintf("%s/music/play?index=%d", d.url, int(extractFieldFromJson(data, "position").(float64)))
 	case "play", "pause", "next", "previous":
-		urlToCall = fmt.Sprintf("%s/music/%s?%s", d.url, event, jsonToParams(data))
+		urlToCall = fmt.Sprintf("%s/music/%s", d.url, event)
 	case "add":
 		return d.postMusicsToServer(data)
 	case "state", "askPlaylist":
@@ -222,7 +222,6 @@ func manageServiceResponse(event, originalData string, resp *http.Response, err 
 func (d Device) postMusicsToServer(data string) (string, string, bool) {
 	// First unsplit
 	musics := stringArrayToIntArray(data)
-	logger.GetLogger().Info("LOG MUSIC SHARE", musics)
 	// Load musics and create request
 	musicsInfo := d.getMusicsInfo(musics)
 	request := make([]map[string]string, len(musicsInfo))
@@ -392,7 +391,6 @@ func CreateShareConnection(response http.ResponseWriter, deviceName, sessionID s
 	sharedSessions[ss.id] = ss
 	logger.GetLogger().Info("Create share", ss.id)
 	ss.original.send("id", fmt.Sprintf("%d", ss.id))
-	//computeLatency(ss.original,ss.id)
 	checkConnection(device)
 	removeSharedSession(ss.id)
 }
